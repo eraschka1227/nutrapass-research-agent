@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+.pages-deploy/
+.pages-dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+npm-debug.log*

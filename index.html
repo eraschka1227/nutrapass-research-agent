@@ -1,0 +1,1475 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+
+  .np,
+  .np *{box-sizing:border-box}
+
+  .np{
+    --np-bg:#fffdf7;
+    --np-bg-2:#fbf8ee;
+    --np-card:#ffffff;
+    --np-card-2:#f6fbf3;
+    --np-mint:#9ed9b4;
+    --np-mint-2:#b9e7c8;
+    --np-mint-3:#31513c;
+    --np-text:#2f3f34;
+    --np-muted:rgba(47,63,52,.70);
+    --np-soft:rgba(185,231,200,.36);
+    --np-charcoal:#2f3f34;
+    --np-sage:#e9f7e8;
+    --np-citrus:#f5df8a;
+    --np-peach:#ffd9b8;
+    --np-sky:#dcefe6;
+    --np-lav:#d7c7f2;
+    font-family:'Helvetica Neue',Helvetica,Arial,'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    min-height:100%;
+    container-type:inline-size;
+    position:relative;
+    isolation:isolate;
+    background:
+      radial-gradient(circle at 10% -3%, rgba(185,231,200,.78), transparent 17rem),
+      radial-gradient(circle at 86% 10%, rgba(255,217,184,.34), transparent 19rem),
+      radial-gradient(circle at 68% 0%, rgba(245,223,138,.26), transparent 16rem),
+      linear-gradient(180deg,#fffdf7 0%,#ffffff 46%,#f7fbf3 100%);
+    color:var(--np-text);
+    border-radius:24px;
+    overflow:hidden;
+    padding:clamp(1rem,2.5vw,2rem);
+  }
+
+  .np::before{content:'';position:absolute;inset:0 0 auto 0;height:7px;background:linear-gradient(90deg,var(--np-mint),var(--np-sky),var(--np-citrus),var(--np-peach),var(--np-lav),var(--np-mint));z-index:0}
+  .np::after{content:'';position:absolute;width:340px;height:340px;right:-150px;top:44px;border-radius:999px;background:radial-gradient(circle,rgba(191,236,207,.32),rgba(183,223,242,.16) 48%,transparent 70%);z-index:0;pointer-events:none}
+  .np-shell{max-width:1040px;margin:0 auto;position:relative;z-index:1}
+  .np-alpha-banner{display:block;margin:.18rem auto .82rem;padding:.58rem .86rem;border:1.5px solid rgba(174,223,192,.72);border-radius:15px;background:linear-gradient(135deg,#ffffff 0%,#f6fbf8 54%,#eaf7ef 100%);color:#333333;text-align:center;font-size:clamp(.78rem,1.25vw,.92rem);font-weight:800;line-height:1.28;box-shadow:0 10px 22px rgba(51,51,51,.06)}
+  .np-alpha-banner strong{text-transform:uppercase;letter-spacing:.035em;color:#333333;font-weight:900}
+  .np-alpha-banner a{color:#333333;text-decoration:underline;text-decoration-color:#aedfc0;text-decoration-thickness:3px;text-underline-offset:3px;font-weight:900;white-space:nowrap}
+  .np-alpha-banner a:hover{color:#000000}
+  .np-alpha-banner a:focus-visible{outline:3px solid rgba(36,48,40,.25);outline-offset:3px;border-radius:6px}
+
+  .np-hd{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding:.25rem 0 1rem;
+  }
+
+  .np-brand{
+    display:flex;align-items:center;color:var(--np-mint);text-decoration:none;
+    padding:0;background:transparent;border:0;box-shadow:none;
+    transition:transform .15s ease, filter .15s ease;
+  }
+  .np-brand:hover{transform:translateY(-1px);filter:drop-shadow(0 10px 20px rgba(36,48,40,.10))}
+  .np-brand:focus-visible{outline:3px solid rgba(63,159,102,.32);outline-offset:5px;border-radius:10px}
+
+  .np-logo-img{
+    display:block;
+    width:clamp(150px,19vw,220px);
+    height:auto;
+    object-fit:contain;
+    filter:drop-shadow(0 8px 18px rgba(36,48,40,.08));
+  }
+
+  .np-logo-fallback{display:none;font-size:1.48rem;font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--np-mint)}
+  .np-logo-fallback span{font-weight:500;color:rgba(191,236,207,.82)}
+  .np-logo-fallback sup{font-size:.48rem;margin-left:.08rem;vertical-align:super}
+
+  .np-nav{
+    border:1px solid rgba(63,159,102,.25);border-radius:999px;
+    color:var(--np-mint-3);background:rgba(255,255,255,.86);padding:.55rem .9rem;font-size:.66rem;
+    letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;box-shadow:0 10px 26px rgba(48,48,48,.06);backdrop-filter:blur(10px);
+  }
+  .np-nav::before{content:'';display:inline-block;width:.55rem;height:.55rem;margin-right:.55rem;border-radius:999px;background:linear-gradient(135deg,var(--np-mint),var(--np-citrus));vertical-align:-.04rem}
+
+  .np-hero{text-align:center;padding:.2rem 0 .8rem}
+  .np-eye{display:inline-flex;align-items:center;gap:.45rem;font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--np-mint-3);margin-bottom:.45rem;font-weight:800;background:rgba(255,255,255,.72);border:1px solid rgba(63,159,102,.18);border-radius:999px;padding:.32rem .7rem;box-shadow:0 10px 24px rgba(63,159,102,.07)}
+  .np-eye::before,.np-eye::after{content:'';width:.34rem;height:.34rem;border-radius:999px;background:var(--np-citrus)}
+  .np-eye::after{background:var(--np-sky)}
+  .np-h1{font-size:clamp(2.28rem,5.55vw,4.35rem);font-weight:900;letter-spacing:-.072em;line-height:.9;margin:0 auto .58rem;max-width:820px;color:#333333}
+  .np-title-pop{position:relative;display:inline-block;color:transparent;background:linear-gradient(96deg,#244f34 0%,#31513c 52%,#c8793b 100%);-webkit-background-clip:text;background-clip:text;text-shadow:0 12px 28px rgba(113,88,50,.10)}
+  .np-title-pop::before{content:'';position:absolute;left:-.08em;top:.1em;width:.18em;height:.18em;border-radius:999px;background:var(--np-peach);opacity:.95;z-index:-1;box-shadow:.18em .18em 0 rgba(185,231,200,.84)}
+  .np-title-pop::after{content:'';position:absolute;left:.04em;right:.02em;bottom:-.12em;height:.14em;border-radius:999px;background:linear-gradient(90deg,var(--np-peach),var(--np-citrus),var(--np-mint-2));opacity:.9;z-index:-1;transform:skewX(-10deg)}
+  .np-title-pop .np-title-accent{font-weight:900;color:transparent;background:linear-gradient(90deg,#244f34,#c8793b);-webkit-background-clip:text;background-clip:text}
+  .np-sub{font-size:clamp(.86rem,1.45vw,.98rem);color:var(--np-muted);max-width:620px;margin:0 auto;line-height:1.45}
+
+  .np-body{max-width:1040px;margin:0 auto;padding:.35rem 0 0}
+  .np-card{
+    background:linear-gradient(180deg,rgba(255,255,255,.94),#f9fffb);
+    border:1px solid rgba(63,159,102,.18);
+    border-radius:20px;
+    padding:clamp(.8rem,2vw,1.15rem);
+    margin-bottom:.75rem;
+    box-shadow:0 18px 45px rgba(45,92,59,.10);
+  }
+
+  .np-lbl{font-size:.7rem;letter-spacing:.17em;text-transform:uppercase;color:var(--np-mint);margin-bottom:.75rem;display:block;font-weight:800}
+  .np-input-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
+  .np-input-head .np-lbl{margin-bottom:0}
+  .np-ai-status{display:inline-flex;align-items:center;gap:.36rem;border:1px solid rgba(63,159,102,.22);border-radius:999px;background:rgba(255,255,255,.82);color:#2f7f50;padding:.26rem .52rem;font-size:.66rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .np-ai-status::before{content:'';width:.48rem;height:.48rem;border-radius:999px;background:var(--np-mint);box-shadow:0 0 0 3px rgba(63,159,102,.15),0 0 10px rgba(63,159,102,.55)}
+  .np-ai-status.is-off{color:rgba(36,48,40,.62);border-color:rgba(36,48,40,.16)}
+  .np-ai-status.is-off::before{background:#a8b3aa;box-shadow:0 0 0 3px rgba(36,48,40,.08)}
+  .np-row{display:flex;gap:.6rem;align-items:stretch}
+  .np-ta{
+    flex:1;background:#fff;border:2px solid var(--np-mint-2);border-radius:999px;
+    min-height:48px;padding:.78rem 1rem;color:#243028;font-family:inherit;
+    font-size:.94rem;line-height:1.3;resize:none;outline:none;box-shadow:inset 0 0 0 1px rgba(48,48,48,.04);
+  }
+  .np-ta::placeholder{color:#777}
+  .np-ta:focus{border-color:var(--np-mint);box-shadow:0 0 0 4px rgba(63,159,102,.14)}
+  .np-btn{
+    background:linear-gradient(135deg,#31513c 0%,#244f34 72%,#c8793b 145%);color:#fff7df;border:3px solid #fff;border-radius:999px;
+    padding:.65rem 1.05rem;font-family:inherit;font-size:.76rem;font-weight:800;
+    letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;flex-shrink:0;
+    transition:transform .15s ease, background .15s ease, box-shadow .15s ease;box-shadow:0 10px 22px rgba(49,81,60,.16);
+  }
+  .np-btn:hover{background:linear-gradient(135deg,#244f34 0%,#31513c 70%,#f0b36d 145%);color:#fff7df;transform:translateY(-1px);box-shadow:0 14px 28px rgba(49,81,60,.20)}
+  .np-btn::after{content:'';display:inline-block;width:.42rem;height:.42rem;margin-left:.45rem;border-radius:999px;background:#aedfc0;box-shadow:.38rem 0 0 rgba(174,223,192,.62),.76rem 0 0 rgba(128,128,128,.38);vertical-align:.02rem}
+  .np-btn:disabled{opacity:.48;cursor:not-allowed;transform:none;background:rgba(191,236,207,.5)}
+
+  .np-ack{display:flex;gap:.6rem;align-items:flex-start;margin:.65rem 0 0;padding:.68rem .85rem;border:1px solid rgba(63,159,102,.24);border-radius:18px;background:#f1fbf5;color:rgba(36,48,40,.82);font-size:.78rem;line-height:1.36}
+  .np-ack input{margin:.18rem 0 0;accent-color:var(--np-mint);width:18px;height:18px;flex:0 0 auto}
+  .np-ack strong{color:var(--np-mint)}
+  .np-privacy-note{margin:.55rem 0 0;padding:.62rem .78rem;border:1px solid rgba(36,48,40,.12);border-radius:16px;background:rgba(255,255,255,.78);color:rgba(36,48,40,.74);font-size:.74rem;line-height:1.36}
+  .np-privacy-note strong{color:#1f6f43;font-weight:900}
+  .np-privacy-note ul{margin:.38rem 0 0;padding-left:1.05rem}
+  .np-privacy-note li{margin:.18rem 0}
+  .np-legal{font-size:.78rem;line-height:1.42;color:rgba(36,48,40,.78);background:linear-gradient(135deg,#ffffff,#f4fbf6)}
+  .np-legal p{margin:.45rem 0 0}
+  .np-legal strong{color:#1f6f43}
+  .np-warning{margin:0 0 .65rem;padding:.78rem .9rem;border:1px solid rgba(63,159,102,.38);border-radius:20px;background:linear-gradient(135deg,#f0fbf4 0%,#ffffff 54%,#fff7df 100%);color:rgba(36,48,40,.9);font-size:.86rem;line-height:1.42;box-shadow:0 12px 32px rgba(45,92,59,.08)}
+  .np-warning strong{color:var(--np-mint);font-weight:800}
+  .np-warning small{display:block;margin-top:.45rem;color:rgba(36,48,40,.64);font-size:.78rem;line-height:1.45}
+
+
+  .np-tabs{display:flex;justify-content:center;gap:.45rem;flex-wrap:wrap;width:fit-content;max-width:100%;margin:.05rem auto .85rem;padding:.35rem;border:1px solid rgba(63,159,102,.18);border-radius:999px;background:rgba(255,255,255,.74);box-shadow:0 12px 28px rgba(45,92,59,.07)}
+  .np-tab{appearance:none;border:0;border-radius:999px;background:transparent;color:rgba(36,48,40,.7);font-family:inherit;font-size:.7rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:.55rem .82rem;cursor:pointer;transition:background .15s ease,color .15s ease,transform .15s ease}
+  .np-tab:hover{background:rgba(174,223,192,.28);color:#333333;transform:translateY(-1px)}
+  .np-tab.is-active{background:linear-gradient(135deg,#31513c,#244f34);color:#fff7df;box-shadow:0 8px 18px rgba(49,81,60,.18)}
+  .np-tab:focus-visible{outline:3px solid rgba(63,159,102,.28);outline-offset:3px}
+  .np-panel[hidden]{display:none!important}
+  .np-lookup-help{margin:.55rem 0 0;color:rgba(36,48,40,.68);font-size:.78rem;line-height:1.4}
+  .np-lookup-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,300px);gap:.75rem;align-items:start}
+  .np-lookup-grid > *{min-width:0}
+  .np-link-list{display:grid;gap:.52rem;margin:.75rem 0 0;padding:0;list-style:none}
+  .np-link-card{background:#fff;border:1px solid rgba(63,159,102,.18);border-left:4px solid rgba(63,159,102,.62);border-radius:14px;padding:.72rem .82rem}
+  .np-link-card:nth-child(4n+2){border-left-color:var(--np-sky)}
+  .np-link-card:nth-child(4n+3){border-left-color:var(--np-citrus)}
+  .np-link-card:nth-child(4n+4){border-left-color:var(--np-peach)}
+  .np-link-kind{font-size:.63rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#2f7f50;margin-bottom:.18rem}
+  .np-link-title{display:inline-block;color:#1f6f43;font-size:.9rem;font-weight:900;line-height:1.25;text-decoration:none}
+  .np-link-title:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .np-link-note{display:block;margin-top:.2rem;color:rgba(36,48,40,.66);font-size:.75rem;line-height:1.35}
+  .np-research-side{background:linear-gradient(135deg,#eef9f2,#fff7df);border:1px solid rgba(63,159,102,.18);border-radius:18px;padding:.9rem}
+  .np-research-side h3{margin:0 0 .45rem;font-size:1rem;color:#243028;letter-spacing:-.02em}
+  .np-research-side ul{margin:.4rem 0 0;padding-left:1rem;color:rgba(36,48,40,.74);font-size:.78rem;line-height:1.45}
+  .np-research-side li{margin:.22rem 0}
+  .np-mini-note{margin:.75rem 0 0;padding:.7rem .8rem;border-radius:16px;background:#fff;border:1px solid rgba(36,48,40,.12);font-size:.76rem;color:rgba(36,48,40,.72);line-height:1.4}
+  .np-clinical-summary{margin:.55rem 0 .85rem}
+  .np-clinical-summary ul{display:grid;gap:.5rem;margin:0;padding:0;list-style:none}
+  .np-clinical-summary li{position:relative;padding-left:1.12rem;color:#243028;font-size:.94rem;line-height:1.48}
+  .np-clinical-summary li::before{content:'';position:absolute;left:0;top:.56em;width:.42rem;height:.42rem;border-radius:999px;background:linear-gradient(135deg,var(--np-mint),var(--np-citrus))}
+  .np-clinical-summary strong{color:#1f6f43;font-weight:900}
+
+  .np-chips{display:flex;gap:.38rem;flex-wrap:wrap;margin-top:.65rem}
+  .np-chip{
+    background:#fff;border:1px solid rgba(63,159,102,.24);border-radius:999px;
+    padding:.3rem .65rem;color:rgba(36,48,40,.72);font-size:.72rem;cursor:pointer;font-family:inherit;
+  }
+  .np-chip:hover{border-color:var(--np-mint);color:var(--np-mint-3);background:linear-gradient(135deg,rgba(191,236,207,.20),rgba(183,223,242,.12))}
+
+  .np-sl{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--np-mint);display:flex;align-items:center;gap:.7rem;margin-bottom:.9rem;font-weight:800}
+  .np-sl::after{content:'';flex:1;height:1px;background:rgba(63,159,102,.18)}
+  .np-results-grid .np-sl{font-size:.88rem;font-weight:900;letter-spacing:.13em;color:#243028;margin-bottom:.78rem}
+  .np-results-grid .np-sl::after{height:2px;background:linear-gradient(90deg,rgba(63,159,102,.38),rgba(244,213,111,.28),rgba(183,223,242,.18))}
+  .np-sum{font-size:.95rem;color:rgba(36,48,40,.76);margin-bottom:.9rem;line-height:1.6}
+  .np-results-grid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:.75rem;align-items:start}
+  .np-main,.np-side{min-width:0}
+  .np-actions{display:flex;gap:.55rem;flex-wrap:wrap;margin:.9rem 0 0}
+  .np-action{background:#fff;border:1px solid rgba(63,159,102,.3);color:var(--np-mint-3);border-radius:999px;padding:.42rem .65rem;font-family:inherit;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;cursor:pointer}
+  .np-action:hover{background:rgba(191,236,207,.17)}
+  .np-nuts{display:flex;flex-direction:column;gap:.55rem}
+  .np-note-section{display:flex;flex-direction:column;gap:.55rem;margin-top:.65rem}
+  .np-note-section:first-child{margin-top:0}
+  .np-note-heading{display:inline-flex;align-self:flex-start;border-radius:999px;background:linear-gradient(135deg,#eef9f2,#fff7df);border:1px solid rgba(63,159,102,.18);color:#1f6f43;font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .58rem}
+  .np-nut{position:relative;overflow:hidden;background:linear-gradient(135deg,#ffffff 0%,#fbfffc 74%,rgba(191,236,207,.18) 100%);border:1px solid rgba(63,159,102,.18);border-left:4px solid rgba(63,159,102,.65);border-radius:14px;padding:.78rem .85rem .78rem 1rem}
+  .np-nut::before{content:'';position:absolute;right:.72rem;top:.72rem;width:.48rem;height:.48rem;border-radius:999px;background:var(--np-sage);box-shadow:.34rem .25rem 0 rgba(183,223,242,.65)}
+  .np-nut:nth-child(4n+2){border-left-color:var(--np-sky);background:linear-gradient(135deg,#ffffff 0%,#fbfffc 74%,rgba(183,223,242,.20) 100%)}
+  .np-nut:nth-child(4n+2)::before{background:var(--np-sky);box-shadow:.34rem .25rem 0 rgba(191,236,207,.65)}
+  .np-nut:nth-child(4n+3){border-left-color:var(--np-citrus);background:linear-gradient(135deg,#ffffff 0%,#fbfffc 74%,rgba(244,213,111,.18) 100%)}
+  .np-nut:nth-child(4n+3)::before{background:var(--np-citrus);box-shadow:.34rem .25rem 0 rgba(242,184,141,.44)}
+  .np-nut:nth-child(4n+4){border-left-color:var(--np-peach);background:linear-gradient(135deg,#ffffff 0%,#fbfffc 74%,rgba(242,184,141,.16) 100%)}
+  .np-nut:nth-child(4n+4)::before{background:var(--np-peach);box-shadow:.34rem .25rem 0 rgba(215,199,242,.48)}
+  .np-nn{font-size:.98rem;font-weight:800;color:#1f6f43;margin-bottom:.2rem}
+
+  .np-nn-btn{appearance:none;border:0;background:transparent;padding:0;margin:0;color:#1f6f43;font:inherit;font-size:.98rem;font-weight:900;text-align:left;cursor:pointer;line-height:1.15;position:relative;z-index:1}
+  .np-nn-btn:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;color:#155c35}
+  .np-nn-btn:focus-visible{outline:3px solid rgba(63,159,102,.28);outline-offset:3px;border-radius:6px}
+  .np-drill-hint{display:inline-block;margin-left:.35rem;color:#2f7f50;font-size:.68rem;font-weight:900;letter-spacing:.04em;opacity:.72}
+  .np-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
+  .np-back{background:#fff;border:1px solid rgba(63,159,102,.32);color:#2f7f50;border-radius:999px;padding:.42rem .68rem;font-family:inherit;font-size:.68rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+  .np-back:hover{background:rgba(191,236,207,.18)}
+  .np-detail-title{margin:0;font-size:clamp(1.25rem,2.4vw,1.8rem);line-height:1.05;letter-spacing:-.035em;color:#243028;overflow-wrap:anywhere}
+  .np-detail-sub{font-size:.92rem;line-height:1.5;color:#243028;margin:.35rem 0 0;max-width:720px}
+  .np-type-grid{display:block;margin-top:.75rem}
+  .np-type-list{display:grid;gap:.52rem;margin:0;padding:0;list-style:none}
+  .np-type{background:linear-gradient(135deg,#fff,#fbfffc 78%,rgba(191,236,207,.22));border:1px solid rgba(63,159,102,.18);border-left:4px solid rgba(63,159,102,.62);border-radius:14px;padding:.72rem .85rem}
+  .np-type:nth-child(4n+2){border-left-color:var(--np-sky);background:linear-gradient(135deg,#fff,#fbfffc 78%,rgba(183,223,242,.20))}
+  .np-type:nth-child(4n+3){border-left-color:var(--np-citrus);background:linear-gradient(135deg,#fff,#fbfffc 78%,rgba(244,213,111,.18))}
+  .np-type:nth-child(4n+4){border-left-color:var(--np-peach);background:linear-gradient(135deg,#fff,#fbfffc 78%,rgba(242,184,141,.16))}
+  .np-type-name{font-size:.94rem;font-weight:900;color:#243028;margin-bottom:.25rem;line-height:1.18}
+  .np-type-use{font-size:.8rem;font-weight:800;color:#1f6f43;margin-bottom:.32rem;line-height:1.28}
+  .np-type-note{font-size:.8rem;color:#243028;line-height:1.42}
+  .np-detail-meta{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.85rem}
+  .np-meta-pill{display:inline-block;border-radius:999px;background:#eef9f2;border:1px solid rgba(63,159,102,.16);color:#2f7f50;font-size:.72rem;font-weight:800;padding:.28rem .55rem}
+  .np-nb{font-size:.82rem;color:#243028;line-height:1.42;margin-bottom:.3rem;font-weight:700}
+  .np-nd{font-size:.82rem;color:#243028;line-height:1.45}
+  .np-rl{display:inline-block;color:var(--np-mint);text-decoration:none;font-size:.72rem;margin-top:.45rem;opacity:.82}
+  .np-rl:hover{opacity:1;text-decoration:underline}
+  .np-research-links{display:grid;gap:.42rem;margin-top:.7rem}
+  .np-research-links .np-rl{margin-top:0;border:1px solid rgba(63,159,102,.22);border-radius:999px;padding:.28rem .52rem;background:#fff;font-weight:800}
+  .np-research-panel{margin-top:1rem;border:1px solid rgba(63,159,102,.18);border-radius:14px;background:#fbfffc;overflow:hidden}
+  .np-research-title{padding:.58rem .75rem;background:linear-gradient(135deg,#eef9f2,#ffffff);border-bottom:1px solid rgba(63,159,102,.14);font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#243028}
+  .np-research-list{display:grid;gap:0;margin:0;padding:0;list-style:none}
+  .np-source-row{display:grid;grid-template-columns:9rem minmax(0,1fr);gap:.7rem;align-items:start;padding:.62rem .75rem;border-top:1px solid rgba(63,159,102,.10)}
+  .np-source-row:first-child{border-top:0}
+  .np-source-kind{font-size:.66rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#2f7f50;line-height:1.3}
+  .np-source-link{font-size:.82rem;font-weight:800;color:#1f6f43;text-decoration:none;line-height:1.32}
+  .np-source-link:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .np-source-note{display:block;margin-top:.12rem;font-size:.7rem;font-weight:600;color:rgba(36,48,40,.62);line-height:1.35}
+  .np-dose{display:inline-block;margin-top:.38rem;padding:.24rem .5rem;border-radius:999px;background:linear-gradient(135deg,#eef9f2,#fff7df);color:#2f7f50;font-size:.72rem;font-weight:800;border:1px solid rgba(63,159,102,.12)}
+  .np-overview{font-size:.9rem;color:#243028;line-height:1.52;white-space:pre-line}
+  .np-overview-list{display:grid;gap:.58rem;margin:0;padding:0;list-style:none;white-space:normal}
+  .np-overview-list li{position:relative;padding-left:1.1rem;line-height:1.5;color:#243028}
+  .np-overview-list li::before{content:'';position:absolute;left:0;top:.55em;width:.42rem;height:.42rem;border-radius:999px;background:linear-gradient(135deg,var(--np-mint),var(--np-citrus))}
+  .np-overview-list strong{font-weight:900;color:#1f6f43}
+  .np-save-card{padding:.55rem .75rem;margin-bottom:.55rem}
+  .np-save-card .np-sl{margin-bottom:.35rem}
+  .np-save-card .np-sum{font-size:.72rem;margin-bottom:.35rem;line-height:1.25}
+  .np-save-card .np-actions{margin:.2rem 0 0}
+  .np-print-head{display:none}
+
+  .np-pg{display:flex;flex-direction:column;gap:.55rem}
+  .np-pc{position:relative;background:#fff;border:1px solid rgba(191,236,207,.55);border-radius:16px;padding:.78rem;color:#303030;overflow:hidden}
+  .np-pc::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--np-mint),var(--np-citrus),var(--np-sky))}
+  .np-pmedia{display:grid;grid-template-columns:46px minmax(0,1fr);gap:.62rem;align-items:center;margin-bottom:.48rem;padding-top:.1rem}
+  .np-pimg{width:46px;height:46px;border-radius:13px;object-fit:cover;border:1px solid rgba(63,159,102,.18);background:#eef9f2;box-shadow:0 8px 16px rgba(45,92,59,.10)}
+  .np-pbrand{font-size:.58rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:#2f7f50;margin-bottom:.16rem;line-height:1}
+  .np-brand-logo{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:42px;border-radius:12px;border:1px solid rgba(63,159,102,.2);background:linear-gradient(135deg,#f2fbf5,#ffffff);color:#1f6f43;font-size:.62rem;font-weight:1000;letter-spacing:-.04em;line-height:.92;text-align:center;box-shadow:0 8px 14px rgba(45,92,59,.08)}
+  .np-brand-logo.is-cellutrex{background:linear-gradient(135deg,#eef8ff,#ffffff);color:#1f6f80}
+  .np-phead{padding-top:.18rem;margin-bottom:.48rem}
+  .np-pn{font-size:.86rem;font-weight:800;color:#303030;line-height:1.25;margin-bottom:.22rem}
+  .np-why{font-size:.72rem;color:#666;line-height:1.35;margin-bottom:.35rem}
+  .np-pp{font-size:.8rem;color:#4f9d70;font-weight:800;white-space:nowrap;margin-bottom:.45rem}
+  .np-pl{display:block;text-align:center;background:var(--np-mint);color:#303030;text-decoration:none;padding:.48rem .7rem;border-radius:999px;font-size:.64rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:2px solid #303030;white-space:nowrap}
+  .np-pl:hover{background:var(--np-mint-2)}
+  .np-detail-products{margin-top:1rem;border:1px solid rgba(63,159,102,.18);border-radius:16px;background:linear-gradient(135deg,#fbfffc,#ffffff);padding:.78rem}
+  .np-detail-products .np-sl{margin-bottom:.55rem}
+  .np-detail-products .np-pg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.55rem}
+  .np-follow-card{margin-top:.75rem}
+  .np-follow-intro{font-size:.9rem;line-height:1.48;color:rgba(36,48,40,.78);margin:0 0 .7rem}
+  .np-follow-messages{display:grid;gap:.62rem;margin-bottom:.68rem}
+  .np-follow-msg{border-radius:15px;padding:.78rem .86rem;font-size:.94rem;line-height:1.52;border:1px solid rgba(63,159,102,.16);background:#fff;color:#243028}
+  .np-follow-msg strong{display:block;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#2f7f50;margin-bottom:.28rem}
+  .np-follow-msg.is-user{background:linear-gradient(135deg,#eef9f2,#ffffff);border-left:4px solid var(--np-mint)}
+  .np-follow-msg.is-ai{background:linear-gradient(135deg,#ffffff,#fbfffc 70%,rgba(183,223,242,.16));border-left:4px solid var(--np-sky)}
+  .np-follow-msg.has-products{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:.78rem;align-items:start}
+  .np-follow-answer{min-width:0}
+  .np-follow-gaps{margin:.55rem 0 0;padding-left:1.05rem;color:#243028}
+  .np-follow-gaps li{margin:.18rem 0}
+  .np-follow-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem;align-items:stretch}
+  .np-follow-input{width:100%;min-height:44px;border:2px solid rgba(191,236,207,.9);border-radius:16px;padding:.68rem .78rem;font:inherit;font-size:.9rem;line-height:1.35;resize:vertical;color:#243028;background:#fff;outline:none}
+  .np-follow-input:focus{border-color:var(--np-mint);box-shadow:0 0 0 4px rgba(63,159,102,.12)}
+  .np-follow-btn{background:#243028;color:#fff;border:0;border-radius:999px;padding:.55rem .8rem;font-family:inherit;font-size:.66rem;font-weight:900;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+  .np-follow-btn:hover{background:#1f6f43}
+  .np-follow-products{margin-top:0;min-width:0}
+  .np-follow-products .np-sl{font-size:.66rem;letter-spacing:.1em;margin-bottom:.42rem;color:#1f6f43}
+  .np-follow-products .np-pg{display:grid;grid-template-columns:1fr;gap:.45rem}
+  .np-follow-products .np-pc{padding:.62rem}
+  .np-follow-products .np-pmedia{grid-template-columns:38px minmax(0,1fr);gap:.5rem;margin-bottom:.36rem}
+  .np-follow-products .np-brand-logo,.np-follow-products .np-pimg{width:38px;height:38px;min-width:38px;border-radius:10px}
+  .np-fda{font-size:.72rem;color:rgba(36,48,40,.56);font-style:italic;border-top:1px solid rgba(63,159,102,.12);padding-top:.9rem;margin-top:1.1rem;line-height:1.5}
+  .np-empty{background:#fff;border:1px solid rgba(63,159,102,.2);border-radius:18px;padding:1rem;color:rgba(36,48,40,.76);font-size:.9rem}
+  .np-loader-card{position:relative;overflow:hidden;display:flex;gap:.95rem;align-items:center;background:linear-gradient(135deg,#ffffff 0%,#fbfffc 56%,#eef9f2 100%);border:1px solid rgba(63,159,102,.24);box-shadow:0 16px 42px rgba(45,92,59,.10)}
+  .np-loader-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(191,236,207,.42),transparent);transform:translateX(-100%);animation:npSweep 1.65s ease-in-out infinite}
+  .np-loader-heart{position:relative;z-index:1;flex:0 0 54px;width:54px;height:54px;border-radius:18px;display:grid;place-items:center;background:radial-gradient(circle at 35% 22%,#fff 0 18%,rgba(255,247,223,.95) 19% 48%,rgba(191,236,207,.35) 49% 100%);border:1px solid rgba(63,159,102,.22);box-shadow:inset 0 0 0 6px rgba(255,255,255,.52),0 10px 22px rgba(45,92,59,.12);color:#e46b83;font-size:2rem;line-height:1;animation:npHeartbeat 1.05s ease-in-out infinite}
+  .np-loader-heart::before,.np-loader-heart::after{content:'';position:absolute;border-radius:999px;background:rgba(244,213,111,.78);opacity:.78;animation:npFloatHeart 1.8s ease-in-out infinite}
+  .np-loader-heart::before{width:.42rem;height:.42rem;right:.42rem;top:.42rem}
+  .np-loader-heart::after{width:.34rem;height:.34rem;left:.5rem;bottom:.56rem;background:rgba(63,159,102,.42);animation-delay:.35s}
+  .np-loader-copy{position:relative;z-index:1;min-width:0}
+  .np-loader-title{font-size:1rem;font-weight:900;color:#1f6f43;margin-bottom:.24rem;line-height:1.16}
+  .np-loader-text{font-size:.86rem;color:#243028;line-height:1.42;margin-bottom:.56rem}
+  .np-loader-steps{display:flex;gap:.35rem;flex-wrap:wrap}
+  .np-loader-steps span{display:inline-flex;align-items:center;border-radius:999px;background:#fff;border:1px solid rgba(63,159,102,.16);color:#2f7f50;font-size:.66rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding:.25rem .48rem;animation:npPulse 1.4s ease-in-out infinite}
+  .np-loader-steps span:nth-child(2){animation-delay:.18s}
+  .np-loader-steps span:nth-child(3){animation-delay:.36s}
+  @keyframes npPulse{0%,100%{transform:scale(1);opacity:.72}50%{transform:scale(1.04);opacity:1}}
+  @keyframes npHeartbeat{0%,100%{transform:scale(1) rotate(-2deg)}18%{transform:scale(1.16) rotate(2deg)}32%{transform:scale(.98) rotate(-1deg)}48%{transform:scale(1.1) rotate(1deg)}65%{transform:scale(1)}}
+  @keyframes npFloatHeart{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(-5px);opacity:1}}
+  @keyframes npSweep{0%{transform:translateX(-100%)}52%,100%{transform:translateX(100%)}}
+
+  @media (prefers-reduced-motion:reduce){
+    .np-loader-card::after,.np-loader-heart,.np-loader-heart::before,.np-loader-heart::after,.np-loader-steps span{animation:none!important}
+  }
+
+  @media (max-width:720px){
+    .np{
+      border-radius:14px;
+      padding:.85rem;
+      background:
+        radial-gradient(circle at 8% -2%, rgba(191,236,207,.55), transparent 13rem),
+        linear-gradient(180deg,#fbfffc 0%,#ffffff 46%,#f3fbf5 100%);
+    }
+    .np::before{height:5px}
+    .np::after{display:none}
+    .np-shell{max-width:100%}
+    .np-alpha-banner{margin:.12rem 0 .62rem;padding:.5rem .58rem;border-radius:13px;font-size:.76rem;line-height:1.3}
+    .np-alpha-banner a{font-size:.76rem}
+    .np-hd{justify-content:center;padding:.2rem 0 .65rem}
+    .np-brand{padding:0;border-radius:0;box-shadow:none;background:transparent;border:0}
+    .np-logo-img{width:min(190px,78vw)}
+    .np-nav{display:none}
+    .np-hero{padding:.15rem 0 .55rem;text-align:center}
+    .np-eye{font-size:.56rem;letter-spacing:.12em;gap:.32rem;padding:.28rem .55rem;margin-bottom:.5rem;max-width:100%}
+    .np-eye::before,.np-eye::after{width:.25rem;height:.25rem;flex:0 0 auto}
+    .np-h1{font-size:clamp(2.1rem,10.2vw,2.95rem);line-height:.9;letter-spacing:-.072em;margin:0 auto .55rem;text-align:center;max-width:100%}
+    .np-sub{font-size:.94rem;line-height:1.45;margin:0;color:rgba(36,48,40,.78);text-align:left}
+    .np-body{padding:.25rem 0 0}
+    .np-card{border-radius:16px;padding:.82rem;margin-bottom:.65rem;box-shadow:0 10px 28px rgba(45,92,59,.08)}
+    .np-input-head{align-items:flex-start;margin-bottom:.55rem}
+    .np-ai-status{font-size:.58rem;padding:.23rem .45rem}
+    .np-ai-status::before{width:.42rem;height:.42rem}
+    .np-row{flex-direction:column;gap:.55rem}
+    .np-ta{border-radius:18px;min-height:112px;padding:.82rem .88rem;font-size:1rem;line-height:1.42}
+    .np-btn{width:100%;min-height:48px;font-size:.78rem;padding:.78rem 1rem}
+    .np-btn::after{display:none}
+    .np-ack{font-size:.76rem;line-height:1.34;padding:.62rem .72rem;border-radius:15px;gap:.5rem}
+    .np-ack input{width:20px;height:20px}
+    .np-chips{display:grid;grid-template-columns:1fr 1fr;gap:.42rem;margin-top:.6rem}
+    .np-chip{width:100%;min-height:42px;padding:.48rem .45rem;font-size:.72rem;line-height:1.15;text-align:center}
+    .np-warning{font-size:.8rem;line-height:1.34;padding:.68rem .72rem;border-radius:15px;margin-bottom:.58rem}
+    .np-warning small{font-size:.72rem;line-height:1.32;margin-top:.36rem}
+    .np-results-grid{display:block}
+    .np-lookup-grid{display:block}
+    .np-research-side{margin-top:.7rem;border-radius:15px;padding:.78rem}
+    .np-research-side h3{font-size:.96rem}
+    .np-research-side ul{font-size:.76rem;line-height:1.38}
+    .np-mini-note{font-size:.74rem;line-height:1.36;padding:.62rem .68rem}
+    .np-clinical-summary li{font-size:.88rem;line-height:1.44}
+    .np-results-grid .np-sl{font-size:.82rem;letter-spacing:.095em;margin-bottom:.6rem;gap:.45rem}
+    .np-sum{font-size:.88rem;line-height:1.48;margin-bottom:.68rem}
+    .np-overview{font-size:.92rem;line-height:1.5}
+    .np-overview-list{gap:.5rem}
+    .np-overview-list li{padding-left:1rem;line-height:1.46}
+    .np-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.38rem;margin:.65rem 0 0}
+    .np-action{min-height:40px;padding:.45rem .35rem;font-size:.62rem;letter-spacing:.04em}
+    .np-nuts{gap:.55rem}
+    .np-nut{border-radius:14px;padding:.72rem .72rem .76rem .82rem;border-left-width:5px}
+    .np-nut::before{right:.58rem;top:.58rem;width:.34rem;height:.34rem;opacity:.65}
+    .np-nn{margin-bottom:.28rem;padding-right:1.1rem}
+    .np-nn-btn{font-size:1.02rem;line-height:1.18;display:block;width:100%}
+    .np-drill-hint{display:block;margin:.18rem 0 0;font-size:.68rem}
+    .np-nb{font-size:.86rem;line-height:1.35;margin-bottom:.32rem}
+    .np-nd{font-size:.86rem;line-height:1.48}
+    .np-dose{font-size:.72rem;line-height:1.2;margin-top:.42rem;white-space:normal}
+    .np-rl{font-size:.74rem;margin-top:.42rem}
+    .np-side{margin-top:.65rem}
+    .np-pg{gap:.5rem}
+    .np-pc{border-radius:14px;padding:.75rem}
+    .np-pn{font-size:.9rem;line-height:1.2}
+    .np-why{font-size:.78rem;line-height:1.34}
+    .np-pp{font-size:.82rem;margin-bottom:.42rem}
+    .np-pl{width:100%;min-height:40px;padding:.58rem .65rem;font-size:.66rem;color:#fff;border-color:transparent}
+    .np-follow-row{grid-template-columns:1fr;gap:.42rem}
+    .np-follow-btn{width:100%;min-height:42px}
+    .np-follow-input{font-size:1rem;min-height:74px}
+    .np-follow-msg{font-size:.98rem;line-height:1.5;padding:.82rem}
+    .np-follow-msg.has-products{display:block}
+    .np-follow-products{margin-top:.68rem}
+    .np-follow-products .np-pg{grid-template-columns:1fr}
+    .np-fda{font-size:.7rem;line-height:1.38;margin-top:.75rem;padding-top:.7rem}
+    .np-type-grid{grid-template-columns:1fr;gap:.55rem}
+    .np-detail-head{flex-direction:column;gap:.65rem}
+    .np-detail-title{font-size:1.55rem;line-height:1.05}
+    .np-detail-sub{font-size:.9rem;line-height:1.46}
+    .np-back{width:100%;min-height:42px;text-align:center}
+    .np-type{padding:.72rem .78rem;border-radius:13px}
+    .np-type-name{font-size:.96rem}
+    .np-type-use,.np-type-note{font-size:.82rem;line-height:1.42}
+  }
+
+  @media (max-width:420px){
+    .np{padding:.68rem;border-radius:12px}
+    .np-logo-img{width:min(176px,82vw)}
+    .np-h1{font-size:1.72rem}
+    .np-sub{font-size:.9rem}
+    .np-card{padding:.72rem;border-radius:15px}
+    .np-chips{grid-template-columns:1fr}
+    .np-actions{grid-template-columns:1fr}
+    .np-action{min-height:42px}
+    .np-results-grid .np-sl{font-size:.78rem;letter-spacing:.075em}
+    .np-overview,.np-nd{font-size:.84rem}
+    .np-nn-btn{font-size:.98rem}
+  }
+
+  /* Portrait phone/tablet override: keep active results readable when the host page has a side menu.
+     Some embeds report a wide layout viewport on phones, so max-width alone is not enough. */
+  @media (orientation:portrait) and (max-width:1024px){
+    .np{
+      width:100%!important;
+      max-width:100vw!important;
+      padding:.62rem!important;
+      border-radius:10px!important;
+    }
+    .np-shell,
+    .np-body{
+      width:100%!important;
+      max-width:100%!important;
+    }
+    .np-results-grid,
+    .np-lookup-grid,
+    .np-follow-msg.has-products,
+    .np-detail-products .np-pg{
+      display:block!important;
+      grid-template-columns:1fr!important;
+    }
+    .np-main,
+    .np-side,
+    .np-lookup-grid > *,
+    .np-follow-answer,
+    .np-follow-products,
+    .np-detail-products,
+    .np-research-side{
+      width:100%!important;
+      max-width:100%!important;
+      min-width:0!important;
+    }
+    .np-side,
+    .np-follow-products,
+    .np-detail-products{
+      position:static!important;
+      margin:.65rem 0 0!important;
+    }
+    /* The evidence-help rail is useful on desktop but becomes the thing users cannot read on portrait phones. */
+    .np-research-side{
+      display:none!important;
+    }
+    .np-source-row{
+      grid-template-columns:1fr!important;
+      gap:.18rem!important;
+    }
+    .np-tabs{
+      width:100%;
+      border-radius:18px;
+      padding:.28rem;
+      gap:.28rem;
+    }
+    .np-tab{
+      flex:1 1 100%;
+      min-height:42px;
+      white-space:normal;
+      line-height:1.12;
+      padding:.52rem .58rem;
+    }
+    .np-card,
+    .np-link-card,
+    .np-nut,
+    .np-type,
+    .np-follow-msg,
+    .np-pc{
+      overflow-wrap:anywhere;
+      word-break:normal;
+    }
+    .np-link-title,
+    .np-source-link,
+    .np-pl{
+      white-space:normal!important;
+    }
+    .np-focus-toggle{
+      display:block;
+    }
+    .np.is-focus-mode{
+      position:relative!important;
+      z-index:999999!important;
+      width:100%!important;
+      max-width:100%!important;
+    }
+    .np.is-focus-mode .np-nav,
+    .np.is-focus-mode .np-side,
+    .np.is-focus-mode .np-research-side,
+    .np.is-focus-mode .np-follow-products,
+    .np.is-focus-mode .np-detail-products{
+      display:none!important;
+    }
+    .np.is-focus-mode .np-results-grid,
+    .np.is-focus-mode .np-lookup-grid,
+    .np.is-focus-mode .np-follow-msg.has-products{
+      display:block!important;
+      grid-template-columns:1fr!important;
+    }
+  }
+
+
+  /* Phone fallback: catches real touch devices even when a platform uses a desktop-width layout viewport. */
+  @media (hover:none) and (pointer:coarse){
+    .np{border-radius:14px;padding:.85rem}
+    .np::after{display:none}
+    .np-hd{justify-content:center;padding:.2rem 0 .65rem}
+    .np-logo-img{width:min(190px,78vw)}
+    .np-nav{display:none}
+    .np-hero{text-align:center;padding:.15rem 0 .55rem}
+    .np-h1{font-size:clamp(2.1rem,10.2vw,2.95rem);line-height:.9;margin:0 auto .55rem;text-align:center;max-width:100%}
+    .np-sub{text-align:left;font-size:.94rem;line-height:1.45}
+    .np-card{border-radius:16px;padding:.82rem;margin-bottom:.65rem}
+    .np-row{flex-direction:column;gap:.55rem}
+    .np-ta{border-radius:18px;min-height:112px;font-size:1rem;line-height:1.42}
+    .np-btn{width:100%;min-height:48px}
+    .np-btn::after{display:none}
+    .np-chips{display:grid;grid-template-columns:1fr 1fr;gap:.42rem}
+    .np-chip{width:100%;min-height:42px;text-align:center}
+    .np-results-grid{display:block}
+    .np-lookup-grid{display:block}
+    .np-research-side{margin-top:.7rem;border-radius:15px;padding:.78rem}
+    .np-clinical-summary li{font-size:.88rem;line-height:1.44}
+    .np-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.38rem}
+    .np-nn-btn{font-size:1.02rem;display:block;width:100%}
+    .np-drill-hint{display:block;margin:.18rem 0 0}
+    .np-nd,.np-nb{font-size:.86rem;line-height:1.46}
+    .np-type-grid{grid-template-columns:1fr}
+    .np-detail-head{flex-direction:column}
+    .np-back,.np-pl{width:100%;min-height:42px}
+    .np-follow-row{grid-template-columns:1fr}
+    .np-follow-input{min-height:74px}
+    .np-follow-products .np-pg{grid-template-columns:1fr}
+  }
+
+  /* Container fallback: helps Shopify/app embeds that are narrow inside a wider preview window. */
+  @container (max-width:720px){
+    .np-hd{justify-content:center;padding:.2rem 0 .65rem}
+    .np-logo-img{width:min(190px,78cqw)}
+    .np-nav{display:none}
+    .np-hero{text-align:center;padding:.15rem 0 .55rem}
+    .np-h1{font-size:clamp(2.1rem,10.2cqw,2.95rem);line-height:.9;margin:0 auto .55rem;text-align:center;max-width:100%}
+    .np-sub{text-align:left;font-size:.94rem;line-height:1.45}
+    .np-row{flex-direction:column;gap:.55rem}
+    .np-ta{border-radius:18px;min-height:112px;font-size:1rem;line-height:1.42}
+    .np-btn{width:100%;min-height:48px}
+    .np-btn::after{display:none}
+    .np-chips{display:grid;grid-template-columns:1fr 1fr;gap:.42rem}
+    .np-results-grid,
+    .np-lookup-grid,
+    .np-follow-msg.has-products,
+    .np-detail-products .np-pg{display:block!important;grid-template-columns:1fr!important}
+    .np-main,
+    .np-side,
+    .np-lookup-grid > *,
+    .np-follow-answer,
+    .np-follow-products,
+    .np-detail-products{width:100%!important;max-width:100%!important;min-width:0!important}
+    .np-side,
+    .np-follow-products,
+    .np-detail-products{position:static!important;margin:.65rem 0 0!important}
+    .np-research-side{display:none!important}
+    .np-source-row{grid-template-columns:1fr!important;gap:.18rem!important}
+    .np-tabs{width:100%;border-radius:18px;padding:.28rem;gap:.28rem}
+    .np-tab{flex:1 1 100%;min-height:42px;white-space:normal;line-height:1.12;padding:.52rem .58rem}
+    .np-link-title,
+    .np-source-link,
+    .np-pl{white-space:normal!important}
+    .np-type-grid{grid-template-columns:1fr}
+    .np-detail-head{flex-direction:column}
+  }
+
+  @media print{
+    @page{size:letter;margin:.42in}
+    body{background:#fff!important}
+    body *{visibility:hidden!important}
+    .np-print-area,.np-print-area *{visibility:visible!important}
+    .np-print-area{position:absolute!important;left:0;top:0;width:100%;background:#fff!important;color:#111!important;padding:0!important;font-family:'DM Sans',Arial,sans-serif!important}
+    .np-print-head{display:flex!important;align-items:center;justify-content:space-between;border-bottom:2px solid #2f7f50;padding-bottom:.14in;margin-bottom:.14in}
+    .np-print-logo{height:.36in;width:auto;object-fit:contain}
+    .np-print-title{font-size:13px;font-weight:800;color:#243028;text-align:right;line-height:1.2}
+    .np-warning{font-size:8.2px!important;line-height:1.24!important;padding:.08in .1in!important;margin:0 0 .1in!important;border:1px solid #b7d8c2!important;box-shadow:none!important;background:#f7fff9!important;color:#111!important}
+    .np-warning small{font-size:7.4px!important;line-height:1.22!important;margin-top:.03in!important;color:#333!important}
+    .np-save-card,.np-side,.np-actions,.np-pl,.np-follow-card{display:none!important}
+    .np::before,.np::after,.np-nut::before,.np-pc::before,.np-eye::before,.np-eye::after,.np-btn::after,.np-nav::before{display:none!important}
+    .np-results-grid{display:block!important}
+    .np-card{box-shadow:none!important;background:#fff!important;color:#111!important;border:1px solid #cfd8d2!important;border-radius:8px!important;padding:.11in!important;margin:0 0 .1in!important;break-inside:avoid}
+    .np-main{display:block!important}
+    .np-main .np-card:nth-child(2){border:none!important;padding:0!important;margin:0!important}
+    .np-sl{font-size:9.2px!important;letter-spacing:.12em!important;color:#111!important;margin-bottom:.055in!important;font-weight:900!important}
+    .np-sl::after{background:#cfd8d2!important}
+    .np-overview,.np-sum{font-size:8.8px!important;line-height:1.34!important;color:#111!important;margin-bottom:.08in!important}
+    .np-overview-list{display:block!important;margin:0!important;padding:0!important;list-style:none!important}
+    .np-overview-list li{padding-left:0!important;margin:0 0 .05in!important;color:#111!important;line-height:1.34!important}
+    .np-overview-list li::before{display:none!important}
+    .np-overview-list strong{color:#111!important;font-weight:900!important}
+    .np-nuts{display:grid!important;grid-template-columns:1fr 1fr!important;gap:.08in!important;align-items:start!important}
+    .np-nut{break-inside:avoid!important;background:#fff!important;color:#111!important;border:1px solid #d7e4db!important;border-left:3px solid #2f7f50!important;border-radius:7px!important;padding:.07in .08in!important;margin:0!important}
+    .np-nn{font-size:9.2px!important;color:#111!important;margin:0 0 .02in!important;line-height:1.12!important}
+    .np-nn-btn{font-size:9.2px!important;color:#111!important;text-decoration:none!important}
+    .np-drill-hint,.np-back{display:none!important}
+    .np-nb{font-size:7.8px!important;color:#111!important;line-height:1.2!important;margin:0 0 .03in!important;font-weight:700!important}
+    .np-nd{font-size:7.5px!important;color:#222!important;line-height:1.22!important;margin:0!important}
+    .np-dose{font-size:7px!important;line-height:1.1!important;margin-top:.03in!important;padding:.02in .04in!important;background:#eef9f2!important;color:#1f6f43!important;border-radius:999px!important}
+    .np-rl{font-size:7px!important;color:#1f6f43!important;margin-top:.03in!important;text-decoration:none!important}
+  }
+</style>
+
+<div class="np">
+  <div class="np-shell">
+    <div class="np-alpha-banner" role="note" aria-label="Alpha testing notice">
+      <span><strong>Alpha testing:</strong> this feature is a work in progress.<br>We’d love to hear your feedback, please <a href="mailto:hello@nutrapass.club?subject=NutraPass%20alpha%20feature%20feedback&body=Hi%20NutraPass%2C%0A%0AI%20have%20feedback%20on%20the%20alpha%20testing%20feature%3A%0A%0A">click here</a> and we’ll review and make adjustments as we build.</span>
+    </div>
+    <div class="np-hd">
+      <a class="np-brand" href="https://nutrapass.club" target="_blank" rel="noopener" aria-label="NutraPass homepage">
+        <img class="np-logo-img" src="Art/nutrapass-logo-horizontal-leaf-black.png" alt="NutraPass" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+        <div class="np-logo-fallback">nutra<span>pass</span><sup>™</sup></div>
+      </a>
+    </div>
+
+    <div class="np-hero">
+      <div class="np-eye">Evidence Support • Not Medical Advice</div>
+      <h1 class="np-h1"><span class="np-title-pop">Research <span class="np-title-accent">Agent</span></span></h1>
+      <p class="np-sub">Explore nutritional solutions to meet your goals<br>In-depth clinical research access.</p>
+    </div>
+
+    <div class="np-body">
+      <div class="np-tabs" role="tablist" aria-label="NutraPass research tools">
+        <button class="np-tab is-active" id="npTabGuidance" type="button" role="tab" aria-selected="true" aria-controls="npPanelGuidance" onclick="npSwitchTab('guidance')">Personalized Results</button>
+        <button class="np-tab" id="npTabClinical" type="button" role="tab" aria-selected="false" aria-controls="npPanelClinical" onclick="npSwitchTab('clinical')">Clinical Research Lookup</button>
+      </div>
+
+      <div class="np-card np-panel" id="npPanelGuidance" role="tabpanel" aria-labelledby="npTabGuidance">
+        <div class="np-input-head">
+          <label class="np-lbl" for="npIn">Describe your goal or concern</label>
+          <span class="np-ai-status" id="npAiStatus" role="status" aria-live="polite">AI active</span>
+        </div>
+        <div class="np-row">
+          <textarea class="np-ta" id="npIn" placeholder="e.g. I have bloating and digestive issues after meals…" rows="3"></textarea>
+          <button class="np-btn" id="npBtn" type="button" onclick="npAsk()" disabled>Explore →</button>
+        </div>
+        <label class="np-ack" for="npAck">
+          <input id="npAck" type="checkbox" onchange="npToggleAck()">
+          <span><strong>I understand this is educational information only.</strong> These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease. I understand results may be AI-assisted and may be incomplete or incorrect. I will verify results and consult a healthcare professional before starting a new supplement regimen.</span>
+        </label>
+        <div class="np-privacy-note" role="note" aria-label="Privacy and AI processing notice">
+          <strong>Privacy:</strong> NutraPass will not collect, sell, or save your personal data from this tool. NutraPass does not save your questions or generated reports on our servers. When AI is active, your question and relevant report context are sent securely to our AI provider to generate the response.
+          <ul>
+            <li>Please avoid entering names, contact details, account numbers, or highly sensitive medical details.</li>
+            <li>If symptoms are severe, urgent, or rapidly worsening, seek emergency or professional medical care instead of using this tool.</li>
+          </ul>
+        </div>
+        <div class="np-chips" aria-label="Common goals">
+          <button class="np-chip" type="button" onclick="npSet('I want to improve my gut health and digestion')">Gut Health</button>
+          <button class="np-chip" type="button" onclick="npSet('I need better sleep and help managing stress')">Sleep &amp; Stress</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to support my immune system naturally')">Immune Support</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to build strength and improve body composition')">Strength &amp; Body</button>
+          <button class="np-chip" type="button" onclick="npSet('I have acid reflux and indigestion problems')">Acid &amp; Reflux</button>
+          <button class="np-chip" type="button" onclick="npSet('I want stronger hair skin and nails')">Hair Skin &amp; Nails</button>
+        </div>
+      </div>
+
+      <div class="np-card np-panel" id="npPanelClinical" role="tabpanel" aria-labelledby="npTabClinical" hidden>
+        <div class="np-input-head">
+          <label class="np-lbl" for="npClinicalIn">Clinical research lookup</label>
+          <span class="np-ai-status" id="npClinicalStatus" role="status" aria-live="polite">Evidence links</span>
+        </div>
+        <div class="np-row">
+          <textarea class="np-ta" id="npClinicalIn" placeholder="e.g. magnesium glycinate, vitamin D, berberine, ashwagandha, zinc…" rows="2"></textarea>
+          <button class="np-btn" id="npClinicalBtn" type="button" onclick="npClinicalLookup()">Look up →</button>
+        </div>
+        <p class="np-lookup-help">Enter one vitamin, mineral, herb, amino acid, botanical, or supplement ingredient. NutraPass will return a quick educational summary and research links to PubMed, clinical trials, safety searches, NIH/ODS when relevant, and broader literature. No login, storage, or personal health data needed. Charming, almost suspiciously responsible.</p>
+        <div class="np-chips" aria-label="Common clinical lookups">
+          <button class="np-chip" type="button" onclick="npSetClinical('Magnesium')">Magnesium</button>
+          <button class="np-chip" type="button" onclick="npSetClinical('Vitamin D')">Vitamin D</button>
+          <button class="np-chip" type="button" onclick="npSetClinical('Berberine')">Berberine</button>
+          <button class="np-chip" type="button" onclick="npSetClinical('Ashwagandha')">Ashwagandha</button>
+          <button class="np-chip" type="button" onclick="npSetClinical('Creatine')">Creatine</button>
+          <button class="np-chip" type="button" onclick="npSetClinical('Omega-3')">Omega-3</button>
+        </div>
+      </div>
+      <div id="npOut"></div>
+      <section class="np-card np-legal" aria-label="Privacy and medical disclaimer">
+        <div class="np-sl">Privacy &amp; Safety</div>
+        <p><strong>No personal-data collection:</strong> NutraPass will not collect, sell, or save your personal data from this tool. NutraPass does not save your questions, follow-up questions, or generated reports on our servers. The tool is designed to process the request and return a response without database, file, or browser local-storage saving.</p>
+        <p><strong>AI processing:</strong> When AI is active, your question and relevant report context are sent to our AI provider to generate the response. Avoid entering names, contact information, account numbers, or highly sensitive medical details.</p>
+        <p><strong>Educational only:</strong> Results are not medical advice, diagnosis, treatment, cure, mitigation, or prevention of any disease. Dietary supplement statements have not been evaluated by the FDA. Consult a qualified healthcare professional before changing supplements, medications, diet, or wellness routines, especially for pregnancy/nursing, children, medical conditions, medications, kidney concerns, blood thinners, severe symptoms, or persistent/worsening concerns.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  window.NUTRAPASS_AI_ENDPOINT = window.NUTRAPASS_AI_ENDPOINT || 'https://nutrapass-ai.eric-012.workers.dev';
+  var NP_AI_ENABLED = true;
+  var P=[
+    {n:'Ultimate Wellness Bundle',p:'$60.99',u:'https://nutrapass.club/products/ultimate-wellness-bundle-np',k:'wellness energy immunity vitamins general',w:'Broad daily wellness coverage',brand:'Silver Fern'},
+    {n:'Cleanse - Daily Gut Detox',p:'$49.99',u:'https://nutrapass.club/products/cleanse-daily-gut-detox-immunoglobulin-igg-1-new',k:'gut detox cleanse microbiome bloat digestion',w:'Gut reset and detox support',brand:'Silver Fern'},
+    {n:'Body Composition Kit',p:'$136.99',u:'https://nutrapass.club/products/body-composition-kit-new',k:'weight metabolism body composition fat muscle strength',w:'Metabolism and body goals',brand:'Silver Fern'},
+    {n:'Immune+ Protocol',p:'$78.99',u:'https://nutrapass.club/products/immune-protocol-new-and-improved-new',k:'immune immunity defense cold flu vitamin',w:'Immune system support',brand:'Silver Fern'},
+    {n:'Complete Biotic Kit',p:'$98.99',u:'https://nutrapass.club/products/complete-biotic-kit-pre-pro-and-post-biotics-new',k:'probiotic prebiotic postbiotic microbiome gut digestion',w:'Full-spectrum microbiome support',brand:'Silver Fern'},
+    {n:'Upper & Lower GI Support Kit',p:'$38.99',u:'https://nutrapass.club/products/upper-and-lower-gi-digestion-support-kit-gi-relief-and-digestive-enzymes-new',k:'digestion enzyme gi relief bloating gas acid indigestion',w:'Digestive comfort after meals',brand:'Silver Fern'},
+    {n:'K2-D3 Bone & Heart Support',p:'$21.99',u:'https://nutrapass.club/products/k2-d3-bone-and-heart-support-new',k:'bone heart vitamin d k2 calcium',w:'Bone and cardiovascular nutrients',brand:'Silver Fern'},
+    {n:'Ultimate Probiotic Bundle',p:'$42.99',u:'https://nutrapass.club/products/ultimate-probiotic-bundle-pack-adult-and-children-kit-new',k:'probiotic gut kids children family microbiome',w:'Family-friendly probiotic option',brand:'Silver Fern'},
+    {n:'Hair Complex - Keratin & Silica',p:'$22.99',u:'https://nutrapass.club/products/hair-complex-keratin-sea-buckthorn-and-silica-new',k:'hair growth keratin silica beauty nails skin',w:'Hair strength nutrients',brand:'Silver Fern'},
+    {n:'Whole Food Multivitamin',p:'$25.50',u:'https://nutrapass.club/products/whole-food-multivitamin-with-trace-mineral-blend-new',k:'multivitamin minerals vitamins daily energy wellness',w:'Daily vitamin/mineral foundation',brand:'Silver Fern'},
+    {n:'Joint Complex',p:'$33.99',u:'https://nutrapass.club/products/joint-complex-new',k:'joint pain inflammation arthritis mobility',w:'Mobility and joint comfort',brand:'Silver Fern'},
+    {n:'Hair Skin & Nails',p:'$50.99',u:'https://nutrapass.club/products/hair-skin-nails-brand-new-product-new',k:'hair skin nails beauty collagen biotin',w:'Beauty-from-within support',brand:'Silver Fern'},
+    {n:'Bloat Relief Kit',p:'$98.99',u:'https://nutrapass.club/products/bloat-relief-kit-new',k:'bloating gas fodmap gut relief ibs digestion',w:'Targets bloat and gas',brand:'Silver Fern'},
+    {n:'Upper GI Relief',p:'$20.50',u:'https://nutrapass.club/products/upper-gi-relief-acid-reflux-indigestion-gas-and-bloating-new',k:'acid reflux indigestion gas bloating gerd heartburn',w:'Upper digestive comfort',brand:'Silver Fern'},
+    {n:'Motility - Constipation Support',p:'$38.99',u:'https://nutrapass.club/products/motility-non-laxative-constipation-and-slow-motility-boost-new',k:'constipation motility bowel slow regularity fiber',w:'Non-laxative motility support',brand:'Silver Fern'},
+    {n:'Reflux Plus Kit',p:'$74.99',u:'https://nutrapass.club/products/reflux-plus-kit-original-acid-issues-kit-new',k:'acid reflux gerd indigestion kit heartburn',w:'Acid/reflux support kit',brand:'Silver Fern'},
+    {n:'Gut Rehab Kit',p:'$76.99',u:'https://nutrapass.club/products/gut-rehab-cleanse-daily-detox-and-the-ultimate-probiotic-combo-new',k:'gut rehab cleanse probiotic detox digestion microbiome',w:'Gut reset plus probiotic',brand:'Silver Fern'},
+    {n:'Metabolism Supplement',p:'$35.50',u:'https://nutrapass.club/products/metabolism-body-composition-supplement-new',k:'metabolism weight fat body composition energy',w:'Metabolic support',brand:'Silver Fern'},
+    {n:'Gut Repair',p:'$19.50',u:'https://nutrapass.club/products/gut-repair-protect-and-fortify-new',k:'gut repair leaky gut intestinal lining digestion',w:'Gut lining support',brand:'Silver Fern'},
+    {n:'Bloat & Gas Relief',p:'$28.99',u:'https://nutrapass.club/products/bloat-gas-relief-the-fodmap-solution-new',k:'bloat gas fodmap ibs digestive digestion',w:'FODMAP-related comfort',brand:'Silver Fern'},
+    {n:'Ultimate Fiber',p:'$27.50',u:'https://nutrapass.club/products/ultimate-fiber-3-prebiotic-fibers-in-1-new',k:'fiber prebiotic gut constipation microbiome regularity',w:'Prebiotic fiber blend',brand:'Silver Fern'},
+    {n:'Regularity',p:'$24.99',u:'https://nutrapass.club/products/regularity-a-non-laxative-constipation-solution-new',k:'constipation regularity bowel fiber motility',w:'Regularity support',brand:'Silver Fern'},
+    {n:'Postbiotic+',p:'$42.50',u:'https://nutrapass.club/products/postbiotic-gut-and-immune-health-support-new',k:'postbiotic gut immune butyrate microbiome',w:'Gut and immune support',brand:'Silver Fern'},
+    {n:'Stress Complex',p:'$24.99',u:'https://nutrapass.club/products/stress-complex-sleep-worry-and-more-non-caffeinated-caffeinated-supplement-options-new',k:'stress sleep anxiety worry cortisol burnout mood',w:'Calm and sleep support',brand:'Silver Fern'},
+    {n:'Sensitive Gut Fiber',p:'$24.99',u:'https://nutrapass.club/products/sensitive-gut-fiber-comfortable-prebiotic-new',k:'fiber prebiotic sensitive ibs gut constipation',w:'Gentler prebiotic option',brand:'Silver Fern'},
+    {n:'Build - Strength & Muscle',p:'$40.99',u:'https://nutrapass.club/products/build-strength-endurance-and-muscle-new',k:'muscle strength endurance protein build workout body',w:'Strength and endurance support',brand:'Silver Fern'},
+    {n:'Build Up Protocol',p:'$71.99',u:'https://nutrapass.club/products/build-up-protocol-new',k:'muscle strength protocol build endurance workout',w:'Stack for build goals',brand:'Silver Fern'},
+    {n:'The Burnout Kit',p:'$84.99',u:'https://nutrapass.club/products/the-burnout-kit-new',k:'burnout stress fatigue energy adrenal sleep',w:'Stress and fatigue stack',brand:'Silver Fern'},
+    {n:'Digestive Enzyme',p:'$24.99',u:'https://nutrapass.club/products/digestive-enzyme-with-100-intestinal-ph-coverage-90-servings-new',k:'enzyme digestion bloating gas absorption meal indigestion',w:'Meal-time digestion support',brand:'Silver Fern'},
+    {n:'H2O Electrolytes',p:'$18.95',u:'https://nutrapass.club/products/h2o-electrolytes™-variety-pack-20-count-zero-sugar-electrolyte-powder-1',k:'electrolytes hydration sodium energy sport muscle',w:'Hydration and performance support',brand:'Cellutrex'}
+  ];
+
+  var N=[
+    {nm:'Probiotics',b:'Support microbiome balance',id:'35945628',k:'gut digestion probiotic microbiome bloating gas ibs immune'},
+    {nm:'Prebiotic fiber',b:'Feeds beneficial gut bacteria',id:'29606185',k:'gut fiber prebiotic constipation regularity microbiome digestion'},
+    {nm:'Digestive enzymes',b:'Help break down meals',id:'33141923',k:'digestion enzyme bloating gas meal indigestion absorption'},
+    {nm:'Vitamin D3',b:'Supports immune function',id:'32252338',k:'immune immunity vitamin d cold flu bone wellness'},
+    {nm:'Vitamin K2',b:'Partners with vitamin D',id:'29597231',k:'bone heart vitamin k2 calcium d'},
+    {nm:'Magnesium',b:'Supports sleep and relaxation',id:'35184264',k:'sleep stress anxiety relaxation muscle cramps'},
+    {nm:'Ashwagandha',b:'May ease perceived stress',id:'31517876',k:'stress anxiety cortisol burnout sleep mood worry'},
+    {nm:'L-theanine',b:'Promotes calm focus',id:'31751906',k:'stress anxiety sleep focus calm mood'},
+    {nm:'Collagen peptides',b:'Supports skin elasticity',id:'33742704',k:'hair skin nails beauty collagen joints'},
+    {nm:'Biotin',b:'Supports hair and nails',id:'28879195',k:'hair skin nails biotin beauty keratin'},
+    {nm:'Protein',b:'Helps build lean mass',id:'28698222',k:'muscle strength build protein workout endurance body composition'},
+    {nm:'Creatine',b:'Supports strength output',id:'28615996',k:'muscle strength creatine build workout endurance'},
+    {nm:'Electrolytes',b:'Supports hydration balance',id:'33127939',k:'hydration electrolytes sport energy muscle sodium'},
+    {nm:'Ginger',b:'Settles occasional nausea',id:'25872115',k:'nausea digestion gastric stomach indigestion'},
+    {nm:'Zinc',b:'Supports immune defenses',id:'31305906',k:'immune immunity cold flu zinc skin'},
+    {nm:'Omega-3s',b:'Supports heart and inflammatory balance',id:'20439549',k:'heart joint inflammation wellness brain mood'},
+    {nm:'Joint support nutrients',b:'Blend category: compare collagen, omega-3s, turmeric/curcumin, glucosamine/chondroitin/MSM, and minerals rather than treating Joint Complex as one ingredient',id:'',k:'joint joints mobility comfort cartilage collagen glucosamine chondroitin msm turmeric curcumin inflammation'},
+    {nm:'Iron',b:'Supports oxygen transport when iron status is low',id:'29606326',k:'iron ferritin anemia fatigue tired ice craving restless legs pica heavy bleeding'},
+    {nm:'Vitamin C',b:'Supports collagen formation and iron absorption',id:'29099763',k:'vitamin c immune collagen skin iron absorption antioxidant'},
+    {nm:'Vitamin B12',b:'Supports normal energy metabolism and nerve function',id:'30632091',k:'b12 energy fatigue vegan numb tingling nerve anemia methylation'},
+    {nm:'Folate',b:'Supports red blood cell and methylation pathways',id:'28615270',k:'folate b vitamin energy methylation pregnancy anemia'},
+    {nm:'Turmeric / curcumin',b:'Supports a healthy inflammatory response',id:'29065496',k:'turmeric curcumin inflammation joint soreness mobility recovery'},
+    {nm:'Melatonin',b:'Supports sleep timing and circadian rhythm',id:'31910165',k:'sleep insomnia circadian jet lag shift work melatonin'},
+    {nm:'Peppermint oil',b:'Used in digestive-comfort research',id:'24100754',k:'peppermint ibs gut cramps bloating digestive comfort'},
+    {nm:'L-glutamine',b:'Amino acid often compared for gut lining support',id:'27749689',k:'glutamine gut lining repair intestinal leaky gut recovery'},
+    {nm:'NAC',b:'Supports glutathione and antioxidant pathways',id:'30753302',k:'nac antioxidant glutathione respiratory detox liver'},
+    {nm:'CoQ10',b:'Supports cellular energy pathways',id:'30302465',k:'coq10 energy mitochondria heart statin fatigue'},
+    {nm:'Psyllium husk',b:'Supports regularity and soluble fiber intake',id:'30239559',k:'psyllium fiber constipation regularity cholesterol stool bowel soluble'},
+    {nm:'PHGG',b:'Gentler prebiotic fiber option',id:'32144785',k:'phgg guar fiber sensitive gut ibs bloating regularity prebiotic'},
+    {nm:'Butyrate / postbiotics',b:'Supports gut-barrier and microbiome signaling',id:'32828753',k:'butyrate postbiotic gut barrier microbiome immune digestion'},
+    {nm:'Calcium',b:'Supports bone and muscle function',id:'29597231',k:'calcium bone muscle cramp vitamin d k2 osteoporosis'},
+    {nm:'Potassium',b:'Supports fluid balance and normal muscle function',id:'33127939',k:'potassium electrolyte hydration cramps muscle blood pressure sodium'},
+    {nm:'Selenium',b:'Supports antioxidant and thyroid-related nutrient status',id:'30509983',k:'selenium thyroid immune antioxidant hair nails'},
+    {nm:'Iodine',b:'Supports thyroid hormone production when intake is low',id:'30836838',k:'iodine thyroid energy metabolism fatigue'},
+    {nm:'Choline',b:'Supports liver, brain, and methylation pathways',id:'28727693',k:'choline liver brain cognition methylation pregnancy'},
+    {nm:'Vitamin E',b:'Supports antioxidant and skin-barrier nutrition',id:'33127954',k:'vitamin e antioxidant skin immune oxidative'},
+    {nm:'Vitamin A / carotenoids',b:'Supports vision, skin, and immune nutrition',id:'31360389',k:'vitamin a carotenoid beta carotene skin eyes immune acne'},
+    {nm:'Rhodiola',b:'Adaptogen compared for fatigue and resilience',id:'29325481',k:'rhodiola fatigue stress burnout energy adaptogen mood'},
+    {nm:'Glycine',b:'Amino acid compared for sleep quality routines',id:'22529837',k:'glycine sleep relaxation bedtime stress'},
+    {nm:'Tart cherry',b:'Compared for sleep timing and exercise recovery',id:'22038497',k:'tart cherry sleep melatonin recovery soreness workout'},
+    {nm:'Valerian',b:'Herbal sleep-support comparison',id:'30091337',k:'valerian sleep insomnia relaxation bedtime'},
+    {nm:'Quercetin',b:'Plant flavonoid antioxidant support',id:'27187333',k:'quercetin seasonal immune antioxidant sinus allergy'},
+    {nm:'Elderberry',b:'Seasonal immune-support comparison',id:'33827515',k:'elderberry immune cold flu seasonal antioxidant'},
+    {nm:'Green tea extract',b:'Metabolic and antioxidant comparison',id:'26093535',k:'green tea egcg metabolism weight antioxidant energy'},
+    {nm:'Berberine',b:'Metabolic wellness comparison',id:'28289059',k:'berberine metabolism glucose weight cholesterol insulin'},
+    {nm:'Cinnamon',b:'Blood-sugar wellness comparison',id:'30396627',k:'cinnamon glucose blood sugar metabolism insulin'},
+    {nm:'Beetroot',b:'Nitric-oxide and endurance support comparison',id:'28484991',k:'beetroot nitric oxide endurance blood flow workout performance'},
+    {nm:'L-citrulline',b:'Blood-flow and exercise-performance comparison',id:'31977835',k:'citrulline nitric oxide blood flow pump endurance workout'},
+    {nm:'Beta-alanine',b:'High-intensity exercise support comparison',id:'28889528',k:'beta alanine endurance workout performance muscle tingles'},
+    {nm:'Silica',b:'Hair, skin, nail, and connective-tissue nutrient comparison',id:'27438201',k:'silica hair skin nails collagen connective beauty'},
+    {nm:'Keratin',b:'Hair and nail structure support comparison',id:'27438201',k:'keratin hair nails beauty strength'}
+  ];
+
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function tokens(goal){return String(goal||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);}
+  function scoreKeywords(keywordString, words){
+    var keys=keywordString.split(/\s+/), score=0;
+    keys.forEach(function(k){
+      words.forEach(function(w){
+        if(w===k || (w.length>4 && (w.indexOf(k)===0 || k.indexOf(w)===0))) score+=1;
+      });
+    });
+    return score;
+  }
+  function topProds(goal,n){
+    var words=tokens(goal);
+    return P.map(function(p){return {p:p,s:scoreKeywords(p.k,words)};})
+      .sort(function(a,b){return b.s-a.s || a.p.n.localeCompare(b.p.n);})
+      .slice(0,n).map(function(x){return x.p;});
+  }
+  function topNutrients(goal,n){
+    var words=tokens(goal);
+    var picked=N.map(function(x){return {x:x,s:scoreKeywords(x.k,words)};})
+      .sort(function(a,b){return b.s-a.s || a.x.nm.localeCompare(b.x.nm);})
+      .slice(0,n).map(function(v){return v.x;});
+    return picked;
+  }
+  function summary(goal){
+    var g=String(goal||'').toLowerCase();
+    if(/reflux|acid|heartburn|indigestion/.test(g)) return 'For reflux or upper-GI discomfort, start with gentle digestive support and products focused on acid balance and post-meal comfort.';
+    if(/sleep|stress|anxiety|burnout|worry/.test(g)) return 'For stress and sleep goals, calming nutrients and burnout-focused support are the strongest match.';
+    if(/immune|cold|flu/.test(g)) return 'For immune support, focus on foundational vitamins, gut-immune nutrients, and daily consistency.';
+    if(/strength|muscle|body|composition|weight|metabolism|workout/.test(g)) return 'For strength and body composition, pair training with protein, hydration, and metabolism-focused support.';
+    if(/hair|skin|nail|beauty/.test(g)) return 'For hair, skin, and nails, look for structural nutrients that support keratin, collagen, and mineral status.';
+    if(/gut|digest|bloat|gas|constipation|ibs|microbiome/.test(g)) return 'For gut health, matching the product to the specific pattern—bloat, regularity, reflux, or microbiome support—matters most.';
+    return 'Here are practical nutrition matches based on the goal you described, with products selected by keyword relevance.';
+  }
+
+  window.npSet=function(t){document.getElementById('npIn').value=t;document.getElementById('npIn').focus();};
+  window.npSwitchTab=function(tab){
+    var guidance=tab==='guidance';
+    var panelGuidance=document.getElementById('npPanelGuidance'), panelClinical=document.getElementById('npPanelClinical');
+    var tabGuidance=document.getElementById('npTabGuidance'), tabClinical=document.getElementById('npTabClinical');
+    if(panelGuidance) panelGuidance.hidden=!guidance;
+    if(panelClinical) panelClinical.hidden=guidance;
+    if(tabGuidance){tabGuidance.className='np-tab'+(guidance?' is-active':'');tabGuidance.setAttribute('aria-selected',guidance?'true':'false');}
+    if(tabClinical){tabClinical.className='np-tab'+(!guidance?' is-active':'');tabClinical.setAttribute('aria-selected',!guidance?'true':'false');}
+    var out=document.getElementById('npOut');
+    if(out) out.innerHTML='';
+  };
+  window.npSetClinical=function(t){var el=document.getElementById('npClinicalIn'); if(el){el.value=t;el.focus();}};
+  function npClinicalSummary(term){
+    var t=String(term||'').toLowerCase();
+    if(/magnesium/.test(t)) return 'Magnesium is an essential mineral involved in normal muscle function, nerve signaling, energy metabolism, and relaxation routines. Research varies by form, dose, population, and outcome, so compare the exact form used in a study with the product label.';
+    if(/vitamin\s*d|d3/.test(t)) return 'Vitamin D is a fat-soluble nutrient commonly studied for bone health, immune function, muscle function, and nutrient status. Blood levels, baseline deficiency, dose, and co-nutrients such as calcium or vitamin K can change how evidence applies.';
+    if(/berberine/.test(t)) return 'Berberine is a plant alkaloid studied mostly in metabolic-wellness contexts. It has meaningful interaction and tolerability considerations, so it is a research topic to review carefully rather than a casual add-on.';
+    if(/ashwagandha/.test(t)) return 'Ashwagandha is an adaptogenic herb studied for perceived stress, sleep quality, and resilience markers. Extract type, withanolide standardization, thyroid context, pregnancy/nursing, autoimmune issues, and medication use matter.';
+    if(/creatine/.test(t)) return 'Creatine, especially creatine monohydrate, is widely studied for strength, power output, lean-mass support, and training adaptation. Hydration, dose consistency, and kidney-related medical context should be considered.';
+    if(/omega|fish oil|epa|dha/.test(t)) return 'Omega-3 fatty acids such as EPA and DHA are studied for heart, brain, inflammatory-balance, and general wellness contexts. Compare actual EPA+DHA per serving, not just total fish oil, and review bleeding-risk or medication considerations.';
+    return 'This lookup is an educational research starting point for the ingredient named above. Evidence quality depends on the exact form, dose, population studied, outcome measured, and safety context; compare those details before applying any study to a real product.';
+  }
+  function npClinicalSummaryHtml(summary){
+    var text=String(summary||'').trim();
+    if(!text) return '';
+    var sentences=text.split(/(?<=[.!?])\s+/).map(function(x){return x.trim();}).filter(Boolean);
+    if(sentences.length<2) sentences=[text];
+    var labels=['Evidence snapshot','What to compare','Safety check','NutraPass note'];
+    return '<div class="np-clinical-summary"><ul>'+sentences.slice(0,4).map(function(sentence,i){
+      var label=labels[i]||'Research note';
+      return '<li><strong>'+esc(label)+':</strong> '+esc(sentence)+'</li>';
+    }).join('')+'</ul></div>';
+  }
+  function npClinicalProducts(term){
+    var t=String(term||'').toLowerCase();
+    var names=[];
+    function add(name){if(names.indexOf(name)<0) names.push(name);}
+    if(/magnesium|glycinate|sleep|calm|stress/.test(t)){add('Stress Complex');add('The Burnout Kit');add('Whole Food Multivitamin');}
+    if(/vitamin\s*d|d3|k2|calcium|bone/.test(t)){add('K2-D3 Bone & Heart Support');add('Whole Food Multivitamin');add('Ultimate Wellness Bundle');}
+    if(/berberine|glucose|metabolic|metabolism|weight/.test(t)){add('Metabolism Supplement');add('Body Composition Kit');add('Ultimate Fiber');}
+    if(/ashwagandha|adaptogen|cortisol|burnout/.test(t)){add('Stress Complex');add('The Burnout Kit');add('Ultimate Wellness Bundle');}
+    if(/creatine|muscle|strength|workout/.test(t)){add('Build - Strength & Muscle');add('Build Up Protocol');add('H2O Electrolytes');}
+    if(/omega|fish oil|epa|dha|joint|heart/.test(t)){add('Joint Complex');add('Ultimate Wellness Bundle');add('K2-D3 Bone & Heart Support');}
+    if(/probiotic|prebiotic|fiber|gut|digest|bloat|gas|constipat|regularity/.test(t)){add('Complete Biotic Kit');add('Upper & Lower GI Support Kit');add('Bloat Relief Kit');add('Ultimate Fiber');}
+    var products=names.map(npProductByName).filter(Boolean);
+    if(!products.length) products=topProds(term,4);
+    return products.slice(0,4);
+  }
+
+  function npOdsUrl(term){
+    var t=String(term||'').toLowerCase();
+    var map={
+      'vitamin d':'VitaminD-Consumer','vitamin d3':'VitaminD-Consumer','magnesium':'Magnesium-Consumer','zinc':'Zinc-Consumer','iron':'Iron-Consumer','vitamin c':'VitaminC-Consumer','vitamin b12':'VitaminB12-Consumer','folate':'Folate-Consumer','calcium':'Calcium-Consumer','potassium':'Potassium-Consumer','selenium':'Selenium-Consumer','iodine':'Iodine-Consumer','vitamin e':'VitaminE-Consumer','vitamin a':'VitaminA-Consumer','choline':'Choline-Consumer'
+    };
+    var key=Object.keys(map).filter(function(k){return t===k || t.indexOf(k)>=0;})[0];
+    return key?'https://ods.od.nih.gov/factsheets/'+map[key]+'/':'';
+  }
+  function npClinicalLinks(term, aiLinks){
+    var name=String(term||'supplement ingredient').trim();
+    var q=encodeURIComponent(name);
+    var rows=[];
+    function row(kind,title,url,note){rows.push({kind:kind,title:title,url:url,note:note});}
+    row('PubMed reviews','PubMed review search for '+name,'https://pubmed.ncbi.nlm.nih.gov/?term='+q+'+supplement+review','Best first stop for review papers and broader evidence summaries.');
+    row('Human trials','PubMed clinical trial search for '+name,'https://pubmed.ncbi.nlm.nih.gov/?term='+q+'+supplement+clinical+trial','Human-study oriented search; check population, dose, duration, and outcomes.');
+    row('Safety','PubMed safety / interaction search for '+name,'https://pubmed.ncbi.nlm.nih.gov/?term='+q+'+supplement+safety+interaction','Use this for medication, pregnancy/nursing, adverse event, and contraindication context.');
+    row('ClinicalTrials.gov','ClinicalTrials.gov search for '+name,'https://clinicaltrials.gov/search?term='+q,'Registered trials, including completed, recruiting, and unpublished-result contexts.');
+    var ods=npOdsUrl(name); if(ods) row('NIH ODS','NIH Office of Dietary Supplements fact sheet: '+name,ods,'Consumer-friendly nutrient overview from NIH ODS.');
+    row('Google Scholar','Google Scholar search for '+name+' supplement review','https://scholar.google.com/scholar?q='+q+'+supplement+review','Broader academic search beyond PubMed indexing.');
+    row('Examine','Examine search for '+name,'https://examine.com/search/?q='+q,'Useful secondary evidence database; verify against primary sources.');
+    row('NutraPass labels','NutraPass product search for '+name,'https://nutrapass.club/search?q='+q,'Compare research to actual Supplement Facts panels and serving sizes.');
+    (aiLinks||[]).slice(0,8).forEach(function(l){if(l&&l.url) row(l.kind||'AI surfaced',l.title||l.url,l.url,l.note||'AI-surfaced source; verify before relying on it.');});
+    return rows;
+  }
+  function npClinicalRender(term,payload,out){
+    var summary=(payload&&payload.summary)||npClinicalSummary(term);
+    var links=npClinicalLinks(term,(payload&&payload.links)||[]);
+    var products=npClinicalProducts(term);
+    var productPanel=npRelatedProductsPanel(products,'Related Products Available on NutraPass');
+    out.innerHTML='<div class="np-card"><div class="np-sl">Clinical Research Lookup</div><div class="np-lookup-grid"><div><h2 class="np-detail-title">'+esc(term)+'</h2>'+npClinicalSummaryHtml(summary)+'<ul class="np-link-list">'+links.map(function(l){return '<li class="np-link-card"><div class="np-link-kind">'+esc(l.kind)+'</div><a class="np-link-title" href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.title)+' →</a><span class="np-link-note">'+esc(l.note)+'</span></li>';}).join('')+'</ul></div><aside class="np-research-side"><h3>How to read the evidence</h3><ul><li>Prioritize human trials and systematic reviews over marketing pages.</li><li>Match ingredient form, dose, duration, and population to the product label.</li><li>Search safety and interactions before stacking supplements.</li><li>Use this as research support, not medical advice. The lawyers have tiny pitchforks.</li></ul><div class="np-mini-note"><strong>Privacy:</strong> NutraPass does not save lookup terms on our servers. If AI is active, the lookup term is sent to the AI provider to generate the summary.</div></aside></div>'+productPanel+'</div>';
+    npJumpToResults(out);
+  }
+  async function npTryClinicalAi(term){
+    if(!NP_AI_ENABLED || !window.NUTRAPASS_AI_ENDPOINT || !window.fetch) return null;
+    var res=await fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clinicalLookup:term})});
+    if(!res.ok) throw new Error('NutraPass clinical lookup returned '+res.status);
+    return await res.json();
+  }
+  window.npClinicalLookup=async function(){
+    var input=document.getElementById('npClinicalIn'), out=document.getElementById('npOut');
+    var term=input?input.value.trim():'';
+    if(!term){out.innerHTML='<div class="np-empty">Enter a vitamin, mineral, herb, or supplement ingredient first.</div>';return;}
+    out.innerHTML='<div class="np-empty np-loader-card" role="status"><div class="np-loader-heart">⌕</div><div class="np-loader-copy"><div class="np-loader-title">Searching clinical research starting points…</div><div class="np-loader-text">Building summary, safety searches, and literature links.</div></div></div>';
+    npJumpToResults(out);
+    try{
+      var payload=await npTryClinicalAi(term);
+      npClinicalRender(term,payload,out);
+    }catch(err){
+      console.warn('NutraPass clinical lookup fallback:',err);
+      npClinicalRender(term,null,out);
+      npAiFallbackNotice(out);
+    }
+  };
+  function npStaticAsk(input,out){
+    npRender({goal:input,s:summary(input),n:topNutrients(input,16)},topProds(input,6),out);
+    npJumpToResults(out);
+  }
+  function npJumpToResults(out){
+    if(out&&out.scrollIntoView) out.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function npLoading(out){
+    out.innerHTML='<div class="np-empty np-loader-card" role="status" aria-live="polite"><div class="np-loader-heart" aria-hidden="true" aria-label="NutraPass heart loading animation">♥</div><div class="np-loader-copy"><div class="np-loader-title">Building your NutraPass response…</div><div class="np-loader-text">Reviewing your goal against ingredient research, product fit, and safety notes.</div><div class="np-loader-steps" aria-hidden="true"><span>Reading</span><span>Matching</span><span>Checking</span></div></div></div>';
+    npJumpToResults(out);
+  }
+  function npSetAiStatus(active){
+    var el=document.getElementById('npAiStatus');
+    if(!el) return;
+    el.textContent=active?'AI active':'AI offline';
+    el.className='np-ai-status'+(active?'':' is-off');
+  }
+  function npAiFallbackNotice(out){
+    npSetAiStatus(false);
+  }
+  function npProductByName(name){
+    name=String(name||'').toLowerCase();
+    return P.filter(function(p){return p.n.toLowerCase()===name;})[0] || null;
+  }
+  function npProductBrand(p){return (p&&p.brand)||'';}
+  function npProductImage(p){return (p&&p.img)||(p&&p.imageUrl)||'';}
+  function npNormalizeIngredientName(name){
+    var n=String(name||'').trim();
+    if(/^joint complex$/i.test(n)) return 'Joint support nutrients';
+    return n;
+  }
+  function npCleanBestFit(text){return String(text||'').replace(/^(Top Match|Additional Option to Compare):\s*/i,'');}
+  function npIngredientByName(name){
+    name=npNormalizeIngredientName(name).toLowerCase();
+    return N.filter(function(n){return n.nm.toLowerCase()===name;})[0] || null;
+  }
+  function renderAiResponse(payload,out,input){
+    var ingredients=(payload.ingredientNotes||payload.ingredients||[]).map(function(item){
+      var itemName=npNormalizeIngredientName(item.name||item.nm);
+      var base=npIngredientByName(itemName)||{nm:itemName||'Ingredient',b:npCleanBestFit(item.bestFit||item.b)||'Educational research note',id:item.pubmedId||item.id||'',k:''};
+      return {nm:base.nm,b:npCleanBestFit(item.bestFit||base.b),id:item.pubmedId||base.id,k:base.k,detail:item.researchContext||item.detail||ingredientDetail(base),dose:item.typicalRange||item.dose||ingredientDose(base)};
+    });
+    if(!ingredients.length) ingredients=topNutrients(input,16);
+    var products=(payload.products||[]).map(function(item){
+      var base=npProductByName(item.name||item.n)||null;
+      return base?Object.assign({},base,{brand:item.brand||base.brand,imageUrl:item.imageUrl||item.img||base.img,why:item.why||base.w}):item;
+    }).filter(Boolean);
+    if(!products.length) products=topProds(input,6);
+    npRender({goal:input,s:payload.summary||summary(input),n:ingredients,overview:payload.nutritionOverview||''},products,out);
+    npJumpToResults(out);
+  }
+  async function npTryAi(input,out){
+    if(!NP_AI_ENABLED || !window.NUTRAPASS_AI_ENDPOINT || !window.fetch) return false;
+    var localIngredients=topNutrients(input,20).map(function(n){return {name:n.nm,bestFit:n.b,pubmedId:n.id};});
+    var localProducts=topProds(input,6).map(function(p){return {name:p.n,brand:p.brand||'',price:p.p,url:p.u,imageUrl:p.img||'',why:p.w};});
+    var res=await fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal:input,products:localProducts,ingredients:localIngredients})});
+    if(!res.ok) throw new Error('NutraPass AI backend returned '+res.status);
+    var payload=await res.json();
+    npSetAiStatus(!(payload && /^fallback/.test(String(payload.mode||''))));
+    renderAiResponse(payload,out,input);
+    return true;
+  }
+  window.npAsk=async function(){
+    var input=document.getElementById('npIn').value.trim();
+    var out=document.getElementById('npOut');
+    var ack=document.getElementById('npAck');
+    if(!ack || !ack.checked){out.innerHTML='<div class="np-empty">Please check the educational-use acknowledgment before exploring product research results.</div>';return;}
+    if(!input){out.innerHTML='<div class="np-empty">Tell us your wellness goal first, or pick one of the quick-start buttons.</div>';return;}
+    window.npLastReport=null;
+    npLoading(out);
+    try{
+      npSetAiStatus(true);
+      var usedAi=await npTryAi(input,out);
+      if(!usedAi){npSetAiStatus(false);npStaticAsk(input,out);}
+    }catch(err){
+      console.warn('NutraPass AI fallback:',err);
+      npStaticAsk(input,out);
+      npAiFallbackNotice(out);
+    }
+  };
+
+  function ingredientDetail(n){
+    if(n && n.detail) return n.detail;
+    var map={
+      'Probiotics':'Often researched for microbiome balance, digestive comfort, bowel regularity, and gut-immune signaling. Strain, dose, and use-case matter, so product labels should be checked carefully.',
+      'Prebiotic fiber':'Fibers such as inulin, PHGG, or resistant starch can feed beneficial gut bacteria and support regularity. Start low and increase gradually because some people notice gas or bloating.',
+      'Digestive enzymes':'Enzyme blends are used as meal-time support for breaking down proteins, fats, carbohydrates, or lactose. Match the enzyme type to the foods that seem to trigger discomfort.',
+      'Vitamin D3':'Vitamin D is commonly researched for immune and bone-health support. Blood levels, dose, and existing medications/conditions should be discussed with a healthcare professional.',
+      'Vitamin K2':'K2 is often paired with vitamin D in bone and cardiovascular wellness discussions. People using blood thinners should ask a clinician before changing vitamin K intake.',
+      'Magnesium':'Magnesium is researched for muscle function, relaxation, sleep quality, and normal nerve function. Forms differ: glycinate is often positioned for calm, citrate for regularity.',
+      'Ashwagandha':'An adaptogenic herb researched for perceived stress and sleep quality. It may not be appropriate for pregnancy, thyroid conditions, autoimmune issues, or some medications.',
+      'L-theanine':'An amino acid from tea researched for calm focus and relaxation without heavy sedation. Often considered for stress-focused routines and evening wind-down support.',
+      'Collagen peptides':'Collagen peptides are researched for skin elasticity, joint comfort, and connective tissue support. Benefits depend on consistent use and adequate total protein/vitamin C intake.',
+      'Biotin':'Biotin supports normal hair, skin, and nail biology, but deficiency is uncommon. High-dose biotin can interfere with some lab tests, so users should tell their clinician.',
+      'Protein':'Protein supports lean mass, recovery, satiety, and body-composition goals when paired with resistance training. Total daily intake matters more than any single product.',
+      'Creatine':'Creatine monohydrate is well-studied for strength, power output, and lean-mass support. Hydration and kidney-related medical questions should be discussed with a professional.',
+      'Electrolytes':'Electrolytes support hydration balance, especially with sweating, low-carb diets, travel, or endurance activity. Sodium/potassium needs vary by person and medical context.',
+      'Ginger':'Ginger is researched for digestive comfort and occasional nausea. It can interact with some medications and may not fit every reflux pattern.',
+      'Zinc':'Zinc supports normal immune function and skin health. Long-term high intake can affect copper status, so dose and duration matter.',
+      'Omega-3s':'Omega-3 fatty acids are researched for heart, brain, inflammatory balance, and joint-comfort support. People on blood thinners or preparing for surgery should ask a clinician.',
+      'Joint support nutrients':'This is a comparison category rather than a single ingredient. Joint-support blends may combine collagen peptides, omega-3s, turmeric/curcumin, glucosamine/chondroitin/MSM, vitamin C, or minerals; compare the actual Supplement Facts panel instead of assuming all “joint complex” products are the same.'
+    };
+    return map[n.nm] || 'Research relevance depends on the ingredient form, dose, product quality, and the user’s health context. Review labels and discuss with a qualified professional.';
+  }
+  function ingredientDose(n){
+    if(n && n.dose) return n.dose;
+    var map={
+      'Probiotics':'Typical label range: 1–10+ billion CFU/day, depending on strain and purpose.',
+      'Prebiotic fiber':'Typical label range: 2–5 g/day to start; many people increase gradually as tolerated.',
+      'Digestive enzymes':'Typical use: 1 serving with meals, following the product label for enzyme units and serving size.',
+      'Vitamin D3':'Common supplemental range: 1,000–2,000 IU/day, but blood levels and clinician guidance matter.',
+      'Vitamin K2':'Common supplemental range: 90–200 mcg/day; ask a clinician if using blood thinners.',
+      'Magnesium':'Common supplemental range: 100–400 mg/day elemental magnesium, depending on form and tolerance.',
+      'Ashwagandha':'Common extract range: 300–600 mg/day; not appropriate for everyone.',
+      'L-theanine':'Common supplemental range: 100–200 mg as needed or daily, depending on product directions.',
+      'Collagen peptides':'Common range: 5–15 g/day, often mixed into drinks or smoothies.',
+      'Biotin':'Common label range varies widely, often 30–5,000 mcg/day; high doses can interfere with lab tests.',
+      'Protein':'Typical target depends on body size and activity; many plans use 20–40 g protein per serving/meal.',
+      'Creatine':'Common range: 3–5 g/day creatine monohydrate.',
+      'Electrolytes':'Typical serving varies by sodium/potassium content and sweat losses; follow label and medical guidance.',
+      'Ginger':'Common supplemental range: 500–1,500 mg/day, depending on form and tolerance.',
+      'Zinc':'Common range: 10–30 mg/day; avoid long-term high-dose use without professional guidance.',
+      'Omega-3s':'Common range: 1–2 g/day combined EPA/DHA, depending on product and clinician guidance.',
+      'Joint support nutrients':'No single range — check each included nutrient or botanical on the product label and compare overlap with other supplements.'
+    };
+    return map[n.nm] || 'Typical dosage depends on form, label directions, and individual context.';
+  }
+
+  function ingredientTypes(n){
+    var map={
+      'Probiotics':[
+        {name:'Lactobacillus strains',use:'Digestive comfort and gut-barrier support',note:'Commonly seen in formulas for bloating, occasional diarrhea support, and general microbiome balance. Strain names matter more than the generic word “probiotic.”'},
+        {name:'Bifidobacterium strains',use:'Regularity and microbiome balance',note:'Frequently researched for bowel pattern support and gut comfort, especially in multi-strain blends.'},
+        {name:'Saccharomyces boulardii',use:'Travel or antibiotic-associated digestive support',note:'A beneficial yeast probiotic often studied separately from bacterial probiotic strains.'},
+        {name:'Spore-forming probiotics',use:'Shelf-stable gut support',note:'Usually Bacillus species. Often marketed for durability; compare species, CFU, and clinical context.'}
+      ],
+      'Prebiotic fiber':[
+        {name:'Partially hydrolyzed guar gum (PHGG)',use:'Gentler regularity and sensitive-gut support',note:'Often positioned as a better-tolerated soluble fiber; useful when bloating sensitivity is a concern.'},
+        {name:'Inulin / FOS',use:'Microbiome feeding',note:'Well-known prebiotic fibers that can increase beneficial bacteria, but may cause gas for sensitive users.'},
+        {name:'Resistant starch',use:'Short-chain fatty acid support',note:'A fermentable carbohydrate found in cooled potatoes/rice and some supplements; researched for microbiome effects.'},
+        {name:'Psyllium husk',use:'Bowel regularity and cholesterol support',note:'A gel-forming soluble fiber. Usually taken with plenty of water and separated from medications.'}
+      ],
+      'Digestive enzymes':[
+        {name:'Protease',use:'Protein digestion',note:'Targets protein-containing meals. Often paired with broad-spectrum enzyme blends.'},
+        {name:'Lipase',use:'Fat digestion',note:'Supports breakdown of dietary fats; product labels may list enzyme activity units.'},
+        {name:'Amylase',use:'Carbohydrate digestion',note:'Targets starches and carbohydrates, commonly included in broad meal-time enzyme products.'},
+        {name:'Lactase / alpha-galactosidase',use:'Specific trigger-food support',note:'Lactase targets lactose; alpha-galactosidase is used for beans/cruciferous vegetables and gas-prone foods.'}
+      ],
+      'Vitamin D3':[
+        {name:'Vitamin D3 softgels',use:'Daily vitamin D support',note:'Often oil-based for absorption. Blood testing helps personalize whether supplementation is needed.'},
+        {name:'D3 + K2 combinations',use:'Bone and cardiovascular wellness positioning',note:'Common pairing in wellness formulas; K2 is not appropriate for everyone, especially with warfarin.'},
+        {name:'Liquid D3 drops',use:'Flexible dosing',note:'Useful when adjusting serving size, but label concentration must be read carefully.'},
+        {name:'D3 in multivitamins',use:'Foundational coverage',note:'Can duplicate with stand-alone D3, so total daily intake should be checked.'}
+      ],
+      'Vitamin K2':[
+        {name:'MK-7',use:'Longer-acting K2 form',note:'Common in D3/K2 products; often dosed in micrograms.'},
+        {name:'MK-4',use:'Alternate K2 form',note:'Studied differently than MK-7 and often used at different serving sizes.'},
+        {name:'D3/K2 blends',use:'Bone-health stacks',note:'Popular combined formula; medication interactions with vitamin K are the main caution.'},
+        {name:'Food sources',use:'Dietary K2 exposure',note:'Natto and some fermented/animal foods contain K2, though amounts vary widely.'}
+      ],
+      'Magnesium':[
+        {name:'Magnesium glycinate',use:'Calm and sleep-positioned support',note:'Often marketed as gentler and less laxative than citrate; compare elemental magnesium amount.'},
+        {name:'Magnesium citrate',use:'Regularity support',note:'Can loosen stools, which may be helpful or unwanted depending on the user.'},
+        {name:'Magnesium malate',use:'Muscle/energy-positioned support',note:'Common in formulas aimed at muscle function or daytime use.'},
+        {name:'Magnesium threonate',use:'Brain/sleep-positioned support',note:'Often premium-priced; look at total elemental magnesium and evidence fit.'}
+      ],
+      'Ashwagandha':[
+        {name:'KSM-66® extract',use:'Stress and resilience support',note:'Root extract commonly used in studies and branded products.'},
+        {name:'Sensoril® extract',use:'Calm/sleep-positioned support',note:'Root-and-leaf extract used in some stress formulas; dosing may differ from KSM-66.'},
+        {name:'Standardized withanolides',use:'Quality comparison marker',note:'Labels may list withanolide percentage; more is not automatically better.'},
+        {name:'Combination stress blends',use:'Stacked calming formulas',note:'Often combined with magnesium, L-theanine, or adaptogens; avoid stacking too many calming products.'}
+      ],
+      'L-theanine':[
+        {name:'Standalone L-theanine',use:'Calm focus',note:'Usually used during the day or evening depending on the goal.'},
+        {name:'L-theanine + caffeine',use:'Focused energy',note:'Common nootropic pairing; not ideal for late-day sleep goals.'},
+        {name:'L-theanine + magnesium',use:'Evening wind-down',note:'Often used in sleep/stress blends for a non-sedating calm profile.'},
+        {name:'Tea-derived theanine',use:'Food/beverage source',note:'Green and black tea contain theanine, though caffeine content varies.'}
+      ],
+      'Collagen peptides':[
+        {name:'Hydrolyzed collagen peptides',use:'Skin and connective tissue support',note:'Powder form commonly used daily; consistency matters.'},
+        {name:'Type I/III collagen',use:'Skin, hair, nails positioning',note:'Most beauty collagen products emphasize these collagen types.'},
+        {name:'Type II collagen',use:'Joint comfort positioning',note:'Often marketed separately from beauty collagen; serving size differs.'},
+        {name:'Collagen + vitamin C',use:'Collagen synthesis support',note:'Vitamin C is a cofactor for collagen formation and is often paired in formulas.'}
+      ],
+      'Biotin':[
+        {name:'Low-dose biotin',use:'Daily nutrient coverage',note:'Closer to dietary-support levels and often included in multis.'},
+        {name:'High-dose biotin',use:'Hair/nail marketed formulas',note:'Can interfere with lab tests; users should tell clinicians before bloodwork.'},
+        {name:'Biotin blends',use:'Beauty stacks',note:'Often combined with collagen, silica, keratin, or minerals.'},
+        {name:'Food sources',use:'Dietary support',note:'Eggs, nuts, seeds, legumes, and meats contribute biotin intake.'}
+      ],
+      'Protein':[
+        {name:'Whey protein',use:'Fast, complete protein',note:'Popular for strength and recovery; not suitable for all dairy-sensitive users.'},
+        {name:'Plant protein blends',use:'Dairy-free protein support',note:'Pea/rice blends can improve amino-acid coverage; texture varies.'},
+        {name:'Collagen protein',use:'Connective tissue positioning',note:'Not a complete muscle-building protein by itself; lower in leucine.'},
+        {name:'Essential amino acids',use:'Low-volume amino support',note:'Used when full protein servings are not tolerated, but food/protein totals still matter.'}
+      ],
+      'Creatine':[
+        {name:'Creatine monohydrate',use:'Strength and power output',note:'Most studied and usually the default comparison point.'},
+        {name:'Micronized creatine',use:'Mixability-focused monohydrate',note:'Still creatine monohydrate, processed for texture/mixing.'},
+        {name:'Buffered/alternate creatines',use:'Premium-positioned alternatives',note:'Often marketed for tolerance; evidence usually still favors monohydrate as baseline.'},
+        {name:'Creatine blends',use:'Workout stacks',note:'May include electrolytes or performance nutrients; check caffeine/stimulants if present.'}
+      ],
+      'Electrolytes':[
+        {name:'Sodium-forward hydration',use:'Sweat/training support',note:'Useful when sweating heavily; sodium needs vary with blood pressure and medical context.'},
+        {name:'Potassium-containing formulas',use:'Fluid balance support',note:'Important electrolyte, but supplemental potassium has medication/medical cautions.'},
+        {name:'Magnesium-containing formulas',use:'Muscle function support',note:'Usually smaller amounts than stand-alone magnesium products.'},
+        {name:'Low/no-sugar packets',use:'Daily hydration convenience',note:'Good for travel or sports; compare sodium, sweeteners, and serving count.'}
+      ],
+      'Ginger':[
+        {name:'Ginger root powder',use:'General digestive comfort',note:'Traditional form; serving size varies by capsule or powder.'},
+        {name:'Standardized ginger extract',use:'Concentrated support',note:'May list gingerols/shogaols; stronger is not always better for reflux-prone users.'},
+        {name:'Ginger chews/tea',use:'Occasional nausea support',note:'Food-like delivery, but sugar content can vary.'},
+        {name:'Ginger blends',use:'Digestive formulas',note:'Often paired with enzymes, peppermint, or bitters; peppermint may not suit reflux.'}
+      ],
+      'Zinc':[
+        {name:'Zinc picolinate/citrate',use:'Common daily zinc forms',note:'Often used in immune and skin products; check elemental zinc amount.'},
+        {name:'Zinc lozenges',use:'Short-term throat/cold-season support',note:'Used differently from daily zinc; taste and nausea can be limiting.'},
+        {name:'Zinc + copper',use:'Longer-term balance',note:'Copper is sometimes included because high zinc over time can affect copper status.'},
+        {name:'Zinc in multivitamins',use:'Foundational coverage',note:'Avoid accidentally duplicating zinc across immune formulas and multis.'}
+      ],
+      'Omega-3s':[
+        {name:'Fish oil EPA/DHA',use:'Heart and inflammatory balance support',note:'Compare actual EPA+DHA per serving, not just total fish oil.'},
+        {name:'High-EPA formulas',use:'Mood/inflammation-positioned products',note:'Often selected when EPA is the primary target.'},
+        {name:'Algae omega-3',use:'Vegan DHA/EPA option',note:'Useful for plant-based users; DHA-forward products are common.'},
+        {name:'Krill oil',use:'Alternative marine omega-3',note:'Usually lower EPA/DHA per serving; compare label math carefully.'}
+      ]
+    };
+    return map[n.nm] || [
+      {name:'Standardized extract/form',use:'Compare active form and dose',note:'Look for the exact ingredient form, serving size, standardization, and study context.'},
+      {name:'Combination formula',use:'Stacked support',note:'Can be convenient, but check overlap and avoid adding several new actives at once.'},
+      {name:'Food-first source',use:'Dietary foundation',note:'Food, sleep, hydration, and routine changes should remain the base layer.'}
+    ];
+  }
+  function npResearchLinks(n){
+    var name=(n&&n.nm)||'nutrition supplement';
+    var q=encodeURIComponent(name);
+    var rows=[];
+    function row(kind,label,url,note){
+      rows.push('<li class="np-source-row"><div class="np-source-kind">'+esc(kind)+'</div><div><a class="np-source-link" href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(label)+' →</a><span class="np-source-note">'+esc(note)+'</span></div></li>');
+    }
+    if(n&&n.id) row('Direct citation','PubMed PMID '+n.id,'https://pubmed.ncbi.nlm.nih.gov/'+esc(n.id)+'/','Specific citation attached to this ingredient note.');
+    row('Broader literature search','PubMed search: reviews for '+name,'https://pubmed.ncbi.nlm.nih.gov/?term='+q+'+supplement+review','Review articles and clinical/nutrition literature mentioning this ingredient.');
+    row('Clinical trials search','PubMed clinical trials: '+name,'https://pubmed.ncbi.nlm.nih.gov/?term='+q+'+supplement+clinical+trial','Human-study oriented search; evaluate population, dose, form, and outcome.');
+    row('Safety search','PubMed safety/interactions: '+name,'https://pubmed.ncbi.nlm.nih.gov/?term='+q+'+supplement+safety+interaction','Use for medication, pregnancy/nursing, condition, and adverse-effect context.');
+    row('Scholar search','Google Scholar: '+name+' supplement review','https://scholar.google.com/scholar?q='+q+'+supplement+review','Broader academic search beyond PubMed indexing.');
+    row('Label comparison','Search NutraPass/product labels for '+name,'https://nutrapass.club/search?q='+q,'Compare actual Supplement Facts panels and serving sizes before choosing.');
+    return '<div class="np-research-panel"><div class="np-research-title">Clinical research links</div><ul class="np-research-list">'+rows.join('')+'</ul></div>';
+  }
+  function npTrimSentence(s){return String(s||'').replace(/[.!?]+$/,'');}
+  function npRenderIngredientDetail(index){
+    var data=window.npLastReport;
+    if(!data || !data.ingredients || !data.ingredients[index]) return;
+    var n=data.ingredients[index], out=document.getElementById('npOut'), types=ingredientTypes(n);
+    var typeHtml='<ul class="np-type-list">'+types.map(function(t){return '<li class="np-type"><div class="np-type-name">'+esc(t.name)+'</div><div class="np-type-use">'+esc(t.use)+'</div><div class="np-type-note">'+esc(t.note)+'</div></li>';}).join('')+'</ul>';
+    var ref=npResearchLinks(n);
+    var products=npRelatedProductsPanel(data.products,'Related Products Available on NutraPass');
+    out.innerHTML=
+      '<div class="np-card np-detail-card"><div class="np-detail-head"><div><div class="np-sl">Ingredient Drill-Down</div><h2 class="np-detail-title">'+esc(n.nm)+'</h2><p class="np-detail-sub">'+esc(npTrimSentence(n.b))+'. Compare forms, fit, cautions, and source links before choosing.</p></div><button class="np-back" type="button" onclick="npBackToResults()">← Back</button></div><div class="np-type-grid">'+typeHtml+'</div><div class="np-detail-meta"><span class="np-meta-pill">Typical range: '+esc(ingredientDose(n))+'</span></div><p class="np-nd" style="margin-top:.8rem">'+esc(ingredientDetail(n))+'</p>'+ref+products+'</div>';
+    out.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  window.npIngredientDetail=npRenderIngredientDetail;
+  window.npBackToResults=function(){
+    var data=window.npLastReport;
+    if(!data) return;
+    npRender({goal:data.goal, s:data.summary, n:data.ingredients}, data.products, document.getElementById('npOut'));
+  };
+
+  function nutritionOverview(goal, ingredients){
+    var g=String(goal||'').toLowerCase();
+    var names=(ingredients||[]).slice(0,6).map(function(n){return n.nm.toLowerCase();}).join(', ');
+    var safety='Supplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care. Introduce one new item at a time, follow labels, and check with a qualified healthcare professional if pregnant/nursing, using medications, managing a condition, or if symptoms are severe, persistent, or worsening.';
+    function block(overview, eat, doNow, options){
+      return 'What may be going on: '+overview+'\n\n'+
+        'Food first: '+eat+'\n\n'+
+        'Easy things to try: '+doNow+'\n\n'+
+        'Nutrition options to compare: '+options+'\n\n'+
+        safety;
+    }
+    if(/ice|dirt|clay|chalk|pica|restless leg|restless legs|heavy bleeding|ferritin|iron/.test(g)) return block(
+      'craving ice or non-food items, restless legs, unusual fatigue, or heavy bleeding can sometimes overlap with iron-status questions, low ferritin, B-vitamin status, sleep disruption, stress load, pregnancy, or absorption issues. This is worth lab-based follow-up rather than guessing from symptoms alone.',
+      'iron-containing foods such as lean meats, seafood, beans, lentils, tofu, spinach, pumpkin seeds, and fortified foods; pair plant iron with vitamin C-rich foods like citrus, berries, kiwi, bell pepper, or broccoli.',
+      'track when cravings or restless-leg sensations happen, note energy, dizziness, shortness of breath, menstrual/blood-loss context, caffeine timing, and sleep schedule, then ask a clinician about CBC, ferritin, and iron studies if it persists.',
+      'iron status labs, vitamin C with meals, B12/folate status, magnesium for normal muscle relaxation, hydration, and protein adequacy. Do not start high-dose iron without blood work and professional guidance because excess iron can be unsafe.'
+    );
+    if(/reflux|acid|heartburn|indigestion|gerd|burning|burp/.test(g)) return block(
+      'upper-digestive discomfort can be influenced by meal size, eating pace, late-night meals, higher-fat meals, caffeine/alcohol, spicy or acidic foods, mint/chocolate triggers, stress, and individual tolerance patterns. Burning, chest discomfort, trouble swallowing, vomiting blood, or unexplained weight loss should be handled medically.',
+      'smaller balanced meals; lower-fat evening meals; oatmeal, bananas, lean proteins, cooked vegetables, and non-mint herbal tea if tolerated.',
+      'avoid lying down right after eating, leave 2–3 hours before bed, slow down meals, elevate the head of the bed if nights are worse, and track triggers such as coffee, alcohol, chocolate, mint, spicy foods, and large late meals.',
+      'digestive enzymes for meal-time support, ginger only if tolerated, and upper-GI/reflux-focused products. Avoid anything that worsens burning or nausea.'
+    );
+    if(/bloat|bloated|gas|fodmap|ibs|distend/.test(g)) return block(
+      'bloating and gas patterns can be influenced by how quickly meals are eaten, fermentable carbohydrates/FODMAP load, constipation or slow transit, microbiome shifts, fiber changes, carbonated drinks, stress, and food tolerance. Persistent severe pain, blood in stool, fever, or unexplained weight loss should be reviewed professionally.',
+      'simple, tolerated foods while observing patterns: oats, rice/potatoes, lean protein, cooked vegetables, kiwi, yogurt/kefir if tolerated, and adequate fluids. Increase beans, cruciferous vegetables, and high-fiber foods gradually.',
+      'walk 5–10 minutes after meals, eat slower, try a short food/symptom log, avoid changing several foods or supplements at once, and notice whether symptoms track with dairy, wheat, onions/garlic, carbonated drinks, or large portions.',
+      'digestive enzymes, probiotics/postbiotics, gentle prebiotic fiber, peppermint oil only if reflux is not an issue, and bloat/FODMAP-focused products.'
+    );
+    if(/constipat|regularity|bowel|motility|poop|stool/.test(g)) return block(
+      'regularity issues can be influenced by fluid intake, fiber type, low food volume, travel, schedule changes, inactivity, stress, medications, magnesium intake, and normal motility patterns. Severe abdominal pain, vomiting, or prolonged constipation needs medical guidance.',
+      'kiwi, prunes, oats, chia/flax, beans/lentils as tolerated, cooked vegetables, enough fluids, and regular meals rather than skipping food all day.',
+      'build a consistent morning routine, walk daily, increase fiber gradually, pair fiber with water, and track whether travel, stress, or low meal volume changes bowel patterns.',
+      'prebiotic fiber, magnesium forms that support regularity, probiotics/postbiotics, and motility/regularity products. Add slowly to avoid making gas or bloating worse.'
+    );
+    if(/sleep|insomnia|stress|anxiety|burnout|worry|cortisol|tired|fatigue/.test(g)) return block(
+      'sleep, stress, and low-energy patterns can be influenced by caffeine timing, inconsistent sleep/wake rhythm, evening light exposure, high stress load, under-eating, low protein, low magnesium intake, overtraining, alcohol, and mood or thyroid/iron/B12 issues. Persistent fatigue, panic symptoms, or major mood changes deserve professional support.',
+      'protein at meals, magnesium-rich foods such as pumpkin seeds/spinach/beans, complex carbs at dinner if tolerated, steady hydration, and lower caffeine intake after late morning or early afternoon.',
+      'set a consistent wind-down time, dim screens/lights before bed, get morning daylight, keep workouts earlier if they feel stimulating, and use breathing or a short walk to downshift stress.',
+      'magnesium, L-theanine, melatonin for timing-focused sleep needs, stress-support blends such as ashwagandha, plus iron/B12/folate status if fatigue is prominent. Use caution with thyroid, mood, pregnancy/nursing, or medication considerations.'
+    );
+    if(/immune|cold|flu|sick|sinus|seasonal/.test(g)) return block(
+      'immune-support needs are often shaped by sleep quality, stress load, vitamin D status, protein intake, gut health, hydration, seasonal exposure, and overall diet quality. Frequent, severe, or prolonged infections should be discussed with a clinician.',
+      'colorful fruits/vegetables, citrus or berries, protein with each meal, zinc foods like seafood/meat/pumpkin seeds, fermented foods, and steady hydration.',
+      'prioritize sleep, wash hands, keep workouts moderate when run down, get daylight, and avoid megadosing single nutrients for long periods.',
+      'vitamin D3, zinc, vitamin C, probiotics/postbiotics, and a multivitamin if diet gaps are likely. Compare dose limits and avoid duplicating nutrients across products.'
+    );
+    if(/strength|muscle|body|composition|weight|metabolism|workout|cramp|calf|sore|recovery/.test(g)) return block(
+      'body-composition, cramping, soreness, and performance goals can be influenced by protein distribution, training progression, hydration/electrolytes, sleep, total energy intake, magnesium status, and recovery time. Sudden one-sided calf pain, swelling, warmth, chest pain, or shortness of breath should be treated as urgent.',
+      'protein-forward meals, Greek yogurt/eggs/lean meats/beans, high-fiber carbs around activity, fruits/vegetables, and fluids with electrolytes when sweating.',
+      'lift consistently, walk daily, plan protein at breakfast, stretch or mobilize tight areas gently, sleep enough for recovery, and track progress with strength/energy/waist or fit rather than day-to-day scale noise only.',
+      'protein, creatine, electrolytes, magnesium, omega-3s, and metabolism/body-composition products. Supplements work best when training, meals, and sleep are already consistent.'
+    );
+    if(/hair|skin|nail|beauty|collagen|acne|dry skin/.test(g)) return block(
+      'hair, skin, and nail changes can be influenced by protein intake, iron/zinc status, essential fatty acids, thyroid or hormone changes, stress load, biotin status, collagen support, skin barrier habits, and normal growth cycles. Sudden hair loss, brittle nails, or major skin changes should be evaluated.',
+      'adequate protein, vitamin-C foods, eggs/fish/lean meats or legumes, nuts/seeds, colorful produce, omega-3-rich foods, and enough calories overall.',
+      'be consistent for 8–12+ weeks, avoid crash dieting, protect sleep, simplify harsh skin/hair routines, and consider labs if changes are sudden or persistent.',
+      'collagen peptides, biotin, zinc, omega-3s, hair/skin/nail blends, and mineral-containing multis. Avoid assuming more is better; high-dose biotin can interfere with some lab tests.'
+    );
+    return block(
+      'your question does not match one narrow category, so this overview is prioritizing broad wellness drivers: meal quality, protein and fiber intake, hydration, sleep rhythm, stress load, movement patterns, and possible nutrient gaps. The most useful next step is usually to identify the main pattern—energy, digestion, sleep, immune support, body composition, or beauty support—then match nutrition options to that pattern.',
+      'a protein source, high-fiber plants, colorful produce, healthy fats, and enough fluids; adjust choices to tolerance and preferences.',
+      'pick one primary goal, make one food or routine change for a week, note energy/digestion/sleep changes, and avoid adding multiple supplements at once.',
+      'the top ingredient matches surfaced here include '+names+'. Compare forms, serving sizes, cautions, and overlap before choosing a product.'
+    );
+  }
+  function formatOverviewHtml(text){
+    var labels=['What may be going on','Food first','Easy things to try','Nutrition options to compare'];
+    var parts=String(text||'').split(/\n\n+/).filter(Boolean);
+    if(!parts.length) return '';
+    return '<ul class="np-overview-list">'+parts.map(function(part){
+      var label='', body=part;
+      labels.some(function(l){
+        var prefix=l+': ';
+        if(part.indexOf(prefix)===0){label=l;body=part.slice(prefix.length);return true;}
+        return false;
+      });
+      if(label) return '<li><strong>'+esc(label)+':</strong> '+esc(body)+'</li>';
+      return '<li>'+esc(part)+'</li>';
+    }).join('')+'</ul>';
+  }
+  function wrapEmailLine(text, indent){
+    text=String(text||'').replace(/\s+/g,' ').trim();
+    indent=indent||'';
+    var max=78, words=text.split(' '), line=indent, out=[];
+    words.forEach(function(w){
+      if((line+w).length>max){out.push(line.trimEnd());line=indent+w+' ';}
+      else line+=w+' ';
+    });
+    if(line.trim()) out.push(line.trimEnd());
+    return out.join('\n');
+  }
+  function formatOverviewForEmail(text){
+    return String(text||'')
+      .replace(/What may be going on: /g,'• What may be going on: ')
+      .replace(/Potential causes: /g,'• What may be going on: ')
+      .replace(/Food first: /g,'• Food first: ')
+      .replace(/Easy things to try: /g,'• Easy things to try: ')
+      .replace(/Nutrition options to compare: /g,'• Nutrition options to compare: ')
+      .split(/\n\n+/)
+      .map(function(line){return wrapEmailLine(line,'  ');})
+      .join('\n\n');
+  }
+  function npReportContextForFollowup(data){
+    data=data||window.npLastReport||{};
+    return {
+      goal:data.goal||'',
+      summary:data.summary||'',
+      overview:data.overview||'',
+      ingredients:(data.ingredients||[]).slice(0,12).map(function(n){return {name:n.nm,bestFit:n.b,researchContext:ingredientDetail(n),typicalRange:ingredientDose(n),pubmedId:n.id||''};}),
+      products:(data.products||[]).slice(0,6).map(function(p){return {name:p.n||p.name,brand:npProductBrand(p),price:p.p||p.price||'',url:npProductSearchUrl(p),imageUrl:npProductImage(p),why:p.w||p.why||''};})
+    };
+  }
+  function npStaticFollowupAnswer(q,data){
+    var names=(data&&data.ingredients||[]).slice(0,3).map(function(n){return n.nm;}).join(', ');
+    return (names?'A good next step is to compare '+names+' against your timing, foods, and tolerance. ':'A good next step is to add timing, food triggers, and tolerance details. ')+'Keep the base simple: food, hydration, sleep, and routine first. If symptoms are severe, persistent, worsening, or medication-related, check with a qualified professional.';
+  }
+  function npFormatFollowupText(text){
+    return esc(text).replace(/\*\*/g,'').replace(/\n\s*[-•]\s*/g,'<br>• ').replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>');
+  }
+  function npRenderFollowupMessages(){
+    var data=window.npLastReport, box=document.getElementById('npFollowMessages');
+    if(!box || !data) return;
+    var turns=data.followUps||[];
+    if(!turns.length){box.innerHTML='<div class="np-follow-msg is-ai"><strong>NutraPass follow-up</strong>Ask a follow-up without losing this report. Good examples: “Which one should I compare first?”, “What foods should I try?”, or “What details would change this result?”</div>';return;}
+    box.innerHTML=turns.map(function(t){
+      if(t.role==='user') return '<div class="np-follow-msg is-user"><strong>You</strong>'+esc(t.text)+'</div>';
+      var gapItems=(t.gaps||[]).slice(0,1);
+      var gaps=gapItems.length?'<ul class="np-follow-gaps">'+gapItems.map(function(g){return '<li>'+esc(g)+'</li>';}).join('')+'</ul>':'';
+      var productItems=(t.products||[]).slice(0,2);
+      var products=productItems.length?'<aside class="np-follow-products" aria-label="Related products from this report"><div class="np-sl">Related products</div><div class="np-pg">'+npProductCards(productItems)+'</div></aside>':'';
+      return '<div class="np-follow-msg is-ai'+(productItems.length?' has-products':'')+'"><div class="np-follow-answer"><strong>NutraPass follow-up</strong>'+npFormatFollowupText(t.text)+gaps+'</div>'+products+'</div>';
+    }).join('');
+  }
+  function npFollowupPanel(){
+    return '<div class="np-card np-follow-card"><div class="np-sl">Follow-up Questions</div><p class="np-follow-intro">Ask a quick follow-up to fill in gaps while keeping this original report on the page.</p><div class="np-follow-messages" id="npFollowMessages" aria-live="polite"></div><div class="np-follow-row"><textarea class="np-follow-input" id="npFollowIn" rows="2" placeholder="Ask a follow-up about this report…"></textarea><button class="np-follow-btn" type="button" onclick="npAskFollowup()">Ask follow-up</button></div></div>';
+  }
+  window.npAskFollowup=async function(){
+    var data=window.npLastReport, input=document.getElementById('npFollowIn');
+    if(!data || !input) return;
+    var q=input.value.trim();
+    if(!q) return;
+    data.followUps=data.followUps||[];
+    data.followUps.push({role:'user',text:q});
+    data.followUps.push({role:'ai',text:'Checking the original report context…'});
+    input.value='';
+    npRenderFollowupMessages();
+    try{
+      var payload=null;
+      if(NP_AI_ENABLED && window.NUTRAPASS_AI_ENDPOINT && window.fetch){
+        var res=await fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({followUpQuestion:q,report:npReportContextForFollowup(data),history:data.followUps.slice(-8)})});
+        if(!res.ok) throw new Error('NutraPass AI follow-up returned '+res.status);
+        payload=await res.json();
+        npSetAiStatus(!(payload && /^fallback/.test(String(payload.mode||''))));
+      }
+      var last=data.followUps[data.followUps.length-1];
+      last.text=(payload&&payload.answer)||npStaticFollowupAnswer(q,data);
+      last.gaps=((payload&&payload.gaps)||[]).slice(0,1);
+      last.products=((payload&&payload.products)||[]).map(function(item){var base=npProductByName(item.name||item.n)||null;return base?Object.assign({},base,{brand:item.brand||base.brand,imageUrl:item.imageUrl||item.img||base.img,why:item.why||base.w}):null;}).filter(Boolean).slice(0,2);
+    }catch(err){
+      console.warn('NutraPass follow-up fallback:',err);
+      var fallback=data.followUps[data.followUps.length-1];
+      fallback.text=npStaticFollowupAnswer(q,data);
+      fallback.gaps=['What timing, food trigger, or routine detail would make this answer more useful?'];
+      fallback.products=(data.products||[]).slice(0,2);
+      npAiFallbackNotice(document.getElementById('npOut'));
+    }
+    npRenderFollowupMessages();
+  };
+  function currentReportText(){
+    var data=window.npLastReport;
+    if(!data) return 'No NutraPass results generated yet.';
+    var lines=[];
+    var divider='────────────────────────────────────────';
+    lines.push('NutraPass');
+    lines.push('Personalized Nutritional Research Tool');
+    lines.push('Educational Research Summary');
+    lines.push(divider);
+    lines.push('');
+    lines.push('WELLNESS GOAL');
+    lines.push(wrapEmailLine(data.goal,'  '));
+    lines.push('');
+    lines.push('QUICK SUMMARY');
+    lines.push(wrapEmailLine(data.summary||summary(data.goal),'  '));
+    lines.push('');
+    lines.push('HEALTH OVERVIEW');
+    lines.push(formatOverviewForEmail(data.overview||nutritionOverview(data.goal, data.ingredients)));
+    lines.push('');
+    lines.push('INGREDIENT RESEARCH NOTES');
+    lines.push(divider);
+    data.ingredients.forEach(function(n,i){
+      lines.push('');
+      lines.push((i+1)+') '+n.nm);
+      lines.push(wrapEmailLine('Best fit: '+n.b,'   '));
+      lines.push(wrapEmailLine('Research context: '+ingredientDetail(n),'   '));
+      lines.push(wrapEmailLine('Typical range: '+ingredientDose(n),'   '));
+      if(n.id) lines.push(wrapEmailLine('Source: https://pubmed.ncbi.nlm.nih.gov/'+n.id+'/','   '));
+    });
+    lines.push('');
+    lines.push('IMPORTANT NOTE');
+    lines.push(wrapEmailLine('Educational information only. NutraPass will not collect, sell, or save your personal data from this tool. NutraPass results are AI-assisted research starting points and are not medical advice or personalized medical recommendations. NutraPass does not save your questions or generated reports on our servers, but when AI is active your question and relevant report context is sent to our AI provider to generate the response. Avoid entering names, contact details, account numbers, or highly sensitive medical details. AI-generated information may be incomplete, outdated, or incorrect. Verify all results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.','  '));
+    lines.push('');
+    lines.push('— NutraPass');
+    return lines.join('\n');
+  }
+  window.npCopyResults=function(){
+    var text=currentReportText();
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){alert('NutraPass results copied.');});}
+    else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('NutraPass results copied.');}
+  };
+  window.npPrintResults=function(){window.print();};
+  window.npEmailResults=function(){
+    var subject='NutraPass research results';
+    var body=currentReportText();
+    window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  };
+
+  function npProductSearchUrl(p){
+    var name=(p&&p.n)||(p&&p.name)||'';
+    return 'https://nutrapass.club/search?q='+encodeURIComponent(name);
+  }
+  function npBrandLogoHtml(brand){
+    brand=String(brand||'NutraPass');
+    var cls=/cellutrex/i.test(brand)?' is-cellutrex':'';
+    var label=/cellutrex/i.test(brand)?'Cellutrex':'Silver\nFern';
+    return '<div class="np-brand-logo'+cls+'" aria-label="'+esc(brand)+' brand">'+esc(label).replace(/\n/g,'<br>')+'</div>';
+  }
+  function npProductCards(prods){
+    return (prods||[]).map(function(p){
+      var brand=npProductBrand(p), img=npProductImage(p), name=p.n||p.name||'', why=p.w||p.why||'', price=p.p||p.price||'';
+      var logo=npBrandLogoHtml(brand);
+      var imageHtml=img?'<img class="np-pimg" src="'+esc(img)+'" alt="" loading="lazy">':logo;
+      var header='<div class="np-pmedia">'+imageHtml+'<div><div class="np-pbrand">'+esc(brand)+'</div><div class="np-pn">'+esc(name)+'</div></div></div>';
+      return '<div class="np-pc">'+header+'<div class="np-why">'+esc(why)+'</div><div class="np-pp">'+esc(price)+'</div><a class="np-pl" href="'+esc(npProductSearchUrl(p))+'" target="_blank" rel="noopener">Find Product</a></div>';
+    }).join('');
+  }
+  function npRelatedProductsPanel(prods,title){
+    var cards=npProductCards(prods);
+    if(!cards) return '';
+    return '<div class="np-detail-products"><div class="np-sl">'+esc(title||'Related Products')+'</div><div class="np-pg">'+cards+'</div></div>';
+  }
+  function npRender(r,prods,out){
+    var existingFollowUps=(window.npLastReport&&window.npLastReport.followUps)||[];
+    window.npLastReport={goal:r.goal||'',summary:r.s||'',ingredients:r.n||[],products:prods||[],overview:r.overview||'',followUps:existingFollowUps};
+    var topMatchItems=[], additionalItems=[];
+    (r.n||[]).forEach(function(n,i){
+      var href=n.id?'https://pubmed.ncbi.nlm.nih.gov/'+esc(n.id)+'/':'';
+      var ref=href?'<a class="np-rl" href="'+href+'" target="_blank" rel="noopener">PubMed source →</a>':'';
+      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div><div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
+      if(i<6) topMatchItems.push(card); else additionalItems.push(card);
+    });
+    var nuts='<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>'+
+      (additionalItems.length?'<div class="np-note-section"><div class="np-note-heading">Additional Options to Compare</div><div class="np-nuts">'+additionalItems.join('')+'</div></div>':'');
+    var cards=npProductCards(prods);
+    out.innerHTML=
+      '<div class="np-print-area">'+
+      '<div class="np-print-head"><img class="np-print-logo" src="Art/nutrapass-logo-horizontal-leaf-black.png" alt="NutraPass"><div class="np-print-title">Personalized Nutritional Research Tool<br>Educational Research Summary</div></div>'+
+      '<div class="np-warning" role="note" aria-label="Educational and AI use disclaimer"><strong>Educational information only.</strong> NutraPass will not collect, sell, or save your personal data from this tool. Results are AI-assisted research starting points and are not medical advice or personalized medical recommendations. NutraPass does not save your questions or generated reports on our servers; when AI is active, your question and relevant report context are sent securely to our AI provider to generate the response. Please avoid entering names, contact details, account numbers, or highly sensitive medical details.<small>AI-generated information may be incomplete, outdated, or incorrect. Verify all results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.</small></div>'+ 
+      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">Copy, print, or open an email draft with the health overview and ingredient notes only.</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
+      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||nutritionOverview(r.goal||'', r.n||[]))+'</div></div><div class="np-card"><div class="np-sl">Ingredient Research Notes</div><div class="np-sum">'+esc(r.s||'')+'</div><div class="np-nuts">'+nuts+'</div></div>'+npFollowupPanel()+'</div>'+ 
+      '<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div><p class="np-fda">*Educational and AI-assisted information only. Verify results before use. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.</p></div></aside></div>'+ 
+      '</div>';
+    npRenderFollowupMessages();
+  }
+  window.npToggleAck=function(){
+    var ack=document.getElementById('npAck');
+    var btn=document.getElementById('npBtn');
+    if(btn) btn.disabled=!(ack&&ack.checked);
+  };
+  var input=document.getElementById('npIn');
+  if(input){input.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&(ev.metaKey||ev.ctrlKey))window.npAsk();});}
+  npSetAiStatus(!!(NP_AI_ENABLED && window.NUTRAPASS_AI_ENDPOINT && window.fetch));
+  window.npToggleAck();
+})();
+</script>

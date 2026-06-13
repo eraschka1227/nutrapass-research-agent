@@ -1,0 +1,11 @@
+name = "nutrapass-ai"
+main = "api/nutrapass-worker.js"
+compatibility_date = "2026-05-30"
+
+# Optional: set default models without code changes.
+# Override in Cloudflare dashboard or with Worker vars/secrets if desired.
+[vars]
+OPENAI_MODEL = "gpt-4o-mini"
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+# Optional runtime selector: openai, claude, or ab. Request body `aiProvider` can override.
+AI_PROVIDER = "claude"
