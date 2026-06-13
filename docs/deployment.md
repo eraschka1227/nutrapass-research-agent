@@ -1,5 +1,27 @@
 # Deployment
 
+## Fast controlled deploy
+
+Hermes/Q can deploy without extra GitHub or Shopify steps when `CLOUDFLARE_API_TOKEN` is present in the service environment:
+
+```bash
+npm run deploy:all
+```
+
+That command checks Cloudflare auth, runs tests, deploys the Worker with `--keep-vars`, deploys the Pages widget, and verifies the live Worker/widget URLs.
+
+Widget-only:
+
+```bash
+npm run deploy:widget
+```
+
+Worker-only:
+
+```bash
+npm run deploy:worker
+```
+
 ## Recommended workflow
 
 Use GitHub + Cloudflare with separate preview and production paths.

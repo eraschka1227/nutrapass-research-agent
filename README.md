@@ -27,7 +27,19 @@ Requires Node.js 22+.
 ```bash
 npm install
 npm test
-npm run stage:widget
+npm run deploy:all
+```
+
+For widget-only changes:
+
+```bash
+npm run deploy:widget
+```
+
+For backend-only changes:
+
+```bash
+npm run deploy:worker
 ```
 
 ## Deployment
