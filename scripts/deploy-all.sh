@@ -4,19 +4,20 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERIFY_URL="${NUTRAPASS_VERIFY_URL:-https://nutrapass-widget.pages.dev}"
 WORKER_URL="${NUTRAPASS_WORKER_URL:-https://nutrapass-ai.eric-012.workers.dev}"
-SKIP_WORKER=0
+SKIP_WORKER=1
 SKIP_WIDGET=0
 SKIP_BROWSER=0
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/deploy-all.sh [--skip-worker] [--skip-widget] [--skip-browser]
+Usage: scripts/deploy-all.sh [--include-worker] [--skip-widget] [--skip-browser]
 
 One-command NutraPass production deploy:
   1. Runs regression tests.
-  2. Deploys the Cloudflare Worker backend unless skipped.
-  3. Deploys the Cloudflare Pages widget unless skipped.
-  4. Performs lightweight live URL verification.
+  2. Deploys the Cloudflare Pages widget unless skipped.
+  3. Verifies the live Worker/widget URLs.
+
+Backend Worker deploy is opt-in with --include-worker because it requires a broader Cloudflare token than Pages deploys.
 
 Environment overrides:
   NUTRAPASS_VERIFY_URL   Widget production URL (default: https://nutrapass-widget.pages.dev)
@@ -27,6 +28,7 @@ USAGE
 
 for arg in "$@"; do
   case "$arg" in
+    --include-worker) SKIP_WORKER=0 ;;
     --skip-worker) SKIP_WORKER=1 ;;
     --skip-widget) SKIP_WIDGET=1 ;;
     --skip-browser) SKIP_BROWSER=1 ;;

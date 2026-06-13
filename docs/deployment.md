@@ -8,7 +8,13 @@ Hermes/Q can deploy without extra GitHub or Shopify steps when `CLOUDFLARE_API_T
 npm run deploy:all
 ```
 
-That command checks Cloudflare auth, runs tests, deploys the Worker with `--keep-vars`, deploys the Pages widget, and verifies the live Worker/widget URLs.
+That command checks Cloudflare auth, runs tests, deploys the Pages widget, and verifies the live Worker/widget URLs.
+
+Full backend + widget deploy, only when the Cloudflare token has Worker edit permissions:
+
+```bash
+npm run deploy:all -- --include-worker
+```
 
 Widget-only:
 
