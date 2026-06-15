@@ -48,6 +48,8 @@ async function workerFallback(goal) {
 
   const worker = fs.readFileSync(workerPath, 'utf8');
   assert('AI prompts forbid category-routing language and generic wellness dumps', /Never tell the user their question does not match a category/.test(worker) && /Never expose internal routing/.test(worker) && /meal quality, protein, fiber, hydration, sleep, stress, movement, nutrient gaps/.test(worker));
+  assert('original and follow-up prompts share the same NutraPass personality language', (worker.match(/friendly, upbeat, reassuring NutraPass voice/g) || []).length >= 2 && (worker.match(/nutrition research guide, not a clinician or hypey salesperson/g) || []).length >= 2);
+  assert('original and follow-up prompts prioritize clinically backed options while allowing labeled traditional alternatives', (worker.match(/Prioritize clinically backed ingredients and fundamentals first/g) || []).length >= 2 && (worker.match(/traditional, emerging, mixed-evidence, or situation-dependent/g) || []).length >= 2 && /Do not present traditional or alternative options as equally proven/.test(worker));
   assert('worker detects and retries generic AI overview filler', /hasGenericWellnessFiller/.test(worker) && /rewriteGenericWellnessAnswer/.test(worker) && /broad wellness drivers/.test(worker));
 
   const index = fs.readFileSync(indexPath, 'utf8');
