@@ -42,9 +42,9 @@
   .np::before{content:'';position:absolute;inset:0 0 auto 0;height:7px;background:linear-gradient(90deg,var(--np-mint),var(--np-sky),var(--np-citrus),var(--np-peach),var(--np-lav),var(--np-mint));z-index:0}
   .np::after{content:'';position:absolute;width:340px;height:340px;right:-150px;top:44px;border-radius:999px;background:radial-gradient(circle,rgba(191,236,207,.32),rgba(183,223,242,.16) 48%,transparent 70%);z-index:0;pointer-events:none}
   .np-shell{max-width:1040px;margin:0 auto;position:relative;z-index:1}
-  .np-alpha-banner{display:block;margin:.18rem auto .82rem;padding:.64rem .9rem;border:1.5px solid rgba(245,223,138,.86);border-radius:15px;background:linear-gradient(135deg,#fff7cf 0%,#fffdf2 52%,#edf8f1 100%);color:#333333;text-align:center;font-size:clamp(.78rem,1.25vw,.92rem);font-weight:800;line-height:1.28;box-shadow:0 10px 22px rgba(51,51,51,.06)}
+  .np-alpha-banner{position:relative;display:block;margin:.18rem auto .82rem;padding:.58rem .86rem;border:1.5px solid rgba(245,223,138,.86);border-radius:15px;background:linear-gradient(135deg,#fff7cf 0%,#fffdf2 52%,#edf8f1 100%);color:#333333;text-align:center;font-size:clamp(.78rem,1.25vw,.92rem);font-weight:800;line-height:1.28;box-shadow:0 14px 28px rgba(51,51,51,.06)}
   .np-alpha-banner strong{text-transform:uppercase;letter-spacing:.035em;color:#333333;font-weight:900}
-  .np-alpha-banner a{color:#244f34;text-decoration:underline;text-decoration-color:#c8793b;text-decoration-thickness:3px;text-underline-offset:3px;font-weight:900;white-space:nowrap}
+  .np-alpha-banner a{color:#333333;text-decoration:underline;text-decoration-color:#aedfc0;text-decoration-thickness:3px;text-underline-offset:3px;font-weight:900;white-space:nowrap}
   .np-alpha-banner a:hover{color:#000000}
   .np-alpha-banner a:focus-visible{outline:3px solid rgba(36,48,40,.25);outline-offset:3px;border-radius:6px}
 
@@ -104,7 +104,7 @@
     box-shadow:0 18px 45px rgba(45,92,59,.10);
   }
 
-  .np-lbl{font-size:.7rem;letter-spacing:.17em;text-transform:uppercase;color:#31513c;margin-bottom:.75rem;display:block;font-weight:900}
+  .np-lbl{font-size:.7rem;letter-spacing:.17em;text-transform:uppercase;color:var(--np-mint);margin-bottom:.75rem;display:block;font-weight:800}
   .np-input-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
   .np-input-head .np-lbl{margin-bottom:0}
   .np-ai-status{display:inline-flex;align-items:center;gap:.36rem;border:1px solid rgba(63,159,102,.22);border-radius:999px;background:rgba(255,255,255,.82);color:#2f7f50;padding:.26rem .52rem;font-size:.66rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
@@ -129,19 +129,19 @@
   .np-btn::after{content:'';display:inline-block;width:.42rem;height:.42rem;margin-left:.45rem;border-radius:999px;background:#aedfc0;box-shadow:.38rem 0 0 rgba(174,223,192,.62),.76rem 0 0 rgba(128,128,128,.38);vertical-align:.02rem}
   .np-btn:disabled{opacity:.48;cursor:not-allowed;transform:none;background:rgba(191,236,207,.5)}
 
-  .np-ack{display:flex;gap:.6rem;align-items:flex-start;margin:.65rem 0 0;padding:.68rem .85rem;border:1px solid rgba(63,159,102,.24);border-radius:18px;background:#f1fbf5;color:rgba(36,48,40,.86);font-size:.78rem;line-height:1.36}
+  .np-ack{display:flex;gap:.6rem;align-items:flex-start;margin:.65rem 0 0;padding:.68rem .85rem;border:1px solid rgba(174,223,192,.86);border-left:5px solid #aedfc0;border-radius:18px;background:linear-gradient(135deg,rgba(174,223,192,.42) 0%,rgba(255,255,255,.94) 56%,rgba(174,223,192,.22) 100%);color:#243028;font-size:.78rem;line-height:1.36;box-shadow:0 10px 22px rgba(45,92,59,.08)}
   .np-ack input{margin:.18rem 0 0;accent-color:var(--np-mint);width:18px;height:18px;flex:0 0 auto}
   .np-ack strong{color:#1f6f43;font-weight:900}
-  .np-privacy-note{margin:.55rem 0 0;padding:.68rem .82rem;border:1px solid rgba(174,223,192,.92);border-left:5px solid #aedfc0;border-radius:16px;background:linear-gradient(135deg,rgba(174,223,192,.46) 0%,rgba(255,255,255,.95) 58%,rgba(174,223,192,.24) 100%);color:#243028;font-size:.74rem;line-height:1.36;box-shadow:0 10px 24px rgba(45,92,59,.07)}
+  .np-privacy-note{margin:.55rem 0 0;padding:.62rem .78rem;border:1px solid rgba(174,223,192,.92);border-left:5px solid #aedfc0;border-radius:16px;background:linear-gradient(135deg,rgba(174,223,192,.46) 0%,rgba(255,255,255,.95) 58%,rgba(174,223,192,.24) 100%);color:#243028;font-size:.76rem;line-height:1.38;box-shadow:0 10px 22px rgba(45,92,59,.08)}
   .np-privacy-note strong{color:#1f6f43;font-weight:900}
   .np-privacy-note ul{margin:.38rem 0 0;padding-left:1.05rem}
   .np-privacy-note li{margin:.18rem 0}
-  .np-legal{font-size:.78rem;line-height:1.42;color:#243028;border:1px solid rgba(174,223,192,.92);border-left:5px solid #aedfc0;background:linear-gradient(135deg,rgba(174,223,192,.42) 0%,rgba(255,255,255,.96) 60%,rgba(245,223,138,.18) 100%);box-shadow:0 12px 28px rgba(45,92,59,.08)}
+  .np-legal{font-size:.8rem;line-height:1.44;color:#243028;background:linear-gradient(135deg,rgba(174,223,192,.48) 0%,rgba(255,255,255,.96) 55%,rgba(174,223,192,.24) 100%);border-color:rgba(174,223,192,.92);border-left:5px solid #aedfc0;box-shadow:0 16px 36px rgba(45,92,59,.08)}
+  .np-legal .np-sl{color:#1f6f43}
   .np-legal p{margin:.45rem 0 0}
-  .np-legal strong{color:#1f6f43;font-weight:900}
-  .np-legal .np-sl{color:#1f6f43;font-weight:900}
+  .np-legal strong{color:#1f6f43}
   .np-warning{margin:0 0 .65rem;padding:.78rem .9rem;border:1px solid rgba(63,159,102,.38);border-radius:20px;background:linear-gradient(135deg,#f0fbf4 0%,#ffffff 54%,#fff7df 100%);color:rgba(36,48,40,.9);font-size:.86rem;line-height:1.42;box-shadow:0 12px 32px rgba(45,92,59,.08)}
-  .np-warning strong{color:#1f6f43;font-weight:900}
+  .np-warning strong{color:var(--np-mint);font-weight:800}
   .np-warning small{display:block;margin-top:.45rem;color:rgba(36,48,40,.64);font-size:.78rem;line-height:1.45}
 
 
@@ -794,22 +794,81 @@
     {nm:'Keratin',b:'Hair and nail structure support comparison',id:'27438201',k:'keratin hair nails beauty strength'}
   ];
 
+  var NP_PRODUCT_RANK_STOPWORDS={i:1,want:1,need:1,for:1,and:1,or:1,the:1,a:1,an:1,to:1,with:1,my:1,me:1,support:1,help:1,better:1,good:1,health:1,wellness:1};
+  var NP_PRODUCT_TAXONOMY={
+    'built':'protein bar snack workout snack sweet tooth high protein treat travel snack lunchbox dessert alternative puff bar bars',
+    'rnwy':'running fuel endurance protein salty carbs race day workout recovery complete protein extra mile athlete training carbs hydration',
+    'purishh':'creatine shilajit protein powder performance strength recovery sun balm hair care conditioner shampoo tallow mineral supplement',
+    'rawguru.com':'vegan collagen vitamin c chocolate functional food beauty plant based superfood b12 d3 k2 coconut cacao snack treat',
+    'cellutrex':'electrolytes hydration sweating travel low sugar workout hydration zero sugar powder watermelon grapefruit orange lemon lime cherry',
+    'silver fern':'gut probiotic prebiotic stress motility digestive fiber microbiome regularity bloat immune postbiotic cleanse constipation'
+  };
   function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function tokens(goal){return String(goal||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);}
+  function tokens(goal){return String(goal||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){return w && !NP_PRODUCT_RANK_STOPWORDS[w] && w.length>2;});}
   function scoreKeywords(keywordString, words){
-    var keys=keywordString.split(/\s+/), score=0;
-    keys.forEach(function(k){
-      words.forEach(function(w){
-        if(w===k || (w.length>4 && (w.indexOf(k)===0 || k.indexOf(w)===0))) score+=1;
-      });
+    var hay=' '+String(keywordString||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ', score=0;
+    words.forEach(function(w){
+      if(hay.indexOf(' '+w+' ')>-1) score+=3;
+      else if(w.length>4 && hay.indexOf(w)>-1) score+=1;
     });
     return score;
   }
-  function topProds(goal,n){
+  function npProductExactNameBoost(p,words){
+    var name=' '+String(p.n||p.name||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ';
+    var exactNameBoost=0;
+    words.forEach(function(w){if(name.indexOf(' '+w+' ')>-1) exactNameBoost+=8;});
+    return exactNameBoost;
+  }
+  function npProductPhraseBoost(p,goal){
+    var phraseBoost=0, name=' '+String(p.n||p.name||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ', g=' '+String(goal||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ';
+    ['vegan collagen','vitamin c','vitamin d','d3 k2','magnesium','creatine','protein powder','electrolyte','chocolate','probiotic','prebiotic'].forEach(function(ph){if(g.indexOf(' '+ph+' ')>-1 && name.indexOf(' '+ph+' ')>-1) phraseBoost+=20;});
+    return phraseBoost;
+  }
+  function npProductBrandKey(p){return String(p.brand||p.b||'').toLowerCase().replace(/[™®]/g,'').trim();}
+  function npProductSearchText(p){
+    var brandKey=npProductBrandKey(p);
+    var brandTaxonomy=NP_PRODUCT_TAXONOMY[brandKey]||'';
+    return [p.k,p.n,p.name,p.brand,p.w,p.why,p.productType,brandTaxonomy].join(' ');
+  }
+  function npDiversifyProductCandidates(scored,n){
+    var minScore=scored.length&&scored[0].s>0?Math.max(2,Math.floor(scored[0].s*.25)):1;
+    var picked=[], seenBrands={};
+    scored.forEach(function(item){
+      var brand=npProductBrandKey(item.p)||'unknown';
+      if(picked.length<n && item.s>=minScore && !seenBrands[brand]){picked.push(item); seenBrands[brand]=1;}
+    });
+    scored.forEach(function(item){
+      if(picked.length<n && picked.indexOf(item)<0) picked.push(item);
+    });
+    return picked.slice(0,n);
+  }
+  function npStaticProducts(){return P.slice();}
+  function npRankProducts(products,goal,n){
     var words=tokens(goal);
-    return P.map(function(p){return {p:p,s:scoreKeywords(p.k,words)};})
-      .sort(function(a,b){return b.s-a.s || a.p.n.localeCompare(b.p.n);})
-      .slice(0,n).map(function(x){return x.p;});
+    var list=(products&&products.length?products:npStaticProducts()).map(function(p){
+      var keys=npProductSearchText(p);
+      return {p:p,s:scoreKeywords(String(keys||''),words)+npProductExactNameBoost(p,words)+npProductPhraseBoost(p,goal)};
+    });
+    list=list.sort(function(a,b){return b.s-a.s || String(a.p.n||a.p.name||'').localeCompare(String(b.p.n||b.p.name||''));});
+    return npDiversifyProductCandidates(list,n).map(function(x){return x.p;});
+  }
+  function topProds(goal,n){
+    return npRankProducts(npStaticProducts(),goal,n);
+  }
+  var npProductCatalogPromise=null;
+  async function npLoadProductCatalog(){
+    if(!NP_AI_ENABLED || !window.NUTRAPASS_AI_ENDPOINT || !window.fetch) return npStaticProducts();
+    if(!npProductCatalogPromise){
+      npProductCatalogPromise=fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productCatalog:true})})
+        .then(function(res){if(!res.ok) throw new Error('NutraPass product catalog returned '+res.status); return res.json();})
+        .then(function(payload){return (payload&&payload.products&&payload.products.length)?payload.products:npStaticProducts();})
+        .catch(function(err){console.warn('NutraPass live product catalog fallback:',err); return npStaticProducts();});
+    }
+    return npProductCatalogPromise;
+  }
+  async function npProductsForGoal(goal,n){
+    var products=await npLoadProductCatalog();
+    return npRankProducts(products,goal,n);
   }
   function topNutrients(goal,n){
     var words=tokens(goal);
@@ -932,8 +991,8 @@
       npAiFallbackNotice(out);
     }
   };
-  function npStaticAsk(input,out){
-    npRender({goal:input,s:summary(input),n:topNutrients(input,16)},topProds(input,6),out);
+  async function npStaticAsk(input,out){
+    npRender({goal:input,s:summary(input),n:topNutrients(input,16)},await npProductsForGoal(input,6),out);
     npJumpToResults(out);
   }
   function npJumpToResults(out){
@@ -986,7 +1045,7 @@
   async function npTryAi(input,out){
     if(!NP_AI_ENABLED || !window.NUTRAPASS_AI_ENDPOINT || !window.fetch) return false;
     var localIngredients=topNutrients(input,20).map(function(n){return {name:n.nm,bestFit:n.b,pubmedId:n.id};});
-    var localProducts=topProds(input,6).map(function(p){return {name:p.n,brand:p.brand||'',price:p.p,url:p.u,imageUrl:p.img||'',why:p.w};});
+    var localProducts=(await npProductsForGoal(input,24)).map(function(p){return {name:p.n||p.name,brand:p.brand||'',price:p.p||p.price||'',url:p.u||p.url||'',imageUrl:p.img||p.imageUrl||'',why:p.w||p.why||''};});
     var res=await fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal:input,products:localProducts,ingredients:localIngredients})});
     if(!res.ok) throw new Error('NutraPass AI backend returned '+res.status);
     var payload=await res.json();
@@ -1005,10 +1064,10 @@
     try{
       npSetAiStatus(true);
       var usedAi=await npTryAi(input,out);
-      if(!usedAi){npSetAiStatus(false);npStaticAsk(input,out);}
+      if(!usedAi){npSetAiStatus(false);await npStaticAsk(input,out);}
     }catch(err){
       console.warn('NutraPass AI fallback:',err);
-      npStaticAsk(input,out);
+      await npStaticAsk(input,out);
       npAiFallbackNotice(out);
     }
   };
@@ -1202,71 +1261,64 @@
   function nutritionOverview(goal, ingredients){
     var g=String(goal||'').toLowerCase();
     var names=(ingredients||[]).slice(0,6).map(function(n){return n.nm.toLowerCase();}).join(', ');
-    var safety='Supplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care. Introduce one new item at a time, follow labels, and check with a qualified healthcare professional if pregnant/nursing, using medications, managing a condition, or if symptoms are severe, persistent, or worsening.';
-    function block(overview, eat, doNow, options){
+    function block(overview, eat, doNow){
       return 'What may be going on: '+overview+'\n\n'+
         'Food first: '+eat+'\n\n'+
-        'Easy things to try: '+doNow+'\n\n'+
-        'Nutrition options to compare: '+options+'\n\n'+
-        safety;
+        'Easy things to try: '+doNow;
     }
     if(/ice|dirt|clay|chalk|pica|restless leg|restless legs|heavy bleeding|ferritin|iron/.test(g)) return block(
       'craving ice or non-food items, restless legs, unusual fatigue, or heavy bleeding can sometimes overlap with iron-status questions, low ferritin, B-vitamin status, sleep disruption, stress load, pregnancy, or absorption issues. This is worth lab-based follow-up rather than guessing from symptoms alone.',
       'iron-containing foods such as lean meats, seafood, beans, lentils, tofu, spinach, pumpkin seeds, and fortified foods; pair plant iron with vitamin C-rich foods like citrus, berries, kiwi, bell pepper, or broccoli.',
-      'track when cravings or restless-leg sensations happen, note energy, dizziness, shortness of breath, menstrual/blood-loss context, caffeine timing, and sleep schedule, then ask a clinician about CBC, ferritin, and iron studies if it persists.',
-      'iron status labs, vitamin C with meals, B12/folate status, magnesium for normal muscle relaxation, hydration, and protein adequacy. Do not start high-dose iron without blood work and professional guidance because excess iron can be unsafe.'
+      'track when cravings or restless-leg sensations happen, note energy, dizziness, shortness of breath, menstrual/blood-loss context, caffeine timing, and sleep schedule, then ask a clinician about CBC, ferritin, and iron studies if it persists.'
     );
     if(/reflux|acid|heartburn|indigestion|gerd|burning|burp/.test(g)) return block(
       'upper-digestive discomfort can be influenced by meal size, eating pace, late-night meals, higher-fat meals, caffeine/alcohol, spicy or acidic foods, mint/chocolate triggers, stress, and individual tolerance patterns. Burning, chest discomfort, trouble swallowing, vomiting blood, or unexplained weight loss should be handled medically.',
       'smaller balanced meals; lower-fat evening meals; oatmeal, bananas, lean proteins, cooked vegetables, and non-mint herbal tea if tolerated.',
-      'avoid lying down right after eating, leave 2–3 hours before bed, slow down meals, elevate the head of the bed if nights are worse, and track triggers such as coffee, alcohol, chocolate, mint, spicy foods, and large late meals.',
-      'digestive enzymes for meal-time support, ginger only if tolerated, and upper-GI/reflux-focused products. Avoid anything that worsens burning or nausea.'
+      'avoid lying down right after eating, leave 2–3 hours before bed, slow down meals, elevate the head of the bed if nights are worse, and track triggers such as coffee, alcohol, chocolate, mint, spicy foods, and large late meals.'
     );
     if(/bloat|bloated|gas|fodmap|ibs|distend/.test(g)) return block(
       'bloating and gas patterns can be influenced by how quickly meals are eaten, fermentable carbohydrates/FODMAP load, constipation or slow transit, microbiome shifts, fiber changes, carbonated drinks, stress, and food tolerance. Persistent severe pain, blood in stool, fever, or unexplained weight loss should be reviewed professionally.',
       'simple, tolerated foods while observing patterns: oats, rice/potatoes, lean protein, cooked vegetables, kiwi, yogurt/kefir if tolerated, and adequate fluids. Increase beans, cruciferous vegetables, and high-fiber foods gradually.',
-      'walk 5–10 minutes after meals, eat slower, try a short food/symptom log, avoid changing several foods or supplements at once, and notice whether symptoms track with dairy, wheat, onions/garlic, carbonated drinks, or large portions.',
-      'digestive enzymes, probiotics/postbiotics, gentle prebiotic fiber, peppermint oil only if reflux is not an issue, and bloat/FODMAP-focused products.'
+      'walk 5–10 minutes after meals, eat slower, try a short food/symptom log, avoid changing several foods or supplements at once, and notice whether symptoms track with dairy, wheat, onions/garlic, carbonated drinks, or large portions.'
     );
     if(/constipat|regularity|bowel|motility|poop|stool/.test(g)) return block(
       'regularity issues can be influenced by fluid intake, fiber type, low food volume, travel, schedule changes, inactivity, stress, medications, magnesium intake, and normal motility patterns. Severe abdominal pain, vomiting, or prolonged constipation needs medical guidance.',
       'kiwi, prunes, oats, chia/flax, beans/lentils as tolerated, cooked vegetables, enough fluids, and regular meals rather than skipping food all day.',
-      'build a consistent morning routine, walk daily, increase fiber gradually, pair fiber with water, and track whether travel, stress, or low meal volume changes bowel patterns.',
-      'prebiotic fiber, magnesium forms that support regularity, probiotics/postbiotics, and motility/regularity products. Add slowly to avoid making gas or bloating worse.'
+      'build a consistent morning routine, walk daily, increase fiber gradually, pair fiber with water, and track whether travel, stress, or low meal volume changes bowel patterns.'
     );
     if(/sleep|insomnia|stress|anxiety|burnout|worry|cortisol|tired|fatigue/.test(g)) return block(
       'sleep, stress, and low-energy patterns can be influenced by caffeine timing, inconsistent sleep/wake rhythm, evening light exposure, high stress load, under-eating, low protein, low magnesium intake, overtraining, alcohol, and mood or thyroid/iron/B12 issues. Persistent fatigue, panic symptoms, or major mood changes deserve professional support.',
       'protein at meals, magnesium-rich foods such as pumpkin seeds/spinach/beans, complex carbs at dinner if tolerated, steady hydration, and lower caffeine intake after late morning or early afternoon.',
-      'set a consistent wind-down time, dim screens/lights before bed, get morning daylight, keep workouts earlier if they feel stimulating, and use breathing or a short walk to downshift stress.',
-      'magnesium, L-theanine, melatonin for timing-focused sleep needs, stress-support blends such as ashwagandha, plus iron/B12/folate status if fatigue is prominent. Use caution with thyroid, mood, pregnancy/nursing, or medication considerations.'
+      'set a consistent wind-down time, dim screens/lights before bed, get morning daylight, keep workouts earlier if they feel stimulating, and use breathing or a short walk to downshift stress.'
     );
     if(/immune|cold|flu|sick|sinus|seasonal/.test(g)) return block(
       'immune-support needs are often shaped by sleep quality, stress load, vitamin D status, protein intake, gut health, hydration, seasonal exposure, and overall diet quality. Frequent, severe, or prolonged infections should be discussed with a clinician.',
       'colorful fruits/vegetables, citrus or berries, protein with each meal, zinc foods like seafood/meat/pumpkin seeds, fermented foods, and steady hydration.',
-      'prioritize sleep, wash hands, keep workouts moderate when run down, get daylight, and avoid megadosing single nutrients for long periods.',
-      'vitamin D3, zinc, vitamin C, probiotics/postbiotics, and a multivitamin if diet gaps are likely. Compare dose limits and avoid duplicating nutrients across products.'
+      'prioritize sleep, wash hands, keep workouts moderate when run down, get daylight, and avoid megadosing single nutrients for long periods.'
+    );
+    if(/shoulder|joint|joints|crunchy|click|clicking|pop|popping|grind|grinding|mobility|stiff|stiffness|tendon|ligament|cartilage|rotator|elbow|knee|hip|neck|back|pain|ache|aches|sore|soreness/.test(g)) return block(
+      'a crunchy, painful shoulder can come from several non-diagnosis patterns, including tendon irritation, joint mechanics, old injury, overuse, posture/desk load, strength imbalance, or normal crepitus that becomes more concerning when pain is present. New severe pain, swelling, numbness, weakness, instability, injury, fever, or worsening range of motion deserves professional evaluation.',
+      'support connective tissue and recovery basics with enough protein, colorful produce for vitamin C/polyphenols, omega-3-rich fish or seeds, hydration, and consistent meals.',
+      'reduce painful loading for a few days, note what motions trigger it, use gentle range-of-motion rather than forcing through pain, and consider a physical therapist or clinician if it persists or limits daily movement.'
     );
     if(/strength|muscle|body|composition|weight|metabolism|workout|cramp|calf|sore|recovery/.test(g)) return block(
       'body-composition, cramping, soreness, and performance goals can be influenced by protein distribution, training progression, hydration/electrolytes, sleep, total energy intake, magnesium status, and recovery time. Sudden one-sided calf pain, swelling, warmth, chest pain, or shortness of breath should be treated as urgent.',
       'protein-forward meals, Greek yogurt/eggs/lean meats/beans, high-fiber carbs around activity, fruits/vegetables, and fluids with electrolytes when sweating.',
-      'lift consistently, walk daily, plan protein at breakfast, stretch or mobilize tight areas gently, sleep enough for recovery, and track progress with strength/energy/waist or fit rather than day-to-day scale noise only.',
-      'protein, creatine, electrolytes, magnesium, omega-3s, and metabolism/body-composition products. Supplements work best when training, meals, and sleep are already consistent.'
+      'lift consistently, walk daily, plan protein at breakfast, stretch or mobilize tight areas gently, sleep enough for recovery, and track progress with strength/energy/waist or fit rather than day-to-day scale noise only.'
     );
     if(/hair|skin|nail|beauty|collagen|acne|dry skin/.test(g)) return block(
       'hair, skin, and nail changes can be influenced by protein intake, iron/zinc status, essential fatty acids, thyroid or hormone changes, stress load, biotin status, collagen support, skin barrier habits, and normal growth cycles. Sudden hair loss, brittle nails, or major skin changes should be evaluated.',
       'adequate protein, vitamin-C foods, eggs/fish/lean meats or legumes, nuts/seeds, colorful produce, omega-3-rich foods, and enough calories overall.',
-      'be consistent for 8–12+ weeks, avoid crash dieting, protect sleep, simplify harsh skin/hair routines, and consider labs if changes are sudden or persistent.',
-      'collagen peptides, biotin, zinc, omega-3s, hair/skin/nail blends, and mineral-containing multis. Avoid assuming more is better; high-dose biotin can interfere with some lab tests.'
+      'be consistent for 8–12+ weeks, avoid crash dieting, protect sleep, simplify harsh skin/hair routines, and consider labs if changes are sudden or persistent.'
     );
     return block(
       'your question does not match one narrow category, so this overview is prioritizing broad wellness drivers: meal quality, protein and fiber intake, hydration, sleep rhythm, stress load, movement patterns, and possible nutrient gaps. The most useful next step is usually to identify the main pattern—energy, digestion, sleep, immune support, body composition, or beauty support—then match nutrition options to that pattern.',
       'a protein source, high-fiber plants, colorful produce, healthy fats, and enough fluids; adjust choices to tolerance and preferences.',
-      'pick one primary goal, make one food or routine change for a week, note energy/digestion/sleep changes, and avoid adding multiple supplements at once.',
-      'the top ingredient matches surfaced here include '+names+'. Compare forms, serving sizes, cautions, and overlap before choosing a product.'
+      'pick one primary goal, make one food or routine change for a week, note energy/digestion/sleep changes, and avoid adding multiple supplements at once.'
     );
   }
   function formatOverviewHtml(text){
-    var labels=['What may be going on','Food first','Easy things to try','Nutrition options to compare'];
+    var labels=['What may be going on','Food first','Easy things to try'];
     var parts=String(text||'').split(/\n\n+/).filter(Boolean);
     if(!parts.length) return '';
     return '<ul class="np-overview-list">'+parts.map(function(part){
@@ -1297,7 +1349,6 @@
       .replace(/Potential causes: /g,'• What may be going on: ')
       .replace(/Food first: /g,'• Food first: ')
       .replace(/Easy things to try: /g,'• Easy things to try: ')
-      .replace(/Nutrition options to compare: /g,'• Nutrition options to compare: ')
       .split(/\n\n+/)
       .map(function(line){return wrapEmailLine(line,'  ');})
       .join('\n\n');
@@ -1387,8 +1438,19 @@
     lines.push('HEALTH OVERVIEW');
     lines.push(formatOverviewForEmail(data.overview||nutritionOverview(data.goal, data.ingredients)));
     lines.push('');
+    lines.push('TOP INGREDIENT MATCHES');
+    lines.push(divider);
+    data.ingredients.forEach(function(n,i){
+      lines.push('');
+      lines.push((i+1)+') '+n.nm);
+      lines.push(wrapEmailLine('Best fit: '+n.b,'   '));
+      lines.push(wrapEmailLine('Research context: '+ingredientDetail(n),'   '));
+      lines.push(wrapEmailLine('Typical range: '+ingredientDose(n),'   '));
+      if(n.id) lines.push(wrapEmailLine('Source: https://pubmed.ncbi.nlm.nih.gov/'+n.id+'/','   '));
+    });
+    lines.push('');
     lines.push('IMPORTANT NOTE');
-    lines.push(wrapEmailLine('Educational information only. NutraPass will not collect, sell, or save your personal data from this tool. NutraPass results are AI-assisted research starting points and are not medical advice or personalized medical recommendations. NutraPass does not save your questions or generated reports on our servers, but when AI is active your question and relevant report context is sent to our AI provider to generate the response. Avoid entering names, contact details, account numbers, or highly sensitive medical details. AI-generated information may be incomplete, outdated, or incorrect. Verify all results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.','  '));
+    lines.push(wrapEmailLine('Educational information only. NutraPass results are AI-assisted research starting points, not medical advice or personalized medical recommendations. AI-generated information may be incomplete, outdated, or incorrect. Verify results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.','  '));
     lines.push('');
     lines.push('— NutraPass');
     return lines.join('\n');
@@ -1406,13 +1468,14 @@
   };
 
   function npProductSearchUrl(p){
+    if(p&&(p.u||p.url)) return p.u||p.url;
     var name=(p&&p.n)||(p&&p.name)||'';
     return 'https://nutrapass.club/search?q='+encodeURIComponent(name);
   }
   function npBrandLogoHtml(brand){
     brand=String(brand||'NutraPass');
     var cls=/cellutrex/i.test(brand)?' is-cellutrex':'';
-    var label=/cellutrex/i.test(brand)?'Cellutrex':'Silver\nFern';
+    var label=/cellutrex/i.test(brand)?'Cellutrex':(/silver\s*fern/i.test(brand)?'Silver\nFern':brand.split(/\s+/).slice(0,2).map(function(x){return x.charAt(0).toUpperCase();}).join(''));
     return '<div class="np-brand-logo'+cls+'" aria-label="'+esc(brand)+' brand">'+esc(label).replace(/\n/g,'<br>')+'</div>';
   }
   function npProductCards(prods){
@@ -1432,14 +1495,23 @@
   function npRender(r,prods,out){
     var existingFollowUps=(window.npLastReport&&window.npLastReport.followUps)||[];
     window.npLastReport={goal:r.goal||'',summary:r.s||'',ingredients:r.n||[],products:prods||[],overview:r.overview||'',followUps:existingFollowUps};
+    var topMatchItems=[], additionalItems=[];
+    (r.n||[]).forEach(function(n,i){
+      var href=n.id?'https://pubmed.ncbi.nlm.nih.gov/'+esc(n.id)+'/':'';
+      var ref=href?'<a class="np-rl" href="'+href+'" target="_blank" rel="noopener">PubMed source →</a>':'';
+      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div><div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
+      if(i<6) topMatchItems.push(card); else additionalItems.push(card);
+    });
+    var nuts='<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>'+
+      (additionalItems.length?'<div class="np-note-section"><div class="np-note-heading">Additional Options to Compare</div><div class="np-nuts">'+additionalItems.join('')+'</div></div>':'');
     var cards=npProductCards(prods);
     out.innerHTML=
       '<div class="np-print-area">'+
       '<div class="np-print-head"><img class="np-print-logo" src="Art/nutrapass-logo-horizontal-leaf-black.png" alt="NutraPass"><div class="np-print-title">Personalized Nutritional Research Tool<br>Educational Research Summary</div></div>'+
-      '<div class="np-warning" role="note" aria-label="Educational and AI use disclaimer"><strong>Educational information only.</strong> NutraPass will not collect, sell, or save your personal data from this tool. Results are AI-assisted research starting points and are not medical advice or personalized medical recommendations. NutraPass does not save your questions or generated reports on our servers; when AI is active, your question and relevant report context are sent securely to our AI provider to generate the response. Please avoid entering names, contact details, account numbers, or highly sensitive medical details.<small>AI-generated information may be incomplete, outdated, or incorrect. Verify all results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.</small></div>'+ 
-      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">Copy, print, or open an email draft with the health overview only.</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
-      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||nutritionOverview(r.goal||'', r.n||[]))+'</div></div>'+npFollowupPanel()+'</div>'+ 
-      '<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div><p class="np-fda">*Educational and AI-assisted information only. Verify results before use. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.</p></div></aside></div>'+ 
+      '<div class="np-warning" role="note" aria-label="Educational disclaimer"><strong>Educational information only.</strong> Results are AI-assisted research starting points, not medical advice or personalized medical recommendations.<small>AI-generated information may be incomplete or incorrect. Verify results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. Products are not intended to diagnose, treat, cure, or prevent any disease.</small></div>'+ 
+      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">Copy, print, or open an email draft with the health overview and top ingredient matches.</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
+      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||nutritionOverview(r.goal||'', r.n||[]))+'</div></div><div class="np-card"><div class="np-nuts">'+nuts+'</div></div>'+npFollowupPanel()+'</div>'+ 
+      '<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div></div></aside></div>'+ 
       '</div>';
     npRenderFollowupMessages();
   }

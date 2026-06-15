@@ -19,7 +19,7 @@ assert('product cards render a brand label', /npProductBrand/.test(html) && /np-
 assert('static products include actual vendor brands instead of NutraPass', /brand:'Silver Fern'/.test(html) && /brand:'Cellutrex'/.test(html) && !/brand:\s*p\.brand\|\|'NutraPass'/.test(html));
 assert('product brand fallback does not mislabel products as NutraPass', /function npProductBrand\(p\)\{return \(p&&p\.brand\)\|\|'';\}/.test(html));
 assert('product image placeholder is removed when no Shopify image is available', /npProductImage/.test(html) && /np-pimg/.test(html) && !/nutrapass-botanical-strip\.png/.test(html));
-assert('frontend sends real brand and optional image metadata to AI worker', /brand:p\.brand\|\|''/.test(html) && /imageUrl:p\.img\|\|''/.test(html));
+assert('frontend sends real brand and optional image metadata to AI worker', /brand:p\.brand\|\|''/.test(html) && /imageUrl:p\.img\|\|p\.imageUrl\|\|''/.test(html));
 assert('worker asks providers to include actual product brand and optional image URL', /"brand":"Silver Fern"/.test(worker) && /"brand":"Cellutrex"/.test(worker) && /"imageUrl":""/.test(worker));
 assert('ingredient drill-down renders list markup instead of card grid only', /np-type-list/.test(html) && /<ul class="np-type-list">/.test(html));
 assert('ingredient drill-down includes multiple research links', /npResearchLinks/.test(html) && /PubMed search/.test(html) && /Google Scholar/.test(html));

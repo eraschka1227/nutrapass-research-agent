@@ -2,20 +2,45 @@
 // Deploy with OPENAI_API_KEY stored as a Worker secret — never expose it in the HTML page.
 // Example: wrangler secret put OPENAI_API_KEY
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGINS_DEFAULT = [
+  'https://nutrapass.club',
+  'https://www.nutrapass.club',
+  'https://nutrapass-widget.pages.dev'
+];
 
-const privacyHeaders = {
-  ...corsHeaders,
-  'Cache-Control': 'no-store, no-cache, must-revalidate, private',
-  'Pragma': 'no-cache',
-  'Expires': '0',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'no-referrer',
-};
+const MAX_BODY_BYTES = 32 * 1024;
+
+function allowedOrigins(env) {
+  const raw = env && env.ALLOWED_ORIGINS ? String(env.ALLOWED_ORIGINS) : '';
+  const fromEnv = raw.split(',').map((origin) => origin.trim()).filter(Boolean);
+  return fromEnv.length ? fromEnv : ALLOWED_ORIGINS_DEFAULT;
+}
+
+function pickOrigin(request, env) {
+  const list = allowedOrigins(env);
+  const origin = request.headers.get('Origin') || '';
+  return list.includes(origin) ? origin : list[0];
+}
+
+function corsHeaders(origin) {
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+  };
+}
+
+function privacyHeaders(origin) {
+  return {
+    ...corsHeaders(origin),
+    'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+  };
+}
 
 const PRODUCT_CATALOG = [
   { name: 'H2O Electrolytes', brand: 'Cellutrex', category: 'hydration / electrolyte support', allowedUse: 'supports hydration balance, especially with sweating, exercise, travel, or low-carb eating patterns' },
@@ -67,20 +92,232 @@ function productBrand(name, fallback = '') {
   return PRODUCT_BRANDS[name] || fallback || '';
 }
 
+function normalizeStoreDomain(domain) {
+  return String(domain || '').trim().replace(/^https?:\/\//i, '').replace(/\/$/, '');
+}
+
+function normalizeShopifyProduct(node = {}) {
+  const variant = node.variants?.edges?.[0]?.node || {};
+  const price = variant.price?.amount ? `$${Number(variant.price.amount).toFixed(2)}` : '';
+  const image = node.featuredImage || node.images?.edges?.[0]?.node || {};
+  const tags = Array.isArray(node.tags) ? node.tags.join(' ') : '';
+  const url = node.onlineStoreUrl || (node.handle ? `https://nutrapass.club/products/${node.handle}` : '');
+  return {
+    name: node.title || '',
+    n: node.title || '',
+    brand: node.vendor || productBrand(node.title, ''),
+    p: price,
+    price,
+    u: url,
+    url,
+    imageUrl: image.url || '',
+    img: image.url || '',
+    w: node.productType || node.vendor || 'Available on NutraPass',
+    why: node.productType || node.vendor || 'Available on NutraPass',
+    k: `${node.title || ''} ${node.vendor || ''} ${node.productType || ''} ${tags} ${node.description || ''}`.toLowerCase(),
+    source: 'shopify_live'
+  };
+}
+
+function staticCatalogProducts() {
+  return PRODUCT_CATALOG.map((p) => ({
+    name: p.name,
+    n: p.name,
+    brand: p.brand || productBrand(p.name, ''),
+    p: '',
+    price: '',
+    u: `https://nutrapass.club/search?q=${encodeURIComponent(p.name)}`,
+    url: `https://nutrapass.club/search?q=${encodeURIComponent(p.name)}`,
+    imageUrl: '',
+    img: '',
+    w: p.allowedUse || p.category || 'Available on NutraPass',
+    why: p.allowedUse || p.category || 'Available on NutraPass',
+    k: `${p.name} ${p.brand || ''} ${p.category || ''} ${p.allowedUse || ''}`.toLowerCase(),
+    source: 'fallback_static_catalog'
+  }));
+}
+
+const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
+const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
+const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v1:';
+const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
+const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
+
+const COMMON_INTENT_RESPONSES = {
+  gut_health: {
+    keywords: ['gut', 'bloat', 'bloating', 'digestion', 'digestive', 'microbiome', 'regularity', 'fiber', 'constipation', 'probiotic', 'prebiotic'],
+    summary: 'For everyday gut support, start with the basics: fiber diversity, hydration, meal rhythm, and products that support regularity or microbiome balance.',
+    overview: 'NutraPass can help you compare prebiotic, probiotic, postbiotic, enzyme, and fiber options. For persistent, severe, or new digestive symptoms, talk with a qualified professional.',
+    ingredients: ['prebiotic fiber', 'probiotics', 'postbiotics', 'digestive enzymes', 'ginger or peppermint-style digestive support'],
+    followUps: ['Is your main goal regularity, bloating comfort, or daily microbiome support?', 'Any major food triggers you already know about?']
+  },
+  sleep_stress: {
+    keywords: ['sleep', 'stress', 'calm', 'relax', 'relaxation', 'cortisol', 'night', 'bedtime', 'anxiety', 'menopause', 'perimenopause', 'hot flashes', 'night sweats'],
+    summary: 'For sleep and stress routines, look at calming habits first, then products that support normal relaxation and sleep quality.',
+    overview: 'Common support categories include magnesium, L-theanine, adaptogen-style stress support, and bedtime routine products. Avoid mixing sedating products with medications unless cleared by a professional.',
+    ingredients: ['magnesium', 'L-theanine', 'adaptogens', 'glycine', 'sleep routine support'],
+    followUps: ['Is the bigger issue falling asleep, staying asleep, or daytime stress?', 'Are you looking for non-sedating daytime support or bedtime support?']
+  },
+  electrolytes: {
+    keywords: ['electrolyte', 'electrolytes', 'hydration', 'sodium', 'potassium', 'magnesium', 'sweat', 'cramps', 'salty'],
+    summary: 'For hydration support, compare electrolyte products by sodium level, taste, sugar/carbs, and whether you need daily hydration or exercise-focused support.',
+    overview: 'Electrolytes may support fluid balance during sweating, travel, low-carb eating patterns, or longer activity. People with kidney, blood pressure, or heart concerns should ask a qualified professional before increasing electrolytes.',
+    ingredients: ['sodium', 'potassium', 'magnesium', 'chloride'],
+    followUps: ['Is this for daily hydration, workouts, heat, travel, or low-carb eating?', 'Do you want sugar-free electrolytes or carbs plus electrolytes?']
+  },
+  protein: {
+    keywords: ['protein', 'bar', 'bars', 'snack', 'muscle', 'recovery', 'strength', 'body composition'],
+    summary: 'For protein support, match the product to the use case: quick snack, post-workout recovery, muscle support, or daily protein gap filling.',
+    overview: 'Protein products can support satiety and training recovery when they fit your overall eating pattern. Check total protein, calories, sweeteners, fiber, and ingredient tolerance.',
+    ingredients: ['whey or plant protein', 'essential amino acids', 'fiber', 'creatine where appropriate'],
+    followUps: ['Do you want a snack/bar, powder, or recovery product?', 'Any dairy, sweetener, or texture preferences?']
+  },
+  creatine: {
+    keywords: ['creatine', 'strength', 'power', 'lifting', 'muscle', 'performance'],
+    summary: 'Creatine is commonly used to support strength, power, and training performance routines.',
+    overview: 'Most people compare creatine products by form, serving size, simplicity, flavor, and tolerance. People with kidney concerns or relevant medications should ask a qualified professional first.',
+    ingredients: ['creatine monohydrate', 'protein', 'electrolytes'],
+    followUps: ['Is this for lifting, sports performance, or general body composition support?', 'Do you prefer flavored or unflavored?']
+  },
+  running_fuel: {
+    keywords: ['running', 'run', 'runner', 'endurance', 'fuel', 'carbs', 'salty carbs', 'race', 'marathon', 'cycling'],
+    summary: 'For running fuel, look for easy-to-use carbs, electrolytes, and recovery support matched to the duration and intensity of the effort.',
+    overview: 'Short sessions may only need hydration. Longer sessions usually benefit from planned carbs and electrolytes, plus post-run protein or recovery support.',
+    ingredients: ['carbohydrates', 'sodium', 'electrolytes', 'protein for recovery'],
+    followUps: ['How long are the runs or races?', 'Do you want during-run fuel, recovery, or both?']
+  },
+  beauty: {
+    keywords: ['hair', 'skin', 'nails', 'beauty', 'collagen', 'vitamin c', 'vegan collagen'],
+    summary: 'For hair, skin, and nail support, compare products that support normal structure, collagen-building nutrients, antioxidant support, and daily nutrient coverage.',
+    overview: 'Look at protein intake, vitamin C, minerals, and targeted beauty products. If hair loss or skin changes are sudden or severe, professional evaluation is the right next step.',
+    ingredients: ['vitamin C', 'silica', 'biotin', 'amino acids', 'antioxidants'],
+    followUps: ['Are you focused more on skin glow, nails, or hair support?', 'Do you prefer vegan options?']
+  },
+  immune: {
+    keywords: ['immune', 'immunity', 'vitamin c', 'zinc', 'sick', 'seasonal'],
+    summary: 'For immune support, start with sleep, protein, micronutrient coverage, and targeted nutrients like vitamin C, D, and zinc when appropriate.',
+    overview: 'Supplements can support normal immune function but do not prevent or treat illness. Check medication interactions and avoid stacking high-dose nutrients without guidance.',
+    ingredients: ['vitamin C', 'vitamin D', 'zinc', 'probiotics', 'multivitamin support'],
+    followUps: ['Is this daily immune support or short-term seasonal support?', 'Are you already taking vitamin D or zinc?']
+  }
+};
+
+const COMMON_INTENT_KEYS = Object.keys(COMMON_INTENT_RESPONSES);
+
+async function readCachedProductCatalog(env) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.get) return null;
+  const raw = await env.PRODUCT_CATALOG_KV.get(PRODUCT_CATALOG_CACHE_KEY, 'json');
+  if (!raw || !Array.isArray(raw.products) || !raw.products.length) return null;
+  return {
+    products: raw.products,
+    mode: 'cached_shopify_catalog',
+    source: raw.source || 'kv',
+    lastSyncedAt: raw.lastSyncedAt || null,
+    productCount: raw.products.length
+  };
+}
+
+async function writeCachedProductCatalog(env, catalog, source = 'shopify_live') {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.put) return catalog;
+  const payload = {
+    products: catalog.products || [],
+    mode: catalog.mode || source,
+    source,
+    lastSyncedAt: new Date().toISOString(),
+    productCount: (catalog.products || []).length
+  };
+  await env.PRODUCT_CATALOG_KV.put(PRODUCT_CATALOG_CACHE_KEY, JSON.stringify(payload), { expirationTtl: PRODUCT_CATALOG_CACHE_TTL_SECONDS });
+  return payload;
+}
+
+async function refreshProductCatalogCache(env, reason = 'scheduled') {
+  const live = await fetchLiveProductCatalog(env);
+  if (live.mode === 'shopify_live') {
+    const cached = await writeCachedProductCatalog(env, live, 'shopify_live');
+    return { ...cached, mode: reason === 'manual_refresh' ? 'manual_refresh' : 'scheduled_refresh' };
+  }
+  return { ...live, mode: live.mode || 'fallback_static_catalog', refreshReason: reason };
+}
+
+async function getProductCatalog(env) {
+  const cached = await readCachedProductCatalog(env);
+  if (cached) return cached;
+  try {
+    return await refreshProductCatalogCache(env, 'cache_miss');
+  } catch (error) {
+    return { products: staticCatalogProducts(), mode: 'fallback_static_catalog', source: 'static', error: 'Live product catalog unavailable; static catalog used.' };
+  }
+}
+
+async function fetchLiveProductCatalog(env) {
+  const domain = normalizeStoreDomain(env.SHOPIFY_STORE_DOMAIN || 'nutrapass.club');
+  const token = env.SHOPIFY_STOREFRONT_ACCESS_TOKEN || env.SHOPIFY_STOREFRONT_TOKEN;
+  const maxProducts = Math.min(Math.max(Number(env.SHOPIFY_PRODUCTS_LIMIT || 5000), 1), 10000);
+  const pageSize = Math.min(Math.max(Number(env.SHOPIFY_PRODUCTS_PAGE_SIZE || 100), 1), 100);
+  if (!domain || !token) {
+    return { products: staticCatalogProducts(), mode: 'fallback_static_catalog', source: 'static', needsSetup: true };
+  }
+  const query = `query NutraPassProducts($first: Int!, $after: String) {
+    products(first: $first, after: $after, sortKey: UPDATED_AT, reverse: true) {
+      pageInfo { hasNextPage endCursor }
+      edges {
+        node {
+          title
+          handle
+          vendor
+          productType
+          tags
+          description
+          onlineStoreUrl
+          featuredImage { url altText }
+          images(first: 1) { edges { node { url altText } } }
+          variants(first: 1) { edges { node { price { amount currencyCode } } } }
+        }
+      }
+    }
+  }`;
+  const products = [];
+  let after = null;
+  let hasNextPage = true;
+  while (hasNextPage && products.length < maxProducts) {
+    const first = Math.min(pageSize, maxProducts - products.length);
+    const response = await fetch(`https://${domain}/api/2025-10/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Storefront-Access-Token': token
+      },
+      body: JSON.stringify({ query, variables: { first, after } })
+    });
+    if (!response.ok) throw new Error(`shopify_catalog_error_${response.status}`);
+    const data = await response.json();
+    const productConnection = data.data?.products;
+    if (data.errors?.length) throw new Error('shopify_catalog_graphql_error');
+    const pageProducts = (productConnection?.edges || [])
+      .map((edge) => normalizeShopifyProduct(edge.node || {}))
+      .filter((product) => product.name);
+    products.push(...pageProducts);
+    hasNextPage = Boolean(productConnection?.pageInfo?.hasNextPage);
+    after = productConnection?.pageInfo?.endCursor || null;
+    if (!after && hasNextPage) break;
+  }
+  return products.length
+    ? { products, mode: 'shopify_live', source: 'shopify_live', productCount: products.length, maxProducts }
+    : { products: staticCatalogProducts(), mode: 'fallback_static_catalog', source: 'static' };
+}
+
 const SYSTEM_PROMPT = `You are NutraPass's educational wellness research assistant.
 
-You write concise, practical, consumer-friendly educational wellness responses.
-Use a friendly, upbeat, reassuring NutraPass voice: warm, clear, practical, and calm — like a nutrition research guide, not a clinician or hypey salesperson.
+You write concise, practical, consumer-friendly educational wellness responses. Your personality is friendly, upbeat, and reassuring — a calm nutrition research guide with clean botanical / mint / citrus NutraPass energy. Be positive and useful without sounding promotional, childish, or medically certain.
 You are not medical advice. You do not diagnose, treat, cure, mitigate, or prevent any disease.
 Use structure/function language only: "supports", "may be associated with", "may be influenced by", "compare options".
 Do not say supplements relieve, treat, cure, fix, prevent, reverse, or heal any disease or symptom.
-Do not invent NutraPass products. Recommend only products supplied in the request or in the approved catalog.
+Do not invent NutraPass products. Recommend only products supplied in the request or in the approved catalog. Preserve each supplied product's URL when returning products.
 Do not invent citations. If a PubMed ID is supplied, you may include it. Otherwise omit citations.
 Include food-first and lifestyle-first guidance before supplements.
-Prioritize clinically backed ingredients and fundamentals first when evidence is reasonably strong and relevant to the user's wording.
-Traditional, botanical, alternative, or emerging options are acceptable as comparison options, but clearly label them as traditional, emerging, mixed-evidence, or situation-dependent when the evidence is weaker, mixed, or context-specific.
-Do not present traditional or alternative options as equally proven when clinically backed options have stronger support.
-For the Health Overview, infer a specific wellness pattern from the user's wording (digestive bloating vs reflux vs constipation vs sleep/stress vs fatigue/iron-status vs immune vs performance vs beauty). Explain what may be going on in plain language. Do not use the old causes-style heading and do not use generic filler unless the user gives no usable detail. If the user's wording is vague, ask them to identify the main pattern instead of pretending to know.
+Prioritize clinically backed ingredients first when evidence is reasonably strong for the user's goal. Traditional options and traditional or alternative options are acceptable when relevant, but clearly label them as traditional, emerging, or situation-dependent comparison options rather than presenting them as equally proven.
+For the Health Overview, infer a specific wellness pattern from the user's wording (digestive bloating vs reflux vs constipation vs sleep/stress vs fatigue/iron-status vs immune vs performance vs joint/mobility/connective tissue vs beauty). Explain what may be going on in plain language. Keep it concise: 3 short sections only — What may be going on, Food first, Easy things to try. Do not include a separate Nutrition options to compare section; ingredient cards and product links already cover comparisons. Do not use generic filler unless the user gives no usable detail. If the user's wording is vague but includes a real body clue (for example shoulder pain, crunchy joints, soreness, cramps, fatigue, sleep, bloating), choose the closest useful pattern and ask at most one clarifying question inside that specific overview instead of punting to broad categories.
+For menopause, perimenopause, hot flashes, night sweats, or midlife sleep concerns, include a short Health Overview that explains sleep disruption may be influenced by hormonal transition, night sweats/hot flashes, stress load, caffeine/alcohol timing, blood-sugar rhythm, mood changes, and nutrient status. Keep it educational, not diagnostic.
 Never tell the user their question does not match a category. Never expose internal routing, category matching, or classification logic. If the user gives no usable wellness detail, ask one short clarifying question instead of producing a broad wellness overview. If the user gives even one clue, choose the closest wellness pattern and write a specific Health Overview using plain language. Avoid generic lists such as "meal quality, protein, fiber, hydration, sleep, stress, movement, nutrient gaps" unless those items are directly tied to the user's stated goal.
 Include a stronger professional-care note for red flags such as severe pain, swelling, one-sided calf pain, warmth, chest pain, shortness of breath, numbness, sudden weakness, pregnancy/nursing, kidney disease, blood thinners, or persistent/worsening symptoms.
 Ingredient Research Notes requirements:
@@ -96,20 +333,22 @@ Ingredient Research Notes requirements:
 Return strict JSON only with this shape:
 {
   "summary": "one short paragraph",
-  "nutritionOverview": "What may be going on: issue-specific Health Overview explanation of the user's likely wellness pattern; avoid generic filler and do not use the old causes-style heading.\n\nFood first: ...\n\nEasy things to try: ...\n\nNutrition options to compare: ...\n\nUse supplements as optional add-ons...",
+  "nutritionOverview": "What may be going on: 1–2 concise sentences explaining the user's likely wellness pattern without diagnosing.\n\nFood first: 1 concise sentence with the most relevant food/routine basics.\n\nEasy things to try: 1–2 concise sentences with practical next steps and one clarifying question only if needed. Do not include a Nutrition options to compare section.",
   "ingredientNotes": [
     {"name":"Magnesium","bestFit":"Normal muscle function and relaxation-routine support","researchContext":"2–3 sentence research context...","typicalRange":"...","pubmedId":""},
     {"name":"Omega-3s","bestFit":"Secondary inflammatory-balance and heart-health comparison","researchContext":"2–3 sentence research context...","typicalRange":"...","pubmedId":""}
   ],
   "products": [
-    {"name":"H2O Electrolytes","brand":"Cellutrex","imageUrl":"","why":"..."},
-    {"name":"Stress Complex","brand":"Silver Fern","imageUrl":"","why":"..."}
+    {"name":"H2O Electrolytes","brand":"Cellutrex","url":"https://nutrapass.club/products/...","imageUrl":"","why":"..."},
+    {"name":"Stress Complex","brand":"Silver Fern","url":"https://nutrapass.club/products/...","imageUrl":"","why":"..."}
   ]
 }`;
 
 const CLINICAL_LOOKUP_PROMPT = `You are NutraPass's clinical nutrition literature lookup assistant.
 
-The user will provide one vitamin, mineral, herb, amino acid, botanical, or supplement ingredient. Write an educational research summary only. Do not diagnose, treat, cure, mitigate, prevent, reverse, fix, or heal any disease. Do not recommend that the user take the ingredient. Use language such as "studied for", "researched in", "may be associated with", "compare", and "review safety".
+The user will provide one vitamin, mineral, herb, amino acid, botanical, or supplement ingredient. Write an educational research summary only. Be friendly, upbeat, and reassuring while staying precise. Do not diagnose, treat, cure, mitigate, prevent, reverse, fix, or heal any disease. Do not recommend that the user take the ingredient. Use language such as "studied for", "researched in", "may be associated with", "compare", and "review safety".
+
+Prioritize clinically backed context first. Traditional or alternative options are acceptable to discuss when clearly labeled as traditional use, emerging evidence, mixed evidence, or situation-dependent. For Black cohosh and similar botanicals, be balanced, not dismissive: mention menopause-related research areas and the mixed evidence picture, then give practical caveats about extract form, liver-related safety review, pregnancy/nursing, medication context, and professional guidance when appropriate.
 
 Return strict JSON only with this shape:
 {
@@ -128,11 +367,10 @@ Link rules:
 
 const FOLLOW_UP_PROMPT = `You are NutraPass's educational wellness follow-up assistant.
 
-Use a friendly, upbeat, reassuring NutraPass voice: warm, clear, practical, and calm — like a nutrition research guide, not a clinician or hypey salesperson.
-Answer the shopper's follow-up question using the original NutraPass report context supplied in the request. Do not replace or rewrite the original report unless directly asked.
+Answer the shopper's follow-up question using the original NutraPass report context supplied in the request. Be warm, kind, and helpful — friendly, upbeat, and useful like a calm nutrition guide, not a clinician. Do not replace or rewrite the original report unless directly asked.
 
 Keep the answer tight: 55–110 words, 2 short paragraphs max, or 3 short bullets max. Avoid wall-of-text responses, markdown bolding, long numbered lists, and overly medical phrasing. Use plain-language structure/function wording only. Do not diagnose, treat, cure, mitigate, prevent, reverse, fix, or heal any disease or symptom. Do not invent NutraPass products. Use only the products and ingredient notes supplied in the request. Include food-first or practical next-step guidance when useful.
-Prioritize clinically backed ingredients and fundamentals first when evidence is reasonably strong and relevant to the shopper's wording. Traditional, botanical, alternative, or emerging options are acceptable as comparison options, but clearly label them as traditional, emerging, mixed-evidence, or situation-dependent when the evidence is weaker, mixed, or context-specific. Do not present traditional or alternative options as equally proven when clinically backed options have stronger support.
+Prioritize clinically backed ingredients first. Traditional or alternative options are fine when they are clearly framed as traditional, emerging, mixed-evidence, or situation-dependent comparison options.
 
 If the shopper asks about a product, brand, or supplement that is not in the supplied NutraPass products, do not force a NutraPass product. Give practical quality/clear-label guidance instead: look for a transparent Supplement Facts panel, exact ingredient forms and amounts, third-party testing or cGMP quality cues, minimal proprietary blends, allergen/sweetener clarity, and serving-size math that matches the research context. Return an empty products array unless a supplied product is directly relevant.
 
@@ -148,14 +386,14 @@ Return strict JSON only with this shape:
   ]
 }`;
 
-function json(data, status = 200) {
+function json(data, status = 200, origin = ALLOWED_ORIGINS_DEFAULT[0]) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...privacyHeaders, 'Content-Type': 'application/json' },
+    headers: { ...privacyHeaders(origin), 'Content-Type': 'application/json' },
   });
 }
 
-function healthPage() {
+function healthPage(origin = ALLOWED_ORIGINS_DEFAULT[0]) {
   return new Response(`<!doctype html>
 <html lang="en">
 <head>
@@ -180,13 +418,193 @@ function healthPage() {
 </body>
 </html>`, {
     status: 200,
-    headers: { ...privacyHeaders, 'Content-Type': 'text/html; charset=UTF-8' },
+    headers: { ...privacyHeaders(origin), 'Content-Type': 'text/html; charset=UTF-8' },
   });
+}
+
+async function verifyTurnstile(env, token, remoteIp) {
+  if (!env.TURNSTILE_SECRET_KEY) return { ok: true, skipped: true };
+  if (!token) return { ok: false, error: 'Missing Turnstile token' };
+  const form = new FormData();
+  form.append('secret', env.TURNSTILE_SECRET_KEY);
+  form.append('response', String(token));
+  if (remoteIp) form.append('remoteip', remoteIp);
+  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+  const result = await response.json().catch(() => ({}));
+  return { ok: Boolean(result.success), error: 'Turnstile verification failed' };
 }
 
 function safeParseJson(text) {
   const cleaned = String(text || '').trim().replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   return JSON.parse(cleaned);
+}
+
+function productNameKey(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function enrichProductLinks(parsed, suppliedProducts = []) {
+  if (!parsed || !Array.isArray(parsed.products)) return parsed;
+  const catalog = Array.isArray(suppliedProducts) ? suppliedProducts : [];
+  parsed.products = parsed.products.map((item) => {
+    if (!item || typeof item !== 'object') return item;
+    if (item.url || item.u) return item;
+    const itemKey = productNameKey(item.name || item.n);
+    const match = catalog.find((p) => {
+      const catalogKey = productNameKey(p.name || p.n);
+      return catalogKey && itemKey && (catalogKey === itemKey || catalogKey.includes(itemKey) || itemKey.includes(catalogKey));
+    });
+    if (!match) return item;
+    return {
+      ...item,
+      url: match.url || match.u || '',
+      u: match.u || match.url || '',
+      price: item.price || item.p || match.price || match.p || '',
+      p: item.p || item.price || match.p || match.price || '',
+      brand: item.brand || match.brand || '',
+      imageUrl: item.imageUrl || item.img || match.imageUrl || match.img || '',
+      img: item.img || item.imageUrl || match.img || match.imageUrl || ''
+    };
+  });
+  return parsed;
+}
+
+function textTokens(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+}
+
+function classifyCommonIntent(userText) {
+  const text = ` ${String(userText || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ')} `;
+  let best = { intent: 'other', score: 0 };
+  for (const intent of COMMON_INTENT_KEYS) {
+    const score = COMMON_INTENT_RESPONSES[intent].keywords.reduce((sum, keyword) => {
+      const normalized = String(keyword).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      return text.includes(` ${normalized} `) ? sum + Math.max(1, normalized.split(/\s+/).length) : sum;
+    }, 0);
+    if (score > best.score) best = { intent, score };
+  }
+  return best.score ? best.intent : 'other';
+}
+
+function hasNuancedContext(userText) {
+  const text = String(userText || '').toLowerCase();
+  return text.length > 220
+    || (/\b(ice|dirt|clay|chalk|laundry starch|cornstarch|pica)\b/.test(text) && /\b(crav|chew|eat|mouth|gnaw)\w*/.test(text))
+    || /\b(menopause|perimenopause|hot flash|hot flashes|night sweat|night sweats|midlife)\b/.test(text)
+    || /\b(pregnant|nursing|breastfeeding|child|kidney|liver|heart disease|cancer|diabetes|blood pressure|warfarin|ssri|maoi|medication|diagnosed|doctor|clinician|surgery|allergy|allergic)\b/.test(text);
+}
+
+function shouldUseCommonFastPath(body, userText) {
+  if (body && body.forceAi === true) return false;
+  const intent = classifyCommonIntent(userText);
+  return intent !== 'other' && !hasNuancedContext(userText);
+}
+
+function commonResponseKey(intent) {
+  return `${COMMON_RESPONSE_CACHE_PREFIX}${intent}`;
+}
+
+async function readCommonResponseCache(env, intent) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.get) return null;
+  const cached = await env.PRODUCT_CATALOG_KV.get(commonResponseKey(intent), 'json');
+  if (!cached || cached.intent !== intent) return null;
+  return cached;
+}
+
+async function writeCommonResponseCache(env, intent, response) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.put) return response;
+  const payload = { ...response, intent, cachedAt: new Date().toISOString() };
+  await env.PRODUCT_CATALOG_KV.put(commonResponseKey(intent), JSON.stringify(payload), { expirationTtl: COMMON_RESPONSE_CACHE_TTL_SECONDS });
+  return payload;
+}
+
+function buildCommonIntentResponse(intent, products = []) {
+  const template = COMMON_INTENT_RESPONSES[intent] || COMMON_INTENT_RESPONSES.gut_health;
+  const productCards = (products || []).slice(0, 6).map((p) => ({
+    name: p.name || p.n || '',
+    brand: p.brand || '',
+    price: p.price || p.p || '',
+    url: p.url || p.u || '',
+    u: p.u || p.url || '',
+    imageUrl: p.imageUrl || p.img || '',
+    img: p.img || p.imageUrl || '',
+    why: p.why || p.w || 'Relevant NutraPass product to compare for this educational goal.'
+  }));
+  return {
+    summary: template.summary,
+    nutritionOverview: `${template.overview}\n\nFood first: keep the basics in place before adding products — regular meals, enough protein/fiber where relevant, hydration, sleep, and consistency.`,
+    ingredientNotes: template.ingredients.map((name) => ({
+      name,
+      bestFit: 'Common comparison point for this goal',
+      researchContext: 'Educational starting point for comparing product fit, ingredient form, serving size, and cautions. Not medical advice.',
+      typicalRange: 'Follow product label directions and professional guidance when relevant.',
+      pubmedId: ''
+    })),
+    products: productCards,
+    followUpQuestions: template.followUps,
+    type: 'common_intent',
+    intent
+  };
+}
+
+function updateAverage(existingAverage, existingCount, nextValue) {
+  const count = Number(existingCount || 0);
+  const avg = Number(existingAverage || 0);
+  return Math.round(((avg * count) + Number(nextValue || 0)) / (count + 1));
+}
+
+async function recordQuestionAnalytics(env, event = {}) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.get || !env.PRODUCT_CATALOG_KV.put) return;
+  const intent = COMMON_INTENT_KEYS.includes(event.intent) ? event.intent : 'other';
+  const key = `${QUESTION_ANALYTICS_PREFIX}${intent}`;
+  const now = new Date().toISOString();
+  const existing = await env.PRODUCT_CATALOG_KV.get(key, 'json') || {};
+  const count = Number(existing.count || 0) + 1;
+  const cacheHits = Number(existing.cacheHits || 0) + (event.cacheHit ? 1 : 0);
+  const aiUses = Number(existing.aiUses || 0) + (event.aiUsed ? 1 : 0);
+  const payload = {
+    intent,
+    count,
+    cacheHits,
+    aiUses,
+    firstSeenAt: existing.firstSeenAt || now,
+    lastSeenAt: now,
+    avgResponseMs: updateAverage(existing.avgResponseMs, existing.count, event.responseMs || 0)
+  };
+  await env.PRODUCT_CATALOG_KV.put(key, JSON.stringify(payload));
+}
+
+async function getQuestionAnalyticsSummary(env) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.list || !env.PRODUCT_CATALOG_KV.get) {
+    return { intents: [], mode: 'analytics_unavailable' };
+  }
+  const listed = await env.PRODUCT_CATALOG_KV.list({ prefix: QUESTION_ANALYTICS_PREFIX, limit: 100 });
+  const rows = [];
+  for (const item of listed.keys || []) {
+    const row = await env.PRODUCT_CATALOG_KV.get(item.name, 'json');
+    if (!row || !row.intent) continue;
+    const first = row.firstSeenAt ? Date.parse(row.firstSeenAt) : 0;
+    const last = row.lastSeenAt ? Date.parse(row.lastSeenAt) : first;
+    rows.push({
+      intent: row.intent,
+      count: Number(row.count || 0),
+      firstSeenAt: row.firstSeenAt || null,
+      lastSeenAt: row.lastSeenAt || null,
+      activeDays: first && last ? Math.max(1, Math.ceil((last - first + 1) / 86400000)) : 0,
+      avgResponseMs: Number(row.avgResponseMs || 0),
+      cacheHits: Number(row.cacheHits || 0),
+      aiUses: Number(row.aiUses || 0)
+    });
+  }
+  rows.sort((a, b) => b.count - a.count || a.intent.localeCompare(b.intent));
+  return { mode: 'privacy_safe_question_analytics', storesRawQuestions: false, intents: rows };
+}
+
+function canReadAnalytics(request, env) {
+  const token = env && env.ANALYTICS_READ_TOKEN ? String(env.ANALYTICS_READ_TOKEN) : '';
+  if (!token) return false;
+  const supplied = request.headers.get('X-NutraPass-Analytics-Token') || new URL(request.url).searchParams.get('token') || '';
+  return supplied === token;
 }
 
 function staticFallback(goal, products = [], ingredients = []) {
@@ -196,9 +614,11 @@ function staticFallback(goal, products = [], ingredients = []) {
   const reflux = has(/reflux|acid|heartburn|gerd|burning|indigestion|burp/);
   const bloat = has(/bloat|bloated|gas|fodmap|ibs|distend/);
   const constipation = has(/constipat|regularity|bowel|motility|poop|stool/);
+  const menopauseSleep = has(/menopause|perimenopause|hot flash|hot flashes|night sweat|midlife/) && has(/sleep|insomnia|night|tired|fatigue|wake|waking/);
   const sleepStress = has(/sleep|insomnia|stress|anxiety|burnout|worry|cortisol|tired|fatigue/);
   const immune = has(/immune|cold|flu|sick|sinus|seasonal/);
   const performance = !pica && has(/strength|muscle|body|composition|weight|metabolism|workout|cramp|calf|sore|recovery|leg/);
+  const jointMobility = has(/shoulder|joint|joints|crunchy|click|clicking|pop|popping|grind|grinding|mobility|stiff|stiffness|tendon|ligament|cartilage|rotator|elbow|knee|hip|neck|back|pain|ache|aches|sore|soreness/);
   const beauty = has(/hair|skin|nail|beauty|collagen|acne|dry skin/);
 
   const ingredientPool = {
@@ -230,6 +650,21 @@ function staticFallback(goal, products = [], ingredients = []) {
       { name: 'Ashwagandha', bestFit: 'Stress-resilience comparison', researchContext: 'Ashwagandha is researched for perceived stress and sleep quality, but it is not appropriate for everyone.', typicalRange: 'Common extract range: 300–600 mg/day; use caution with thyroid, pregnancy/nursing, autoimmune issues, or medications.', pubmedId: '31517876' },
       { name: 'Melatonin', bestFit: 'Sleep timing and circadian-rhythm support', researchContext: 'Melatonin is best framed around sleep timing rather than general sedation.', typicalRange: 'Use the lowest effective label dose and avoid mixing with sedatives without professional guidance.', pubmedId: '' }
     ],
+    menopauseSleep: [
+      { name: 'Magnesium', bestFit: 'Clinically backed relaxation-routine and normal muscle/nerve support', researchContext: 'Magnesium is researched for normal nerve and muscle function and is often compared in sleep and relaxation routines. For menopause-related sleep questions, it is a practical first comparison because form, dose, and digestive tolerance can be checked clearly on labels.', typicalRange: 'Common supplemental range: 100–400 mg/day elemental magnesium depending on form and tolerance.', pubmedId: '35184264' },
+      { name: 'L-theanine', bestFit: 'Clinically backed calm wind-down support without heavy sedation', researchContext: 'L-theanine is studied for calm focus, relaxation, and sleep-quality related outcomes. It fits best when stress, racing thoughts, or wind-down difficulty are part of the sleep pattern.', typicalRange: 'Common range: 100–200 mg as needed or daily depending on product directions.', pubmedId: '31751906' },
+      { name: 'Glycine', bestFit: 'Clinically studied sleep-quality and bedtime-routine comparison', researchContext: 'Glycine has human research in sleep-quality and next-day fatigue contexts, often as a bedtime amino-acid option. It is a comparison option, not a substitute for addressing hot flashes, caffeine timing, stress, or sleep schedule.', typicalRange: 'Common study range: about 3 g near bedtime; follow product directions.', pubmedId: '' },
+      { name: 'Soy isoflavones', bestFit: 'Traditional / mixed-evidence menopause comfort comparison', researchContext: 'Soy isoflavones are studied as phytoestrogen compounds in menopause-related research, especially hot flash and comfort outcomes. Evidence and fit vary by person, diet pattern, product standardization, and medical context.', typicalRange: 'Dose varies by isoflavone content; compare label amounts and ask a qualified professional if you have hormone-sensitive conditions or medications.', pubmedId: '' },
+      { name: 'Black cohosh', bestFit: 'Traditional botanical / mixed-evidence menopause support comparison', researchContext: 'Black cohosh is a traditional botanical commonly researched around menopause-related comfort and hot flash patterns, with mixed findings across studies. It deserves balanced review rather than automatic dismissal: compare extract type, quality, duration studied, and safety context.', typicalRange: 'Follow label directions for standardized extracts; review liver-related cautions and medication/pregnancy/nursing context with a qualified professional.', pubmedId: '' },
+      { name: 'Saffron', bestFit: 'Emerging mood and sleep-quality comparison', researchContext: 'Saffron has emerging research in mood, stress, and sleep-quality related outcomes. It is best framed as an alternative comparison option when mood or stress load overlaps with sleep changes.', typicalRange: 'Common extract range in studies is often around 28–30 mg/day; follow label directions.', pubmedId: '' }
+    ],
+    jointMobility: [
+      { name: 'Collagen peptides', bestFit: 'Connective-tissue and joint-support comparison', researchContext: 'Collagen peptides are studied in connective-tissue, tendon, skin, and joint-comfort contexts. They fit best as a longer-term comparison option alongside protein adequacy, strength work, and movement mechanics.', typicalRange: 'Common range: 5–15 g/day; follow label directions.', pubmedId: '33742704' },
+      { name: 'Omega-3s', bestFit: 'Inflammatory-balance and general joint-support comparison', researchContext: 'Omega-3 fatty acids are researched for inflammatory balance and broad cardiometabolic support. They are a comparison option when joint comfort overlaps with low fish intake or general inflammation-support goals.', typicalRange: 'Common range: 1–2 g/day combined EPA/DHA depending on product and guidance.', pubmedId: '20439549' },
+      { name: 'Curcumin / turmeric extract', bestFit: 'Botanical joint-comfort comparison', researchContext: 'Curcumin is a botanical compound commonly researched in joint-comfort and inflammatory-balance contexts. Absorption form and medication context matter, especially with blood thinners or surgery.', typicalRange: 'Follow product directions; many extracts are standardized and paired with absorption aids.', pubmedId: '' },
+      { name: 'Glucosamine / chondroitin / MSM category', bestFit: 'Traditional joint-support category comparison', researchContext: 'These are common joint-support ingredients with mixed and situation-dependent evidence. They are best compared by form, dose, shellfish source, medication context, and trial period rather than treated as quick fixes.', typicalRange: 'Follow label directions; review shellfish allergy, blood thinner, diabetes, or medication context with a professional.', pubmedId: '' },
+      { name: 'Magnesium', bestFit: 'Normal muscle function and tension-support comparison', researchContext: 'Magnesium supports normal muscle and nerve function and may be relevant when tightness, stress, or sleep quality overlaps with musculoskeletal discomfort. It does not replace evaluation for injury, weakness, or persistent pain.', typicalRange: 'Common supplemental range: 100–400 mg/day elemental magnesium depending on form and tolerance.', pubmedId: '35184264' }
+    ],
     immune: [
       { name: 'Vitamin D3', bestFit: 'Immune and bone-health nutrient status comparison', researchContext: 'Vitamin D is researched for immune and bone-health support; blood levels help personalize need.', typicalRange: 'Common supplemental range: 1,000–2,000 IU/day, but blood levels and clinician guidance matter.', pubmedId: '32252338' },
       { name: 'Zinc', bestFit: 'Normal immune function support', researchContext: 'Zinc supports normal immune function; dose and duration matter because high zinc can affect copper status.', typicalRange: 'Common range: 10–30 mg/day; avoid long-term high-dose use without guidance.', pubmedId: '31305906' },
@@ -251,7 +686,7 @@ function staticFallback(goal, products = [], ingredients = []) {
   };
 
   let key = 'general';
-  if (pica) key = 'pica'; else if (reflux) key = 'reflux'; else if (bloat) key = 'bloat'; else if (constipation) key = 'constipation'; else if (sleepStress) key = 'sleepStress'; else if (immune) key = 'immune'; else if (performance) key = 'performance'; else if (beauty) key = 'beauty';
+  if (pica) key = 'pica'; else if (reflux) key = 'reflux'; else if (bloat) key = 'bloat'; else if (constipation) key = 'constipation'; else if (menopauseSleep) key = 'menopauseSleep'; else if (sleepStress) key = 'sleepStress'; else if (immune) key = 'immune'; else if (jointMobility) key = 'jointMobility'; else if (performance) key = 'performance'; else if (beauty) key = 'beauty';
 
   const normalizeSuppliedIngredient = (i, idx) => {
     const rawName = i.name || i.nm || `Ingredient ${idx + 1}`;
@@ -276,13 +711,15 @@ function staticFallback(goal, products = [], ingredients = []) {
       return true;
     })
     .slice(0, 12);
-  const suppliedProducts = (products || []).slice(0, 4).map(p => ({ name: p.name, brand: productBrand(p.name, p.brand), imageUrl: p.imageUrl || '', why: p.why || 'Closest product fit from the NutraPass catalog' }));
+  const suppliedProducts = (products || []).slice(0, 4).map(p => ({ name: p.name || p.n, brand: productBrand(p.name || p.n, p.brand), url: p.url || p.u || '', u: p.u || p.url || '', price: p.price || p.p || '', imageUrl: p.imageUrl || p.img || '', why: p.why || p.w || 'Closest product fit from the NutraPass catalog' }));
   const productMap = {
     pica: [{ name: 'Ultimate Wellness Bundle', why: 'Broad daily wellness comparison only; prioritize clinician-guided iron-status evaluation before supplement choices' }, { name: 'Stress Complex', why: 'Sleep and shift-work routine support comparison' }],
     reflux: [{ name: 'Upper GI Relief', why: 'Upper digestive comfort comparison' }, { name: 'Reflux Plus Kit', why: 'Acid/reflux support kit comparison' }, { name: 'Digestive Enzyme', why: 'Meal-time digestion support comparison' }],
     bloat: [{ name: 'Bloat Relief Kit', why: 'Bloat and gas support comparison' }, { name: 'Bloat & Gas Relief', why: 'FODMAP-related comfort comparison' }, { name: 'Complete Biotic Kit', why: 'Microbiome support comparison' }],
     constipation: [{ name: 'Motility - Constipation Support', why: 'Non-laxative motility support comparison' }, { name: 'Regularity', why: 'Regularity support comparison' }, { name: 'Ultimate Fiber', why: 'Prebiotic fiber comparison' }],
     sleepStress: [{ name: 'Stress Complex', why: 'Calm and sleep routine support comparison' }, { name: 'The Burnout Kit', why: 'Stress and fatigue stack comparison' }],
+    menopauseSleep: [{ name: 'Stress Complex', why: 'Calm wind-down and sleep-routine support comparison' }, { name: 'The Burnout Kit', why: 'Stress and low-energy routine comparison when fatigue overlaps with sleep disruption' }],
+    jointMobility: [{ name: 'Joint Complex', why: 'Joint comfort and mobility routine comparison' }, { name: 'Hair Skin & Nails', why: 'Collagen/beauty-from-within product to compare when connective-tissue nutrients are relevant' }],
     immune: [{ name: 'Immune+ Protocol', why: 'Immune system support comparison' }, { name: 'Postbiotic+', why: 'Gut and immune support comparison' }, { name: 'Whole Food Multivitamin', why: 'Daily vitamin/mineral foundation comparison' }],
     performance: [{ name: 'H2O Electrolytes', why: 'Hydration and electrolyte balance support' }, { name: 'Build - Strength & Muscle', why: 'Training and recovery routine support' }, { name: 'Build Up Protocol', why: 'Stack for build goals comparison' }],
     beauty: [{ name: 'Hair Skin & Nails', why: 'Beauty-from-within support comparison' }, { name: 'Hair Complex - Keratin & Silica', why: 'Hair strength nutrient comparison' }]
@@ -290,23 +727,29 @@ function staticFallback(goal, products = [], ingredients = []) {
   const chosenProducts = (productMap[key] || suppliedProducts).map(p => ({
     ...p,
     brand: productBrand(p.name, p.brand),
-    imageUrl: p.imageUrl || ''
+    url: p.url || p.u || '',
+    u: p.u || p.url || '',
+    price: p.price || p.p || '',
+    imageUrl: p.imageUrl || p.img || '',
+    img: p.img || p.imageUrl || ''
   }));
 
   const overviewMap = {
-    pica: 'What may be going on: craving ice or non-food items plus restless legs can sometimes overlap with iron-status questions, low ferritin, B-vitamin status, sleep disruption, stress load, pregnancy, heavy menstrual bleeding, or absorption issues. This is worth lab-based follow-up rather than guessing from symptoms alone.\n\nFood first: compare iron-containing foods such as lean meats, seafood, beans, lentils, tofu, spinach, pumpkin seeds, and fortified foods; pair plant iron with vitamin C-rich foods like citrus, berries, kiwi, bell pepper, or broccoli.\n\nEasy things to try: track when cravings or restless-leg sensations happen, note energy, dizziness, shortness of breath, menstrual/blood-loss context, caffeine timing, and sleep schedule, then ask a clinician about CBC, ferritin, and iron studies if it persists.\n\nNutrition options to compare: iron status labs, vitamin C with meals, B12/folate status, magnesium for normal muscle relaxation, hydration, and protein adequacy. Do not start high-dose iron without blood work and professional guidance because excess iron can be unsafe.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    reflux: 'What may be going on: upper-digestive discomfort can be influenced by meal size, eating pace, late-night meals, higher-fat meals, caffeine/alcohol, spicy or acidic foods, mint/chocolate triggers, stress, and individual tolerance patterns. Burning, chest discomfort, trouble swallowing, vomiting blood, or unexplained weight loss should be handled medically.\n\nFood first: try smaller balanced meals, lower-fat evening meals, oatmeal, bananas, lean proteins, cooked vegetables, and non-mint herbal tea if tolerated.\n\nEasy things to try: avoid lying down right after eating, leave 2–3 hours before bed, slow down meals, and track triggers such as coffee, alcohol, chocolate, mint, spicy foods, and large late meals.\n\nNutrition options to compare: digestive enzymes for meal-time support, ginger only if tolerated, and upper-GI/reflux-focused products. Avoid anything that worsens burning or nausea.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    bloat: 'What may be going on: bloating and gas patterns can be influenced by how quickly meals are eaten, fermentable carbohydrates/FODMAP load, constipation or slow transit, microbiome shifts, fiber changes, carbonated drinks, stress, and food tolerance.\n\nFood first: use simple tolerated foods while observing patterns: oats, rice/potatoes, lean protein, cooked vegetables, kiwi, yogurt/kefir if tolerated, and adequate fluids. Increase beans, cruciferous vegetables, and high-fiber foods gradually.\n\nEasy things to try: walk 5–10 minutes after meals, eat slower, keep a food/symptom log, avoid changing several foods or supplements at once, and notice whether symptoms track with dairy, wheat, onions/garlic, carbonated drinks, or large portions.\n\nNutrition options to compare: digestive enzymes, probiotics/postbiotics, gentle prebiotic fiber, peppermint oil only if reflux is not an issue, and bloat/FODMAP-focused products.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    constipation: 'What may be going on: regularity issues can be influenced by fluid intake, fiber type, low food volume, travel, schedule changes, inactivity, stress, medications, magnesium intake, and normal motility patterns.\n\nFood first: compare kiwi, prunes, oats, chia/flax, beans/lentils as tolerated, cooked vegetables, enough fluids, and regular meals rather than skipping food all day.\n\nEasy things to try: build a consistent morning routine, walk daily, increase fiber gradually, pair fiber with water, and track whether travel, stress, or low meal volume changes bowel patterns.\n\nNutrition options to compare: prebiotic fiber, magnesium forms that support regularity, probiotics/postbiotics, and motility/regularity products. Add slowly to avoid making gas or bloating worse.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    sleepStress: 'What may be going on: sleep, stress, and low-energy patterns can be influenced by caffeine timing, inconsistent sleep/wake rhythm, evening light exposure, high stress load, under-eating, low protein, low magnesium intake, overtraining, alcohol, and mood or thyroid/iron/B12 issues.\n\nFood first: include protein at meals, magnesium-rich foods such as pumpkin seeds/spinach/beans, complex carbs at dinner if tolerated, steady hydration, and lower caffeine intake after late morning or early afternoon.\n\nEasy things to try: set a consistent wind-down time, dim screens/lights before bed, get morning daylight, keep workouts earlier if they feel stimulating, and use breathing or a short walk to downshift stress.\n\nNutrition options to compare: magnesium, L-theanine, melatonin for timing-focused sleep needs, stress-support blends such as ashwagandha, plus iron/B12/folate status if fatigue is prominent.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    immune: 'What may be going on: immune-support needs are often shaped by sleep quality, stress load, vitamin D status, protein intake, gut health, hydration, seasonal exposure, and overall diet quality. Frequent, severe, or prolonged infections should be discussed with a clinician.\n\nFood first: focus on colorful fruits/vegetables, citrus or berries, protein with each meal, zinc foods like seafood/meat/pumpkin seeds, fermented foods, and steady hydration.\n\nEasy things to try: prioritize sleep, wash hands, keep workouts moderate when run down, get daylight, and avoid megadosing single nutrients for long periods.\n\nNutrition options to compare: vitamin D3, zinc, vitamin C, probiotics/postbiotics, and a multivitamin if diet gaps are likely. Compare dose limits and avoid duplicating nutrients across products.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    performance: 'What may be going on: body-composition, cramping, soreness, and performance goals can be influenced by protein distribution, training progression, hydration/electrolytes, sleep, total energy intake, magnesium status, and recovery time. Sudden one-sided calf pain, swelling, warmth, chest pain, or shortness of breath should be treated as urgent.\n\nFood first: build protein-forward meals, high-fiber carbs around activity, fruits/vegetables, and fluids with electrolytes when sweating.\n\nEasy things to try: lift consistently, walk daily, plan protein at breakfast, stretch or mobilize tight areas gently, sleep enough for recovery, and track progress with strength/energy/waist or fit rather than day-to-day scale noise only.\n\nNutrition options to compare: protein, creatine, electrolytes, magnesium, omega-3s, and metabolism/body-composition products.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
-    beauty: 'What may be going on: hair, skin, and nail changes can be influenced by protein intake, iron/zinc status, essential fatty acids, thyroid or hormone changes, stress load, biotin status, collagen support, skin barrier habits, and normal growth cycles. Sudden hair loss, brittle nails, or major skin changes should be evaluated.\n\nFood first: prioritize adequate protein, vitamin-C foods, eggs/fish/lean meats or legumes, nuts/seeds, colorful produce, omega-3-rich foods, and enough calories overall.\n\nEasy things to try: be consistent for 8–12+ weeks, avoid crash dieting, protect sleep, simplify harsh skin/hair routines, and consider labs if changes are sudden or persistent.\n\nNutrition options to compare: collagen peptides, biotin, zinc, omega-3s, hair/skin/nail blends, and mineral-containing multis. Avoid assuming more is better; high-dose biotin can interfere with some lab tests.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.'
+    pica: 'What may be going on: craving ice or non-food items plus restless legs can sometimes overlap with iron-status questions, low ferritin, B-vitamin status, sleep disruption, stress load, pregnancy, heavy menstrual bleeding, or absorption issues. This is worth lab-based follow-up rather than guessing from symptoms alone.\n\nFood first: compare iron-containing foods such as lean meats, seafood, beans, lentils, tofu, spinach, pumpkin seeds, and fortified foods; pair plant iron with vitamin C-rich foods like citrus, berries, kiwi, bell pepper, or broccoli.\n\nEasy things to try: track when cravings or restless-leg sensations happen, note energy, dizziness, shortness of breath, menstrual/blood-loss context, caffeine timing, and sleep schedule, then ask a clinician about CBC, ferritin, and iron studies if it persists.',
+    reflux: 'What may be going on: upper-digestive discomfort can be influenced by meal size, eating pace, late-night meals, higher-fat meals, caffeine/alcohol, spicy or acidic foods, mint/chocolate triggers, stress, and individual tolerance patterns. Burning, chest discomfort, trouble swallowing, vomiting blood, or unexplained weight loss should be handled medically.\n\nFood first: try smaller balanced meals, lower-fat evening meals, oatmeal, bananas, lean proteins, cooked vegetables, and non-mint herbal tea if tolerated.\n\nEasy things to try: avoid lying down right after eating, leave 2–3 hours before bed, slow down meals, and track triggers such as coffee, alcohol, chocolate, mint, spicy foods, and large late meals.',
+    bloat: 'What may be going on: bloating and gas patterns can be influenced by how quickly meals are eaten, fermentable carbohydrates/FODMAP load, constipation or slow transit, microbiome shifts, fiber changes, carbonated drinks, stress, and food tolerance.\n\nFood first: use simple tolerated foods while observing patterns: oats, rice/potatoes, lean protein, cooked vegetables, kiwi, yogurt/kefir if tolerated, and adequate fluids. Increase beans, cruciferous vegetables, and high-fiber foods gradually.\n\nEasy things to try: walk 5–10 minutes after meals, eat slower, keep a food/symptom log, avoid changing several foods or supplements at once, and notice whether symptoms track with dairy, wheat, onions/garlic, carbonated drinks, or large portions.',
+    constipation: 'What may be going on: regularity issues can be influenced by fluid intake, fiber type, low food volume, travel, schedule changes, inactivity, stress, medications, magnesium intake, and normal motility patterns.\n\nFood first: compare kiwi, prunes, oats, chia/flax, beans/lentils as tolerated, cooked vegetables, enough fluids, and regular meals rather than skipping food all day.\n\nEasy things to try: build a consistent morning routine, walk daily, increase fiber gradually, pair fiber with water, and track whether travel, stress, or low meal volume changes bowel patterns.',
+    sleepStress: 'What may be going on: sleep, stress, and low-energy patterns can be influenced by caffeine timing, inconsistent sleep/wake rhythm, evening light exposure, high stress load, under-eating, low protein, low magnesium intake, overtraining, alcohol, and mood or thyroid/iron/B12 issues.\n\nFood first: include protein at meals, magnesium-rich foods such as pumpkin seeds/spinach/beans, complex carbs at dinner if tolerated, steady hydration, and lower caffeine intake after late morning or early afternoon.\n\nEasy things to try: set a consistent wind-down time, dim screens/lights before bed, get morning daylight, keep workouts earlier if they feel stimulating, and use breathing or a short walk to downshift stress.',
+    menopauseSleep: 'What may be going on: sleep changes during menopause or perimenopause may be influenced by hormonal transition, hot flashes or night sweats, stress load, caffeine/alcohol timing, evening light exposure, blood-sugar rhythm, mood changes, and iron/B12/thyroid or magnesium status. This is common enough to explore thoughtfully, but persistent or severe sleep disruption, heavy bleeding, mood changes, or medication questions deserve professional guidance.\n\nFood first: anchor protein at meals, include magnesium-rich foods such as pumpkin seeds/spinach/beans, consider soy foods if tolerated, keep alcohol and late caffeine modest, and use steady hydration without overdoing fluids right before bed.\n\nEasy things to try: cool the room, use breathable layers, get morning daylight, dim screens/lights before bed, track hot flashes/night sweats and caffeine/alcohol timing, and change one supplement or routine variable at a time.',
+    jointMobility: 'What may be going on: a crunchy, painful shoulder can come from several non-diagnosis patterns, including tendon irritation, joint mechanics, old injury, overuse, posture/desk load, strength imbalance, or normal crepitus that becomes more concerning when pain is present. New severe pain, swelling, numbness, weakness, instability, injury, fever, or worsening range of motion deserves professional evaluation.\n\nFood first: support connective tissue and recovery basics with enough protein, colorful produce for vitamin C/polyphenols, omega-3-rich fish or seeds, hydration, and consistent meals.\n\nEasy things to try: reduce painful loading for a few days, note what motions trigger it, use gentle range-of-motion rather than forcing through pain, and consider a physical therapist or clinician if it persists or limits daily movement.',
+    immune: 'What may be going on: immune-support needs are often shaped by sleep quality, stress load, vitamin D status, protein intake, gut health, hydration, seasonal exposure, and overall diet quality. Frequent, severe, or prolonged infections should be discussed with a clinician.\n\nFood first: focus on colorful fruits/vegetables, citrus or berries, protein with each meal, zinc foods like seafood/meat/pumpkin seeds, fermented foods, and steady hydration.\n\nEasy things to try: prioritize sleep, wash hands, keep workouts moderate when run down, get daylight, and avoid megadosing single nutrients for long periods.',
+    performance: 'What may be going on: body-composition, cramping, soreness, and performance goals can be influenced by protein distribution, training progression, hydration/electrolytes, sleep, total energy intake, magnesium status, and recovery time. Sudden one-sided calf pain, swelling, warmth, chest pain, or shortness of breath should be treated as urgent.\n\nFood first: build protein-forward meals, high-fiber carbs around activity, fruits/vegetables, and fluids with electrolytes when sweating.\n\nEasy things to try: lift consistently, walk daily, plan protein at breakfast, stretch or mobilize tight areas gently, sleep enough for recovery, and track progress with strength/energy/waist or fit rather than day-to-day scale noise only.',
+    beauty: 'What may be going on: hair, skin, and nail changes can be influenced by protein intake, iron/zinc status, essential fatty acids, thyroid or hormone changes, stress load, biotin status, collagen support, skin barrier habits, and normal growth cycles. Sudden hair loss, brittle nails, or major skin changes should be evaluated.\n\nFood first: prioritize adequate protein, vitamin-C foods, eggs/fish/lean meats or legumes, nuts/seeds, colorful produce, omega-3-rich foods, and enough calories overall.\n\nEasy things to try: be consistent for 8–12+ weeks, avoid crash dieting, protect sleep, simplify harsh skin/hair routines, and consider labs if changes are sudden or persistent.'
   };
 
   return {
-    summary: key === 'general' ? 'I can help narrow this into a more useful NutraPass research summary with one quick direction.' : `I’m reading this as a ${key.replace('sleepStress', 'sleep/stress').replace('pica', 'iron-status / unusual-craving')} support question, so the overview is tailored to that pattern.`,
-    nutritionOverview: overviewMap[key] || 'What may be going on: what is the main thing you want help comparing right now — digestion, energy, sleep/stress, body composition, immunity, or hair/skin/nails? With that direction, NutraPass can give a more specific food-first overview and ingredient comparison instead of guessing.\n\nFood first: once the main pattern is clear, start with the simplest meal or routine lever connected to that goal.\n\nEasy things to try: pick one focus area, note timing and triggers for a few days, and avoid adding multiple supplements at once.\n\nNutrition options to compare: compare ingredient form, serving size, cautions, and product overlap after the goal is clearer.\n\nSupplements should be optional add-ons, not substitutes for food, sleep, movement, or medical care.',
+    summary: key === 'general' ? 'I can help narrow this into a more useful NutraPass research summary with one quick direction.' : `I’m reading this as a ${key.replace('sleepStress', 'sleep/stress').replace('pica', 'iron-status / unusual-craving').replace('jointMobility', 'joint/mobility')} support question, so the overview is tailored to that pattern.`,
+    nutritionOverview: overviewMap[key] || 'What may be going on: I need one more clue to make this useful instead of guessing. What is the main thing you want help comparing — digestion, energy, sleep/stress, body composition, immunity, joint/mobility, or hair/skin/nails?\n\nFood first: once the main pattern is clear, start with the simplest meal or routine lever connected to that goal.\n\nEasy things to try: pick one focus area, note timing and triggers for a few days, and avoid adding multiple supplements at once.',
     ingredientNotes: chosenIngredients,
     products: chosenProducts
   };
@@ -540,14 +983,40 @@ async function rewriteGenericWellnessAnswer(provider, env, userPayload, parsed, 
 }
 
 export default {
-  async fetch(request, env) {
-    if (request.method === 'OPTIONS') return new Response(null, { headers: privacyHeaders });
-    if (request.method === 'GET' || request.method === 'HEAD') return healthPage();
-    if (request.method !== 'POST') return json({ error: 'POST only' }, 405);
+  async fetch(request, env, ctx) {
+    const requestStartedAt = Date.now();
+    const allowOrigin = pickOrigin(request, env);
+    if (request.method === 'OPTIONS') return new Response(null, { headers: privacyHeaders(allowOrigin) });
+    const url = new URL(request.url);
+    if ((request.method === 'GET' || request.method === 'HEAD') && /^\/question-analytics\/?$/.test(url.pathname)) {
+      if (!canReadAnalytics(request, env)) return json({ error: 'Not found' }, 404, allowOrigin);
+      return json(await getQuestionAnalyticsSummary(env), 200, allowOrigin);
+    }
+    if ((request.method === 'GET' || request.method === 'HEAD') && /^\/(products|product-catalog)\/?$/.test(url.pathname)) {
+      return json(await getProductCatalog(env), 200, allowOrigin);
+    }
+    if (request.method === 'POST' && /^\/(products|product-catalog)\/refresh\/?$/.test(url.pathname)) {
+      return json(await refreshProductCatalogCache(env, 'manual_refresh'), 200, allowOrigin);
+    }
+    if (request.method === 'GET' || request.method === 'HEAD') return healthPage(allowOrigin);
+    if (request.method !== 'POST') return json({ error: 'POST only' }, 405, allowOrigin);
+
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > MAX_BODY_BYTES) return json({ error: 'Request too large' }, 413, allowOrigin);
 
     let body;
     try { body = await request.json(); }
-    catch { return json({ error: 'Invalid JSON body' }, 400); }
+    catch { return json({ error: 'Invalid JSON body' }, 400, allowOrigin); }
+
+    const turnstile = await verifyTurnstile(env, body.turnstileToken, request.headers.get('CF-Connecting-IP') || '');
+    if (!turnstile.ok) return json({ error: turnstile.error || 'Turnstile verification failed' }, 403, allowOrigin);
+
+    if (body.productCatalog === true || body.liveProducts === true) {
+      return json(await getProductCatalog(env), 200, allowOrigin);
+    }
+    if (body.refreshProductCatalog === true) {
+      return json(await refreshProductCatalogCache(env, 'manual_refresh'), 200, allowOrigin);
+    }
 
     const clinicalLookup = String(body.clinicalLookup || body.lookupIngredient || '').slice(0, 160);
     if (clinicalLookup.trim()) {
@@ -557,15 +1026,15 @@ export default {
         linkPreference: 'Return durable research/search links only. Do not invent PubMed IDs.'
       };
       const provider = selectAiProvider(body, env);
-      if (provider === 'fallback') return json(staticClinicalLookupFallback(clinicalLookup));
+      if (provider === 'fallback') return json(staticClinicalLookupFallback(clinicalLookup), 200, allowOrigin);
       try {
         const content = provider === 'claude'
           ? await callClaudeClinicalLookup(env, lookupPayload)
           : await callOpenAiClinicalLookup(env, lookupPayload);
         const parsed = safeParseJson(content);
-        return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai', type: 'clinicalLookup' });
+        return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai', type: 'clinicalLookup' }, 200, allowOrigin);
       } catch (error) {
-        return json({ ...staticClinicalLookupFallback(clinicalLookup), mode: `fallback_${provider}_clinical_error`, error: 'AI provider unavailable; static clinical lookup fallback used.' });
+        return json({ ...staticClinicalLookupFallback(clinicalLookup), mode: `fallback_${provider}_clinical_error`, error: 'AI provider unavailable; static clinical lookup fallback used.' }, 200, allowOrigin);
       }
     }
 
@@ -584,7 +1053,7 @@ export default {
       };
       const provider = selectAiProvider(body, env);
       if (provider === 'fallback') {
-        return json({ ...staticFollowUpFallback(followUpQuestion, report), mode: 'fallback_no_ai_key', type: 'followup' });
+        return json({ ...staticFollowUpFallback(followUpQuestion, report), mode: 'fallback_no_ai_key', type: 'followup' }, 200, allowOrigin);
       }
       try {
         const content = provider === 'claude'
@@ -596,28 +1065,53 @@ export default {
           parsed = safeParseJson(rewritten);
         }
         if (asksAboutOffCatalogProduct(followUpQuestion)) parsed.products = [];
-        return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai', type: 'followup' });
+        return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai', type: 'followup' }, 200, allowOrigin);
       } catch (error) {
-        return json({ ...staticFollowUpFallback(followUpQuestion, report), mode: `fallback_${provider}_error`, type: 'followup', error: 'AI provider unavailable; static educational fallback used.' });
+        return json({ ...staticFollowUpFallback(followUpQuestion, report), mode: `fallback_${provider}_error`, type: 'followup', error: 'AI provider unavailable; static educational fallback used.' }, 200, allowOrigin);
       }
     }
 
     const goal = String(body.goal || '').slice(0, 800);
-    const products = Array.isArray(body.products) ? body.products.slice(0, 8) : [];
+    const products = Array.isArray(body.products) ? body.products.slice(0, 24) : [];
     const ingredients = Array.isArray(body.ingredients) ? body.ingredients.slice(0, 20) : [];
-    if (!goal.trim()) return json({ error: 'Missing goal' }, 400);
+    if (!goal.trim()) return json({ error: 'Missing goal' }, 400, allowOrigin);
+    const intent = classifyCommonIntent(goal);
+    const provider = selectAiProvider(body, env);
+
+    // Prefer a fresh AI response whenever a provider key is available.
+    // The common template/cache path is only a non-AI fallback for environments
+    // without usable provider credentials, or when explicitly requested.
+    const useCommonFallback = shouldUseCommonFastPath(body, goal) && (provider === 'fallback' || body.useCommonFastPath === true);
+    if (useCommonFallback) {
+      const cached = await readCommonResponseCache(env, intent);
+      const freshResponse = buildCommonIntentResponse(intent, products);
+      const response = cached || await writeCommonResponseCache(env, intent, { ...freshResponse, products: [] });
+      const payload = enrichProductLinks({ ...response, products: freshResponse.products || [] }, products);
+      if (ctx && ctx.waitUntil) ctx.waitUntil(recordQuestionAnalytics(env, {
+        intent,
+        cacheHit: Boolean(cached),
+        aiUsed: false,
+        responseMs: Date.now() - requestStartedAt
+      }));
+      return json({ ...payload, mode: cached ? 'common_cache_hit' : 'common_template_cached', cacheHit: Boolean(cached), aiUsed: false }, 200, allowOrigin);
+    }
 
     const userPayload = {
       userQuestion: goal,
       approvedProductsFromPage: products,
       approvedIngredientsFromPage: ingredients,
-      approvedProductCatalog: PRODUCT_CATALOG,
+      approvedProductCatalog: products.length ? products : PRODUCT_CATALOG,
       requiredDisclaimer: 'Educational information only; not medical advice; not intended to diagnose, treat, cure, or prevent any disease.'
     };
 
-    const provider = selectAiProvider(body, env);
     if (provider === 'fallback') {
-      return json({ ...staticFallback(goal, products, ingredients), mode: 'fallback_no_ai_key' });
+      if (ctx && ctx.waitUntil) ctx.waitUntil(recordQuestionAnalytics(env, {
+        intent,
+        cacheHit: false,
+        aiUsed: false,
+        responseMs: Date.now() - requestStartedAt
+      }));
+      return json({ ...staticFallback(goal, products, ingredients), mode: 'fallback_no_ai_key' }, 200, allowOrigin);
     }
 
     try {
@@ -629,9 +1123,21 @@ export default {
         const rewritten = await rewriteGenericWellnessAnswer(provider, env, userPayload, parsed);
         parsed = safeParseJson(rewritten);
       }
-      return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai' });
+      if (ctx && ctx.waitUntil) ctx.waitUntil(recordQuestionAnalytics(env, {
+        intent,
+        cacheHit: false,
+        aiUsed: true,
+        responseMs: Date.now() - requestStartedAt
+      }));
+      return json({ ...enrichProductLinks(parsed, products), mode: provider === 'claude' ? 'claude' : 'openai', cacheHit: false, aiUsed: true }, 200, allowOrigin);
     } catch (error) {
-      return json({ ...staticFallback(goal, products, ingredients), mode: `fallback_${provider}_error`, error: 'AI provider unavailable; static educational fallback used.' });
+      if (ctx && ctx.waitUntil) ctx.waitUntil(recordQuestionAnalytics(env, {
+        intent,
+        cacheHit: false,
+        aiUsed: true,
+        responseMs: Date.now() - requestStartedAt
+      }));
+      return json({ ...staticFallback(goal, products, ingredients), mode: `fallback_${provider}_error`, error: 'AI provider unavailable; static educational fallback used.' }, 200, allowOrigin);
     }
   }
 };

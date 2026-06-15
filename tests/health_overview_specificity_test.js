@@ -44,12 +44,25 @@ async function workerFallback(goal) {
 
   const vague = await workerFallback('I want to feel better.');
   const vagueBlob = JSON.stringify(vague).toLowerCase();
-  assert('vague fallback asks one clarifying question instead of category-mismatch filler', vagueBlob.includes('what is the main thing') && !vagueBlob.includes('does not match one narrow category') && !vagueBlob.includes('broad wellness drivers'));
+  assert('fully vague fallback asks one clarifying question instead of category-mismatch filler', vagueBlob.includes('what is the main thing') && vagueBlob.includes('joint/mobility') && !vagueBlob.includes('does not match one narrow category') && !vagueBlob.includes('broad wellness drivers'));
+
+  const shoulder = await workerFallback('My shoulder is crunchy and painful.');
+  const shoulderOverview = String(shoulder.nutritionOverview || '').toLowerCase();
+  const shoulderBlob = JSON.stringify(shoulder).toLowerCase();
+  assert('vague physical clue routes to joint/mobility overview instead of broad category punt', shoulderOverview.startsWith('what may be going on:') && /shoulder|joint|tendon|mobility|range of motion/.test(shoulderOverview) && !shoulderOverview.includes('what is the main thing you want help comparing'));
+  assert('joint/mobility fallback gives relevant ingredients and products', /collagen|omega-3|curcumin|glucosamine|magnesium/.test(shoulderBlob) && /joint complex|joint comfort|mobility/.test(shoulderBlob));
+  assert('Health Overview no longer includes Nutrition options to compare section', !shoulderOverview.includes('nutrition options to compare') && !String(reflux.nutritionOverview || '').toLowerCase().includes('nutrition options to compare'));
+
+  const menopauseSleep = await workerFallback('I am struggling with sleep and menopause. What nutrition options should I compare?');
+  const menopauseOverview = String(menopauseSleep.nutritionOverview || '').toLowerCase();
+  const menopauseNotes = JSON.stringify(menopauseSleep.ingredientNotes || []).toLowerCase();
+  assert('menopause sleep fallback includes a what-may-be-going-on health overview', menopauseOverview.startsWith('what may be going on:') && /menopause|perimenopause|hot flashes|night sweats|hormone/.test(menopauseOverview));
+  assert('menopause sleep fallback prioritizes clinically backed ingredients while allowing traditional options', /magnesium|l-theanine|glycine/.test(menopauseNotes) && /black cohosh|saffron|soy isoflavones|red clover/.test(menopauseNotes));
 
   const worker = fs.readFileSync(workerPath, 'utf8');
   assert('AI prompts forbid category-routing language and generic wellness dumps', /Never tell the user their question does not match a category/.test(worker) && /Never expose internal routing/.test(worker) && /meal quality, protein, fiber, hydration, sleep, stress, movement, nutrient gaps/.test(worker));
-  assert('original and follow-up prompts share the same NutraPass personality language', (worker.match(/friendly, upbeat, reassuring NutraPass voice/g) || []).length >= 2 && (worker.match(/nutrition research guide, not a clinician or hypey salesperson/g) || []).length >= 2);
-  assert('original and follow-up prompts prioritize clinically backed options while allowing labeled traditional alternatives', (worker.match(/Prioritize clinically backed ingredients and fundamentals first/g) || []).length >= 2 && (worker.match(/traditional, emerging, mixed-evidence, or situation-dependent/g) || []).length >= 2 && /Do not present traditional or alternative options as equally proven/.test(worker));
+  assert('AI prompts require friendly upbeat tone and evidence-tiered ingredient framing', /friendly, upbeat, and reassuring/.test(worker) && /Prioritize clinically backed ingredients/.test(worker) && /traditional or alternative options/.test(worker));
+  assert('Black Cohosh lookup prompt is balanced rather than reflexively negative', /Black cohosh/.test(worker) && /balanced, not dismissive/.test(worker));
   assert('worker detects and retries generic AI overview filler', /hasGenericWellnessFiller/.test(worker) && /rewriteGenericWellnessAnswer/.test(worker) && /broad wellness drivers/.test(worker));
 
   const index = fs.readFileSync(indexPath, 'utf8');

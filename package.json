@@ -1,21 +1,21 @@
 {
-  "name": "nutrapass-research-agent",
+  "name": "nutrapass-ai-worker",
   "version": "0.1.0",
   "private": true,
-  "description": "NutraPass Research Agent widget, Cloudflare Worker backend, deploy helpers, and regression checks.",
+  "description": "NutraPass AI Cloudflare Worker deploy helpers and regression checks.",
   "engines": {
     "node": ">=22.0.0"
   },
   "scripts": {
-    "test": "node tests/ai_integration_test.js && node tests/worker_deploy_config_test.js && node tests/package_deploy_scripts_test.js && node tests/unusual_request_fallback_test.js && node tests/health_overview_specificity_test.js && node tests/worker_get_health_test.js && node tests/ingredient_notes_depth_test.js && node tests/product_and_drilldown_ui_test.js && node tests/followup_chat_test.js && node tests/privacy_safety_test.js && node tests/clinical_lookup_tab_test.js",
+    "test": "node tests/ai_integration_test.js && node tests/worker_deploy_config_test.js && node tests/package_deploy_scripts_test.js && node tests/unusual_request_fallback_test.js && node tests/health_overview_specificity_test.js && node tests/worker_get_health_test.js && node tests/ingredient_notes_depth_test.js && node tests/product_and_drilldown_ui_test.js && node tests/live_product_feed_test.js && node tests/followup_chat_test.js && node tests/privacy_safety_test.js && node tests/clinical_lookup_tab_test.js",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "deploy:all": "bash scripts/deploy-all.sh",
-    "deploy:worker": "wrangler deploy --keep-vars",
     "deploy:widget": "bash scripts/deploy-widget.sh",
     "stage:widget": "bash scripts/deploy-widget.sh --stage-only",
     "secret:openai": "wrangler secret put OPENAI_API_KEY",
-    "secret:anthropic": "wrangler secret put ANTHROPIC_API_KEY"
+    "secret:anthropic": "wrangler secret put ANTHROPIC_API_KEY",
+    "secret:shopify": "wrangler secret put SHOPIFY_STOREFRONT_ACCESS_TOKEN",
+    "secret:analytics": "wrangler secret put ANALYTICS_READ_TOKEN"
   },
   "devDependencies": {
     "wrangler": "4.95.0"

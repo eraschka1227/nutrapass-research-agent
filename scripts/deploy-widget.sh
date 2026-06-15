@@ -72,8 +72,19 @@ if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
 fi
 
 echo "==> Deploying to Cloudflare Pages project '$PROJECT_NAME' on branch '$BRANCH'"
-# Run Wrangler from the clean staged artifact directory. This avoids writing
-# .wrangler/tmp under synced project folders that may have restrictive perms.
-npx --yes wrangler@latest pages deploy . --cwd "$STAGE_DIR" --project-name "$PROJECT_NAME" --branch "$BRANCH" --commit-dirty=true
+# Prefer the project-pinned Wrangler from npm ci. If this script is run from a
+# Hermes/local shell where node_modules is missing or read-only, fall back to a
+# temp install outside synced folders so deploys do not depend on Q Sync perms.
+WRANGLER_BIN="${WRANGLER_BIN:-$ROOT_DIR/node_modules/.bin/wrangler}"
+if [[ ! -x "$WRANGLER_BIN" ]]; then
+  TMP_WRANGLER_DIR="${TMPDIR:-/tmp}/nutrapass-wrangler-cli"
+  mkdir -p "$TMP_WRANGLER_DIR"
+  if [[ ! -x "$TMP_WRANGLER_DIR/node_modules/.bin/wrangler" ]]; then
+    npm --prefix "$TMP_WRANGLER_DIR" install wrangler@4.95.0 >/dev/null
+  fi
+  WRANGLER_BIN="$TMP_WRANGLER_DIR/node_modules/.bin/wrangler"
+fi
+
+"$WRANGLER_BIN" pages deploy "$STAGE_DIR" --project-name "$PROJECT_NAME" --branch "$BRANCH" --commit-dirty=true
 
 echo "==> Deployment command completed. Verify production URL: https://${PROJECT_NAME}.pages.dev"

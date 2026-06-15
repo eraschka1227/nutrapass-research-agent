@@ -9,3 +9,12 @@ OPENAI_MODEL = "gpt-4o-mini"
 ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 # Optional runtime selector: openai, claude, or ab. Request body `aiProvider` can override.
 AI_PROVIDER = "claude"
+# Live product feed source. Storefront access token must be configured as a secret.
+SHOPIFY_STORE_DOMAIN = "nutrapass.club"
+SHOPIFY_PRODUCTS_LIMIT = "5000"
+SHOPIFY_PRODUCTS_PAGE_SIZE = "100"
+ALLOWED_ORIGINS = "https://nutrapass.club,https://www.nutrapass.club,https://nutrapass-widget.pages.dev"
+
+[[kv_namespaces]]
+binding = "PRODUCT_CATALOG_KV"
+id = "e05f0fb2f41943aab100d9e4734e1a0a"
