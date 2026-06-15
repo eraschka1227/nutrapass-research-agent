@@ -42,9 +42,9 @@
   .np::before{content:'';position:absolute;inset:0 0 auto 0;height:7px;background:linear-gradient(90deg,var(--np-mint),var(--np-sky),var(--np-citrus),var(--np-peach),var(--np-lav),var(--np-mint));z-index:0}
   .np::after{content:'';position:absolute;width:340px;height:340px;right:-150px;top:44px;border-radius:999px;background:radial-gradient(circle,rgba(191,236,207,.32),rgba(183,223,242,.16) 48%,transparent 70%);z-index:0;pointer-events:none}
   .np-shell{max-width:1040px;margin:0 auto;position:relative;z-index:1}
-  .np-alpha-banner{display:block;margin:.18rem auto .82rem;padding:.58rem .86rem;border:1.5px solid rgba(174,223,192,.72);border-radius:15px;background:linear-gradient(135deg,#ffffff 0%,#f6fbf8 54%,#eaf7ef 100%);color:#333333;text-align:center;font-size:clamp(.78rem,1.25vw,.92rem);font-weight:800;line-height:1.28;box-shadow:0 10px 22px rgba(51,51,51,.06)}
+  .np-alpha-banner{display:block;margin:.18rem auto .82rem;padding:.64rem .9rem;border:1.5px solid rgba(245,223,138,.86);border-radius:15px;background:linear-gradient(135deg,#fff7cf 0%,#fffdf2 52%,#edf8f1 100%);color:#333333;text-align:center;font-size:clamp(.78rem,1.25vw,.92rem);font-weight:800;line-height:1.28;box-shadow:0 10px 22px rgba(51,51,51,.06)}
   .np-alpha-banner strong{text-transform:uppercase;letter-spacing:.035em;color:#333333;font-weight:900}
-  .np-alpha-banner a{color:#333333;text-decoration:underline;text-decoration-color:#aedfc0;text-decoration-thickness:3px;text-underline-offset:3px;font-weight:900;white-space:nowrap}
+  .np-alpha-banner a{color:#244f34;text-decoration:underline;text-decoration-color:#c8793b;text-decoration-thickness:3px;text-underline-offset:3px;font-weight:900;white-space:nowrap}
   .np-alpha-banner a:hover{color:#000000}
   .np-alpha-banner a:focus-visible{outline:3px solid rgba(36,48,40,.25);outline-offset:3px;border-radius:6px}
 
@@ -104,7 +104,7 @@
     box-shadow:0 18px 45px rgba(45,92,59,.10);
   }
 
-  .np-lbl{font-size:.7rem;letter-spacing:.17em;text-transform:uppercase;color:var(--np-mint);margin-bottom:.75rem;display:block;font-weight:800}
+  .np-lbl{font-size:.7rem;letter-spacing:.17em;text-transform:uppercase;color:#31513c;margin-bottom:.75rem;display:block;font-weight:900}
   .np-input-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
   .np-input-head .np-lbl{margin-bottom:0}
   .np-ai-status{display:inline-flex;align-items:center;gap:.36rem;border:1px solid rgba(63,159,102,.22);border-radius:999px;background:rgba(255,255,255,.82);color:#2f7f50;padding:.26rem .52rem;font-size:.66rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
@@ -129,18 +129,19 @@
   .np-btn::after{content:'';display:inline-block;width:.42rem;height:.42rem;margin-left:.45rem;border-radius:999px;background:#aedfc0;box-shadow:.38rem 0 0 rgba(174,223,192,.62),.76rem 0 0 rgba(128,128,128,.38);vertical-align:.02rem}
   .np-btn:disabled{opacity:.48;cursor:not-allowed;transform:none;background:rgba(191,236,207,.5)}
 
-  .np-ack{display:flex;gap:.6rem;align-items:flex-start;margin:.65rem 0 0;padding:.68rem .85rem;border:1px solid rgba(63,159,102,.24);border-radius:18px;background:#f1fbf5;color:rgba(36,48,40,.82);font-size:.78rem;line-height:1.36}
+  .np-ack{display:flex;gap:.6rem;align-items:flex-start;margin:.65rem 0 0;padding:.68rem .85rem;border:1px solid rgba(63,159,102,.24);border-radius:18px;background:#f1fbf5;color:rgba(36,48,40,.86);font-size:.78rem;line-height:1.36}
   .np-ack input{margin:.18rem 0 0;accent-color:var(--np-mint);width:18px;height:18px;flex:0 0 auto}
-  .np-ack strong{color:var(--np-mint)}
-  .np-privacy-note{margin:.55rem 0 0;padding:.62rem .78rem;border:1px solid rgba(36,48,40,.12);border-radius:16px;background:rgba(255,255,255,.78);color:rgba(36,48,40,.74);font-size:.74rem;line-height:1.36}
+  .np-ack strong{color:#1f6f43;font-weight:900}
+  .np-privacy-note{margin:.55rem 0 0;padding:.68rem .82rem;border:1px solid rgba(174,223,192,.92);border-left:5px solid #aedfc0;border-radius:16px;background:linear-gradient(135deg,rgba(174,223,192,.46) 0%,rgba(255,255,255,.95) 58%,rgba(174,223,192,.24) 100%);color:#243028;font-size:.74rem;line-height:1.36;box-shadow:0 10px 24px rgba(45,92,59,.07)}
   .np-privacy-note strong{color:#1f6f43;font-weight:900}
   .np-privacy-note ul{margin:.38rem 0 0;padding-left:1.05rem}
   .np-privacy-note li{margin:.18rem 0}
-  .np-legal{font-size:.78rem;line-height:1.42;color:rgba(36,48,40,.78);background:linear-gradient(135deg,#ffffff,#f4fbf6)}
+  .np-legal{font-size:.78rem;line-height:1.42;color:#243028;border:1px solid rgba(174,223,192,.92);border-left:5px solid #aedfc0;background:linear-gradient(135deg,rgba(174,223,192,.42) 0%,rgba(255,255,255,.96) 60%,rgba(245,223,138,.18) 100%);box-shadow:0 12px 28px rgba(45,92,59,.08)}
   .np-legal p{margin:.45rem 0 0}
-  .np-legal strong{color:#1f6f43}
+  .np-legal strong{color:#1f6f43;font-weight:900}
+  .np-legal .np-sl{color:#1f6f43;font-weight:900}
   .np-warning{margin:0 0 .65rem;padding:.78rem .9rem;border:1px solid rgba(63,159,102,.38);border-radius:20px;background:linear-gradient(135deg,#f0fbf4 0%,#ffffff 54%,#fff7df 100%);color:rgba(36,48,40,.9);font-size:.86rem;line-height:1.42;box-shadow:0 12px 32px rgba(45,92,59,.08)}
-  .np-warning strong{color:var(--np-mint);font-weight:800}
+  .np-warning strong{color:#1f6f43;font-weight:900}
   .np-warning small{display:block;margin-top:.45rem;color:rgba(36,48,40,.64);font-size:.78rem;line-height:1.45}
 
 
@@ -651,6 +652,14 @@
           <textarea class="np-ta" id="npIn" placeholder="e.g. I have bloating and digestive issues after meals…" rows="3"></textarea>
           <button class="np-btn" id="npBtn" type="button" onclick="npAsk()" disabled>Explore →</button>
         </div>
+        <div class="np-chips" aria-label="Common goals">
+          <button class="np-chip" type="button" onclick="npSet('I want to improve my gut health and digestion')">Gut Health</button>
+          <button class="np-chip" type="button" onclick="npSet('I need better sleep and help managing stress')">Sleep &amp; Stress</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to support my immune system naturally')">Immune Support</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to build strength and improve body composition')">Strength &amp; Body</button>
+          <button class="np-chip" type="button" onclick="npSet('I have acid reflux and indigestion problems')">Acid &amp; Reflux</button>
+          <button class="np-chip" type="button" onclick="npSet('I want stronger hair skin and nails')">Hair Skin &amp; Nails</button>
+        </div>
         <label class="np-ack" for="npAck">
           <input id="npAck" type="checkbox" onchange="npToggleAck()">
           <span><strong>I understand this is educational information only.</strong> These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease. I understand results may be AI-assisted and may be incomplete or incorrect. I will verify results and consult a healthcare professional before starting a new supplement regimen.</span>
@@ -661,14 +670,6 @@
             <li>Please avoid entering names, contact details, account numbers, or highly sensitive medical details.</li>
             <li>If symptoms are severe, urgent, or rapidly worsening, seek emergency or professional medical care instead of using this tool.</li>
           </ul>
-        </div>
-        <div class="np-chips" aria-label="Common goals">
-          <button class="np-chip" type="button" onclick="npSet('I want to improve my gut health and digestion')">Gut Health</button>
-          <button class="np-chip" type="button" onclick="npSet('I need better sleep and help managing stress')">Sleep &amp; Stress</button>
-          <button class="np-chip" type="button" onclick="npSet('I want to support my immune system naturally')">Immune Support</button>
-          <button class="np-chip" type="button" onclick="npSet('I want to build strength and improve body composition')">Strength &amp; Body</button>
-          <button class="np-chip" type="button" onclick="npSet('I have acid reflux and indigestion problems')">Acid &amp; Reflux</button>
-          <button class="np-chip" type="button" onclick="npSet('I want stronger hair skin and nails')">Hair Skin &amp; Nails</button>
         </div>
       </div>
 
