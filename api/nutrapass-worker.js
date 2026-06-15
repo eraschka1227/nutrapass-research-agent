@@ -315,6 +315,7 @@ Do not say supplements relieve, treat, cure, fix, prevent, reverse, or heal any 
 Do not invent NutraPass products. Recommend only products supplied in the request or in the approved catalog. Preserve each supplied product's URL when returning products.
 Do not invent citations. If a PubMed ID is supplied, you may include it. Otherwise omit citations.
 Include food-first and lifestyle-first guidance before supplements.
+Privacy/data-collection rule: if the user asks what data NutraPass collects, saves, stores, remembers, knows about them, or asks about privacy/personal information, do not infer or invent stored profile/account data. Rephrase the privacy policy plainly: NutraPass is not collecting, selling, or saving personal data from this tool; NutraPass does not save questions, follow-up questions, or generated reports on its servers; when AI is active, the question and relevant report context are sent securely to the AI provider only to generate the response; users should avoid names, contact details, account numbers, or highly sensitive medical details. Do not say NutraPass stores wellness goals, health overviews, account settings, or personal profiles unless an explicit provided policy says so.
 Prioritize clinically backed ingredients first when evidence is reasonably strong for the user's goal. Traditional options and traditional or alternative options are acceptable when relevant, but clearly label them as traditional, emerging, or situation-dependent comparison options rather than presenting them as equally proven.
 For the Health Overview, infer a specific wellness pattern from the user's wording (digestive bloating vs reflux vs constipation vs sleep/stress vs fatigue/iron-status vs immune vs performance vs joint/mobility/connective tissue vs beauty). Explain what may be going on in plain language. Keep it concise: 3 short sections only — What may be going on, Food first, Easy things to try. Do not include a separate Nutrition options to compare section; ingredient cards and product links already cover comparisons. Do not use generic filler unless the user gives no usable detail. If the user's wording is vague but includes a real body clue (for example shoulder pain, crunchy joints, soreness, cramps, fatigue, sleep, bloating), choose the closest useful pattern and ask at most one clarifying question inside that specific overview instead of punting to broad categories.
 For menopause, perimenopause, hot flashes, night sweats, or midlife sleep concerns, include a short Health Overview that explains sleep disruption may be influenced by hormonal transition, night sweats/hot flashes, stress load, caffeine/alcohol timing, blood-sugar rhythm, mood changes, and nutrient status. Keep it educational, not diagnostic.
@@ -371,6 +372,8 @@ Answer the shopper's follow-up question using the original NutraPass report cont
 
 Keep the answer tight: 55–110 words, 2 short paragraphs max, or 3 short bullets max. Avoid wall-of-text responses, markdown bolding, long numbered lists, and overly medical phrasing. Use plain-language structure/function wording only. Do not diagnose, treat, cure, mitigate, prevent, reverse, fix, or heal any disease or symptom. Do not invent NutraPass products. Use only the products and ingredient notes supplied in the request. Include food-first or practical next-step guidance when useful.
 Prioritize clinically backed ingredients first. Traditional or alternative options are fine when they are clearly framed as traditional, emerging, mixed-evidence, or situation-dependent comparison options.
+
+Privacy/data-collection rule: if the shopper asks what data NutraPass collects, saves, stores, remembers, knows about them, or asks about privacy/personal information, answer only by rephrasing the privacy policy. Be clear and direct: NutraPass is not collecting, selling, or saving personal data from this tool; NutraPass does not save questions, follow-up questions, or generated reports on its servers; when AI is active, the question and relevant report context are sent securely to the AI provider only to generate the response. Do not say NutraPass stores wellness goals, health overviews, account settings, personal profiles, or knows facts about the shopper. Do not personalize the privacy answer from report context. Return an empty products array and an empty gaps array for privacy/data questions.
 
 If the shopper asks about a product, brand, or supplement that is not in the supplied NutraPass products, do not force a NutraPass product. Give practical quality/clear-label guidance instead: look for a transparent Supplement Facts panel, exact ingredient forms and amounts, third-party testing or cGMP quality cues, minimal proprietary blends, allergen/sweetener clarity, and serving-size math that matches the research context. Return an empty products array unless a supplied product is directly relevant.
 
@@ -874,6 +877,31 @@ async function callClaudeFollowUp(env, userPayload) {
   return (data.content || []).map(part => part?.text || '').join('\n').trim() || '{}';
 }
 
+function asksAboutPrivacyOrData(question) {
+  const q = String(question || '').toLowerCase();
+  return /\b(data|personal information|personal info|privacy|private|collect|collecting|collection|save|saving|saved|store|storing|stored|remember|remembering|know about me|have about me|profile|account)\b/.test(q)
+    && /\b(you|nutrapass|my|me|this tool|question|report|data|information|privacy)\b/.test(q);
+}
+
+function privacyPolicyAnswerPayload() {
+  return {
+    answer: 'NutraPass is not collecting, selling, or saving your personal data from this tool. NutraPass does not save your questions, follow-up questions, or generated reports on our servers.\n\nWhen AI is active, the text you type and relevant report context are sent securely to our AI provider only to generate the response. Please avoid entering names, contact details, account numbers, or highly sensitive medical details.',
+    gaps: [],
+    products: []
+  };
+}
+
+function privacyPolicyReportPayload() {
+  const answer = privacyPolicyAnswerPayload().answer;
+  return {
+    summary: 'NutraPass is not collecting, selling, or saving your personal data from this tool.',
+    nutritionOverview: answer,
+    ingredientNotes: [],
+    products: [],
+    type: 'privacy'
+  };
+}
+
 function asksAboutOffCatalogProduct(question) {
   const q = String(question || '').toLowerCase();
   return /not on nutrapass|not available|outside nutrapass|what about|which brand|brand|label|supplement facts|proprietary blend/.test(q);
@@ -1040,6 +1068,9 @@ export default {
 
     const followUpQuestion = String(body.followUpQuestion || body.followup || body.question || '').slice(0, 700);
     if (followUpQuestion.trim()) {
+      if (asksAboutPrivacyOrData(followUpQuestion)) {
+        return json({ ...privacyPolicyAnswerPayload(), mode: 'privacy_policy_static', type: 'followup' }, 200, allowOrigin);
+      }
       const report = body.report && typeof body.report === 'object' ? body.report : {};
       const followPayload = {
         followUpQuestion,
@@ -1075,6 +1106,9 @@ export default {
     const products = Array.isArray(body.products) ? body.products.slice(0, 24) : [];
     const ingredients = Array.isArray(body.ingredients) ? body.ingredients.slice(0, 20) : [];
     if (!goal.trim()) return json({ error: 'Missing goal' }, 400, allowOrigin);
+    if (asksAboutPrivacyOrData(goal)) {
+      return json({ ...privacyPolicyReportPayload(), mode: 'privacy_policy_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
+    }
     const intent = classifyCommonIntent(goal);
     const provider = selectAiProvider(body, env);
 

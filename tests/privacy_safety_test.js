@@ -29,6 +29,9 @@ assert('worker applies privacy headers to JSON and health responses', /headers: 
 assert('worker OPTIONS also uses privacy headers', /method === 'OPTIONS'\) return new Response\(null, \{ headers: privacyHeaders\(allowOrigin\) \}\)/.test(worker));
 assert('worker does not return raw provider error details to the browser', /AI provider unavailable; static educational fallback used\./.test(worker) && !/error: String\(error\)\.slice/.test(worker));
 assert('worker source does not bind to NutraPass persistence services for user questions', !/\bKV_NAMESPACE\b|\bD1\b|\bR2\b|DurableObject|Analytics Engine|ctx\.waitUntil\([^)]*log/i.test(worker));
+assert('worker prompt has hard privacy data-collection rule in system and follow-up prompts', /Privacy\/data-collection rule:[\s\S]*not collecting, selling, or saving personal data from this tool/.test(worker) && /Do not say NutraPass stores wellness goals, health overviews, account settings, personal profiles/.test(worker));
+assert('worker routes privacy follow-up questions to static privacy policy answer before AI', /function asksAboutPrivacyOrData/.test(worker) && /privacyPolicyAnswerPayload/.test(worker) && /mode: 'privacy_policy_static', type: 'followup'/.test(worker));
+assert('worker static privacy answer does not claim saved goals or account profile data', /NutraPass does not save your questions, follow-up questions, or generated reports on our servers/.test(worker) && !/You can review or update your information anytime through your account/.test(worker));
 assert('privacy safety test is included in npm test script', pkg.scripts && /privacy_safety_test\.js/.test(pkg.scripts.test || ''));
 
 if (process.exitCode) process.exit(process.exitCode);
