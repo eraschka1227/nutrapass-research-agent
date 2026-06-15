@@ -1,0 +1,55 @@
+name: Deploy NutraPass
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'wrangler.toml'
+      - '.github/workflows/deploy-nutrapass.yml'
+
+concurrency:
+  group: nutrapass-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Test and deploy Worker + Pages widget
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      NUTRAPASS_PAGES_PROJECT: nutrapass-widget
+      NUTRAPASS_PAGES_BRANCH: main
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run regression tests
+        run: npm test
+
+      - name: Verify Wrangler auth and permissions
+        run: npx wrangler whoami
+
+      - name: Deploy NutraPass AI Worker
+        run: npx wrangler deploy
+
+      - name: Deploy NutraPass Pages widget
+        run: bash scripts/deploy-widget.sh --skip-tests
