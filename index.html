@@ -1387,17 +1387,6 @@
     lines.push('HEALTH OVERVIEW');
     lines.push(formatOverviewForEmail(data.overview||nutritionOverview(data.goal, data.ingredients)));
     lines.push('');
-    lines.push('INGREDIENT RESEARCH NOTES');
-    lines.push(divider);
-    data.ingredients.forEach(function(n,i){
-      lines.push('');
-      lines.push((i+1)+') '+n.nm);
-      lines.push(wrapEmailLine('Best fit: '+n.b,'   '));
-      lines.push(wrapEmailLine('Research context: '+ingredientDetail(n),'   '));
-      lines.push(wrapEmailLine('Typical range: '+ingredientDose(n),'   '));
-      if(n.id) lines.push(wrapEmailLine('Source: https://pubmed.ncbi.nlm.nih.gov/'+n.id+'/','   '));
-    });
-    lines.push('');
     lines.push('IMPORTANT NOTE');
     lines.push(wrapEmailLine('Educational information only. NutraPass will not collect, sell, or save your personal data from this tool. NutraPass results are AI-assisted research starting points and are not medical advice or personalized medical recommendations. NutraPass does not save your questions or generated reports on our servers, but when AI is active your question and relevant report context is sent to our AI provider to generate the response. Avoid entering names, contact details, account numbers, or highly sensitive medical details. AI-generated information may be incomplete, outdated, or incorrect. Verify all results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.','  '));
     lines.push('');
@@ -1443,22 +1432,13 @@
   function npRender(r,prods,out){
     var existingFollowUps=(window.npLastReport&&window.npLastReport.followUps)||[];
     window.npLastReport={goal:r.goal||'',summary:r.s||'',ingredients:r.n||[],products:prods||[],overview:r.overview||'',followUps:existingFollowUps};
-    var topMatchItems=[], additionalItems=[];
-    (r.n||[]).forEach(function(n,i){
-      var href=n.id?'https://pubmed.ncbi.nlm.nih.gov/'+esc(n.id)+'/':'';
-      var ref=href?'<a class="np-rl" href="'+href+'" target="_blank" rel="noopener">PubMed source →</a>':'';
-      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div><div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
-      if(i<6) topMatchItems.push(card); else additionalItems.push(card);
-    });
-    var nuts='<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>'+
-      (additionalItems.length?'<div class="np-note-section"><div class="np-note-heading">Additional Options to Compare</div><div class="np-nuts">'+additionalItems.join('')+'</div></div>':'');
     var cards=npProductCards(prods);
     out.innerHTML=
       '<div class="np-print-area">'+
       '<div class="np-print-head"><img class="np-print-logo" src="Art/nutrapass-logo-horizontal-leaf-black.png" alt="NutraPass"><div class="np-print-title">Personalized Nutritional Research Tool<br>Educational Research Summary</div></div>'+
       '<div class="np-warning" role="note" aria-label="Educational and AI use disclaimer"><strong>Educational information only.</strong> NutraPass will not collect, sell, or save your personal data from this tool. Results are AI-assisted research starting points and are not medical advice or personalized medical recommendations. NutraPass does not save your questions or generated reports on our servers; when AI is active, your question and relevant report context are sent securely to our AI provider to generate the response. Please avoid entering names, contact details, account numbers, or highly sensitive medical details.<small>AI-generated information may be incomplete, outdated, or incorrect. Verify all results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.</small></div>'+ 
-      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">Copy, print, or open an email draft with the health overview and ingredient notes only.</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
-      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||nutritionOverview(r.goal||'', r.n||[]))+'</div></div><div class="np-card"><div class="np-sl">Ingredient Research Notes</div><div class="np-sum">'+esc(r.s||'')+'</div><div class="np-nuts">'+nuts+'</div></div>'+npFollowupPanel()+'</div>'+ 
+      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">Copy, print, or open an email draft with the health overview only.</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
+      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||nutritionOverview(r.goal||'', r.n||[]))+'</div></div>'+npFollowupPanel()+'</div>'+ 
       '<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div><p class="np-fda">*Educational and AI-assisted information only. Verify results before use. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.</p></div></aside></div>'+ 
       '</div>';
     npRenderFollowupMessages();

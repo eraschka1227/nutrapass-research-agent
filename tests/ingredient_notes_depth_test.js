@@ -20,8 +20,9 @@ assert('worker prompt separates strongest matches from additional comparison opt
 assert('worker prompt asks for 2–3 sentence research context', /2[–-]3 sentence research context/i.test(worker));
 assert('worker accepts at least 20 approved ingredients from frontend', /body\.ingredients\) \? body\.ingredients\.slice\(0, 20\)/.test(worker));
 assert('frontend sends top 20 candidate ingredients to AI', /topNutrients\(input,20\)/.test(html));
-assert('frontend renders Top Matches section', /Top Matches/.test(html));
-assert('frontend renders Additional Options to Compare section', /Additional Options to Compare/.test(html));
+assert('frontend keeps ingredient notes as hidden report context for follow-ups', /ingredients:r\.n\|\|\[\]/.test(html));
+assert('frontend no longer renders ingredient note sections in the main report', !/Ingredient Research Notes/.test(html) && !/Top Matches/.test(html) && !/Additional Options to Compare/.test(html));
+assert('copy/email helper is shortened to health overview only', /health overview only/.test(html) && !/INGREDIENT RESEARCH NOTES/.test(html));
 assert('ingredient note bestFit copy does not repeat section rank labels', !/bestFit:\s*['"]Top Match:/i.test(worker) && !/bestFit:\s*['"]Additional Option to Compare:/i.test(worker) && !/\$\{idx < 6 \? 'Top Match' : 'Additional Option to Compare'\}:/.test(worker));
 assert('worker prompt examples omit per-card rank labels in bestFit', !/"bestFit":"Top Match:/i.test(worker) && !/"bestFit":"Additional Option to Compare:/i.test(worker));
 assert('Joint Complex is treated as product or category, not ingredient note', /Joint Complex/.test(worker) && /function\s+npNormalizeIngredientName/.test(html) && /Joint support nutrients/.test(html) && /Joint Complex/.test(html));
