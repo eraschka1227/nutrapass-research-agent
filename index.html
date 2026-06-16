@@ -1028,18 +1028,21 @@
     return N.filter(function(n){return n.nm.toLowerCase()===name;})[0] || null;
   }
   function renderAiResponse(payload,out,input){
+    var hasIngredientResults=payload&&(Array.isArray(payload.ingredientNotes)||Array.isArray(payload.ingredients));
+    var hasProductResults=payload&&Array.isArray(payload.products);
+    var noResults=!!(payload&&payload.noResults) || /^(content_safety|medical_redirect|out_of_scope|privacy)$/.test(String((payload&&payload.type)||''));
     var ingredients=(payload.ingredientNotes||payload.ingredients||[]).map(function(item){
       var itemName=npNormalizeIngredientName(item.name||item.nm);
       var base=npIngredientByName(itemName)||{nm:itemName||'Ingredient',b:npCleanBestFit(item.bestFit||item.b)||'Educational research note',id:item.pubmedId||item.id||'',k:''};
       return {nm:base.nm,b:npCleanBestFit(item.bestFit||base.b),id:item.pubmedId||base.id,k:base.k,detail:item.researchContext||item.detail||ingredientDetail(base),dose:item.typicalRange||item.dose||ingredientDose(base)};
     });
-    if(!ingredients.length) ingredients=topNutrients(input,16);
+    if(!ingredients.length && !noResults && !hasIngredientResults) ingredients=topNutrients(input,16);
     var products=(payload.products||[]).map(function(item){
       var base=npProductByName(item.name||item.n)||null;
       return base?Object.assign({},base,{brand:item.brand||base.brand,imageUrl:item.imageUrl||item.img||base.img,why:item.why||base.w}):item;
     }).filter(Boolean);
-    if(!products.length) products=topProds(input,6);
-    npRender({goal:input,s:payload.summary||summary(input),n:ingredients,overview:payload.nutritionOverview||''},products,out);
+    if(!products.length && !noResults && !hasProductResults) products=topProds(input,6);
+    npRender({goal:input,s:payload.summary||summary(input),n:ingredients,overview:payload.nutritionOverview||'',noResults:noResults},products,out);
     npJumpToResults(out);
   }
   async function npTryAi(input,out){
@@ -1255,7 +1258,7 @@
   window.npBackToResults=function(){
     var data=window.npLastReport;
     if(!data) return;
-    npRender({goal:data.goal, s:data.summary, n:data.ingredients}, data.products, document.getElementById('npOut'));
+    npRender({goal:data.goal, s:data.summary, n:data.ingredients, overview:data.overview, noResults:data.noResults}, data.products, document.getElementById('npOut'));
   };
 
   function nutritionOverview(goal, ingredients){
@@ -1438,17 +1441,19 @@
     lines.push('HEALTH OVERVIEW');
     lines.push(formatOverviewForEmail(data.overview||nutritionOverview(data.goal, data.ingredients)));
     lines.push('');
-    lines.push('TOP INGREDIENT MATCHES');
-    lines.push(divider);
-    data.ingredients.forEach(function(n,i){
+    if(!data.noResults && data.ingredients && data.ingredients.length){
+      lines.push('TOP INGREDIENT MATCHES');
+      lines.push(divider);
+      data.ingredients.forEach(function(n,i){
+        lines.push('');
+        lines.push((i+1)+') '+n.nm);
+        lines.push(wrapEmailLine('Best fit: '+n.b,'   '));
+        lines.push(wrapEmailLine('Research context: '+ingredientDetail(n),'   '));
+        lines.push(wrapEmailLine('Typical range: '+ingredientDose(n),'   '));
+        if(n.id) lines.push(wrapEmailLine('Source: https://pubmed.ncbi.nlm.nih.gov/'+n.id+'/','   '));
+      });
       lines.push('');
-      lines.push((i+1)+') '+n.nm);
-      lines.push(wrapEmailLine('Best fit: '+n.b,'   '));
-      lines.push(wrapEmailLine('Research context: '+ingredientDetail(n),'   '));
-      lines.push(wrapEmailLine('Typical range: '+ingredientDose(n),'   '));
-      if(n.id) lines.push(wrapEmailLine('Source: https://pubmed.ncbi.nlm.nih.gov/'+n.id+'/','   '));
-    });
-    lines.push('');
+    }
     lines.push('IMPORTANT NOTE');
     lines.push(wrapEmailLine('Educational information only. NutraPass results are AI-assisted research starting points, not medical advice or personalized medical recommendations. AI-generated information may be incomplete, outdated, or incorrect. Verify results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.','  '));
     lines.push('');
@@ -1494,7 +1499,7 @@
   }
   function npRender(r,prods,out){
     var existingFollowUps=(window.npLastReport&&window.npLastReport.followUps)||[];
-    window.npLastReport={goal:r.goal||'',summary:r.s||'',ingredients:r.n||[],products:prods||[],overview:r.overview||'',followUps:existingFollowUps};
+    window.npLastReport={goal:r.goal||'',summary:r.s||'',ingredients:r.n||[],products:prods||[],overview:r.overview||'',noResults:!!r.noResults,followUps:existingFollowUps};
     var topMatchItems=[], additionalItems=[];
     (r.n||[]).forEach(function(n,i){
       var href=n.id?'https://pubmed.ncbi.nlm.nih.gov/'+esc(n.id)+'/':'';
@@ -1502,16 +1507,20 @@
       var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div><div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
       if(i<6) topMatchItems.push(card); else additionalItems.push(card);
     });
-    var nuts='<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>'+
+    var nuts=(topMatchItems.length?'<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>':'')+
       (additionalItems.length?'<div class="np-note-section"><div class="np-note-heading">Additional Options to Compare</div><div class="np-nuts">'+additionalItems.join('')+'</div></div>':'');
     var cards=npProductCards(prods);
+    var noPanels=!(r.n&&r.n.length) && !cards;
+    var ingredientPanel=nuts?'<div class="np-card"><div class="np-nuts">'+nuts+'</div></div>':'';
+    var productPanel=cards?'<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div></div></aside>':'';
+    var saveText=(r.noResults||noPanels)?'Copy, print, or open an email draft with this NutraPass response.':'Copy, print, or open an email draft with the health overview and top ingredient matches.';
     out.innerHTML=
       '<div class="np-print-area">'+
       '<div class="np-print-head"><img class="np-print-logo" src="Art/nutrapass-logo-horizontal-leaf-black.png" alt="NutraPass"><div class="np-print-title">Personalized Nutritional Research Tool<br>Educational Research Summary</div></div>'+
       '<div class="np-warning" role="note" aria-label="Educational disclaimer"><strong>Educational information only.</strong> Results are AI-assisted research starting points, not medical advice or personalized medical recommendations.<small>AI-generated information may be incomplete or incorrect. Verify results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. Products are not intended to diagnose, treat, cure, or prevent any disease.</small></div>'+ 
-      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">Copy, print, or open an email draft with the health overview and top ingredient matches.</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
-      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||nutritionOverview(r.goal||'', r.n||[]))+'</div></div><div class="np-card"><div class="np-nuts">'+nuts+'</div></div>'+npFollowupPanel()+'</div>'+ 
-      '<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div></div></aside></div>'+ 
+      '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">'+esc(saveText)+'</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
+      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||r.s||nutritionOverview(r.goal||'', r.n||[]))+'</div></div>'+ingredientPanel+npFollowupPanel()+'</div>'+ 
+      productPanel+'</div>'+ 
       '</div>';
     npRenderFollowupMessages();
   }

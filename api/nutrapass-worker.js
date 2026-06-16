@@ -315,6 +315,7 @@ Do not say supplements relieve, treat, cure, fix, prevent, reverse, or heal any 
 Do not invent NutraPass products. Recommend only products supplied in the request or in the approved catalog. Preserve each supplied product's URL when returning products.
 Do not invent citations. If a PubMed ID is supplied, you may include it. Otherwise omit citations.
 Include food-first and lifestyle-first guidance before supplements.
+No-results consistency rule: if the user question is vulgar, abusive, aggressively sexual, cancer/oncology/serious-disease treatment seeking, or clearly unrelated to nutrition/wellness/product research, do not provide ingredient results or related products. Return a concise boundary/referral answer, set "noResults": true, and return empty "ingredientNotes" and "products" arrays.
 Privacy/data-collection rule: if the user asks what data NutraPass collects, saves, stores, remembers, knows about them, or asks about privacy/personal information, do not infer or invent stored profile/account data. Rephrase the privacy policy plainly: NutraPass is not collecting, selling, or saving personal data from this tool; NutraPass does not save questions, follow-up questions, or generated reports on its servers; when AI is active, the question and relevant report context are sent securely to the AI provider only to generate the response; users should avoid names, contact details, account numbers, or highly sensitive medical details. Do not say NutraPass stores wellness goals, health overviews, account settings, or personal profiles unless an explicit provided policy says so.
 Prioritize clinically backed ingredients first when evidence is reasonably strong for the user's goal. Traditional options and traditional or alternative options are acceptable when relevant, but clearly label them as traditional, emerging, or situation-dependent comparison options rather than presenting them as equally proven.
 For the Health Overview, infer a specific wellness pattern from the user's wording (digestive bloating vs reflux vs constipation vs sleep/stress vs fatigue/iron-status vs immune vs performance vs joint/mobility/connective tissue vs beauty). Explain what may be going on in plain language. Keep it concise: 3 short sections only — What may be going on, Food first, Easy things to try. Do not include a separate Nutrition options to compare section; ingredient cards and product links already cover comparisons. Do not use generic filler unless the user gives no usable detail. If the user's wording is vague but includes a real body clue (for example shoulder pain, crunchy joints, soreness, cramps, fatigue, sleep, bloating), choose the closest useful pattern and ask at most one clarifying question inside that specific overview instead of punting to broad categories.
@@ -342,7 +343,8 @@ Return strict JSON only with this shape:
   "products": [
     {"name":"H2O Electrolytes","brand":"Cellutrex","url":"https://nutrapass.club/products/...","imageUrl":"","why":"..."},
     {"name":"Stress Complex","brand":"Silver Fern","url":"https://nutrapass.club/products/...","imageUrl":"","why":"..."}
-  ]
+  ],
+  "noResults": false
 }`;
 
 const CLINICAL_LOOKUP_PROMPT = `You are NutraPass's clinical nutrition literature lookup assistant.
@@ -373,6 +375,8 @@ Answer the shopper's follow-up question using the original NutraPass report cont
 Keep the answer tight: 55–110 words, 2 short paragraphs max, or 3 short bullets max. Avoid wall-of-text responses, markdown bolding, long numbered lists, and overly medical phrasing. Use plain-language structure/function wording only. Do not diagnose, treat, cure, mitigate, prevent, reverse, fix, or heal any disease or symptom. Do not invent NutraPass products. Use only the products and ingredient notes supplied in the request. Include food-first or practical next-step guidance when useful.
 Prioritize clinically backed ingredients first. Traditional or alternative options are fine when they are clearly framed as traditional, emerging, mixed-evidence, or situation-dependent comparison options.
 
+No-results consistency rule: if the shopper's follow-up is vulgar, abusive, aggressively sexual, cancer/oncology/serious-disease treatment seeking, or clearly unrelated to nutrition/wellness/product research, do not provide related products. Return a concise boundary/referral answer, set "noResults": true, use an empty products array, and use an empty gaps array.
+
 Privacy/data-collection rule: if the shopper asks what data NutraPass collects, saves, stores, remembers, knows about them, or asks about privacy/personal information, answer only by rephrasing the privacy policy. Be clear and direct: NutraPass is not collecting, selling, or saving personal data from this tool; NutraPass does not save questions, follow-up questions, or generated reports on its servers; when AI is active, the question and relevant report context are sent securely to the AI provider only to generate the response. Do not say NutraPass stores wellness goals, health overviews, account settings, personal profiles, or knows facts about the shopper. Do not personalize the privacy answer from report context. Return an empty products array and an empty gaps array for privacy/data questions.
 
 If the shopper asks about a product, brand, or supplement that is not in the supplied NutraPass products, do not force a NutraPass product. Give practical quality/clear-label guidance instead: look for a transparent Supplement Facts panel, exact ingredient forms and amounts, third-party testing or cGMP quality cues, minimal proprietary blends, allergen/sweetener clarity, and serving-size math that matches the research context. Return an empty products array unless a supplied product is directly relevant.
@@ -386,7 +390,8 @@ Return strict JSON only with this shape:
   "gaps": ["optional single concise question to fill an important gap"],
   "products": [
     {"name":"Existing product from supplied report only","brand":"Silver Fern","imageUrl":"","why":"why it remains relevant to this follow-up"}
-  ]
+  ],
+  "noResults": false
 }`;
 
 function json(data, status = 200, origin = ALLOWED_ORIGINS_DEFAULT[0]) {
@@ -883,11 +888,82 @@ function asksAboutPrivacyOrData(question) {
     && /\b(you|nutrapass|my|me|this tool|question|report|data|information|privacy)\b/.test(q);
 }
 
+const DISALLOWED_QUESTION_RESPONSE = 'I can’t help with vulgar, abusive, or aggressively sexual questions. NutraPass is here for respectful wellness and product research.';
+
+function asksVulgarAbusiveOrSexualQuestion(question) {
+  const q = ` ${String(question || '').toLowerCase().replace(/[\u2019']/g, "'").replace(/[^a-z0-9'*]+/g, ' ')} `;
+  if (!q.trim()) return false;
+
+  const vulgarTerms = /\b(fuck(?:ing|er|ers|ed)?|shit(?:ty)?|bullshit|bitch(?:es)?|asshole|dickhead|cunt|slut|whore|bastard|motherfucker)\b/;
+  const abusivePhrases = /\b(kill yourself|kys|go die|you suck|you are stupid|you're stupid|idiot|moron|retard(?:ed)?|shut up)\b/;
+  const aggressiveSexualTerms = /\b(suck my|blowjob|handjob|cum|jizz|porn|nude|nudes|naked pics|sex tape|rape|raping|incest|bestiality|fuck me|fuck you|dildo|anal sex|cock|pussy)\b/;
+
+  return vulgarTerms.test(q) || abusivePhrases.test(q) || aggressiveSexualTerms.test(q);
+}
+
+function disallowedQuestionAnswerPayload() {
+  return {
+    answer: DISALLOWED_QUESTION_RESPONSE,
+    gaps: [],
+    products: [],
+    noResults: true,
+    type: 'content_safety'
+  };
+}
+
+function disallowedQuestionReportPayload() {
+  return {
+    summary: DISALLOWED_QUESTION_RESPONSE,
+    nutritionOverview: '',
+    ingredientNotes: [],
+    products: [],
+    noResults: true,
+    type: 'content_safety'
+  };
+}
+
+const MEDICAL_REDIRECT_RESPONSE = 'NutraPass can’t answer cancer, oncology, or serious-disease treatment questions. Please work with a qualified healthcare professional for that situation.';
+const OUT_OF_SCOPE_RESPONSE = 'NutraPass is built for nutrition, wellness, ingredient, and product research. I can’t help with that question here.';
+
+function asksAboutCancerOrSeriousTreatment(question) {
+  const q = ` ${String(question || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ')} `;
+  return /\b(cancer|tumor|tumour|oncology|oncologist|chemo|chemotherapy|radiation therapy|radiotherapy|leukemia|lymphoma|melanoma|carcinoma|metastatic|metastasis|malignant)\b/.test(q);
+}
+
+function asksClearlyNonNutritionQuestion(question) {
+  const q = ` ${String(question || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ')} `;
+  const nutritionTerms = /\b(nutrition|nutrient|supplement|vitamin|mineral|protein|fiber|diet|food|meal|hydration|electrolyte|gut|digestion|sleep|stress|energy|immune|joint|skin|hair|nail|weight|workout|wellness|ingredient|product|label)\b/;
+  if (nutritionTerms.test(q)) return false;
+  return /\b(code|javascript|python|sql|tax|legal|lawsuit|contract|stock|crypto|weather|sports score|car repair|homework|essay|movie|travel itinerary|flight|hotel|politics|election)\b/.test(q);
+}
+
+function noResultsAnswerPayload(message, type) {
+  return {
+    answer: message,
+    gaps: [],
+    products: [],
+    noResults: true,
+    type
+  };
+}
+
+function noResultsReportPayload(message, type) {
+  return {
+    summary: message,
+    nutritionOverview: '',
+    ingredientNotes: [],
+    products: [],
+    noResults: true,
+    type
+  };
+}
+
 function privacyPolicyAnswerPayload() {
   return {
     answer: 'NutraPass is not collecting, selling, or saving your personal data from this tool. NutraPass does not save your questions, follow-up questions, or generated reports on our servers.\n\nWhen AI is active, the text you type and relevant report context are sent securely to our AI provider only to generate the response. Please avoid entering names, contact details, account numbers, or highly sensitive medical details.',
     gaps: [],
-    products: []
+    products: [],
+    noResults: true
   };
 }
 
@@ -898,6 +974,7 @@ function privacyPolicyReportPayload() {
     nutritionOverview: answer,
     ingredientNotes: [],
     products: [],
+    noResults: true,
     type: 'privacy'
   };
 }
@@ -1053,6 +1130,15 @@ export default {
         requiredDisclaimer: 'Educational information only; not medical advice; not intended to diagnose, treat, cure, or prevent any disease.',
         linkPreference: 'Return durable research/search links only. Do not invent PubMed IDs.'
       };
+      if (asksVulgarAbusiveOrSexualQuestion(clinicalLookup)) {
+        return json({ ...disallowedQuestionReportPayload(), mode: 'content_safety_static' }, 200, allowOrigin);
+      }
+      if (asksAboutCancerOrSeriousTreatment(clinicalLookup)) {
+        return json({ ...noResultsReportPayload(MEDICAL_REDIRECT_RESPONSE, 'medical_redirect'), mode: 'medical_redirect_static' }, 200, allowOrigin);
+      }
+      if (asksClearlyNonNutritionQuestion(clinicalLookup)) {
+        return json({ ...noResultsReportPayload(OUT_OF_SCOPE_RESPONSE, 'out_of_scope'), mode: 'out_of_scope_static' }, 200, allowOrigin);
+      }
       const provider = selectAiProvider(body, env);
       if (provider === 'fallback') return json(staticClinicalLookupFallback(clinicalLookup), 200, allowOrigin);
       try {
@@ -1068,6 +1154,15 @@ export default {
 
     const followUpQuestion = String(body.followUpQuestion || body.followup || body.question || '').slice(0, 700);
     if (followUpQuestion.trim()) {
+      if (asksVulgarAbusiveOrSexualQuestion(followUpQuestion)) {
+        return json({ ...disallowedQuestionAnswerPayload(), mode: 'content_safety_static', type: 'followup' }, 200, allowOrigin);
+      }
+      if (asksAboutCancerOrSeriousTreatment(followUpQuestion)) {
+        return json({ ...noResultsAnswerPayload(MEDICAL_REDIRECT_RESPONSE, 'medical_redirect'), mode: 'medical_redirect_static', type: 'followup' }, 200, allowOrigin);
+      }
+      if (asksClearlyNonNutritionQuestion(followUpQuestion)) {
+        return json({ ...noResultsAnswerPayload(OUT_OF_SCOPE_RESPONSE, 'out_of_scope'), mode: 'out_of_scope_static', type: 'followup' }, 200, allowOrigin);
+      }
       if (asksAboutPrivacyOrData(followUpQuestion)) {
         return json({ ...privacyPolicyAnswerPayload(), mode: 'privacy_policy_static', type: 'followup' }, 200, allowOrigin);
       }
@@ -1106,6 +1201,15 @@ export default {
     const products = Array.isArray(body.products) ? body.products.slice(0, 24) : [];
     const ingredients = Array.isArray(body.ingredients) ? body.ingredients.slice(0, 20) : [];
     if (!goal.trim()) return json({ error: 'Missing goal' }, 400, allowOrigin);
+    if (asksVulgarAbusiveOrSexualQuestion(goal)) {
+      return json({ ...disallowedQuestionReportPayload(), mode: 'content_safety_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
+    }
+    if (asksAboutCancerOrSeriousTreatment(goal)) {
+      return json({ ...noResultsReportPayload(MEDICAL_REDIRECT_RESPONSE, 'medical_redirect'), mode: 'medical_redirect_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
+    }
+    if (asksClearlyNonNutritionQuestion(goal)) {
+      return json({ ...noResultsReportPayload(OUT_OF_SCOPE_RESPONSE, 'out_of_scope'), mode: 'out_of_scope_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
+    }
     if (asksAboutPrivacyOrData(goal)) {
       return json({ ...privacyPolicyReportPayload(), mode: 'privacy_policy_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
     }
