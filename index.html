@@ -120,14 +120,23 @@
   .np-ta::placeholder{color:#777}
   .np-ta:focus{border-color:var(--np-mint);box-shadow:0 0 0 4px rgba(63,159,102,.14)}
   .np-btn{
+    position:relative;overflow:hidden;
     background:linear-gradient(135deg,#31513c 0%,#244f34 72%,#c8793b 145%);color:#fff7df;border:3px solid #fff;border-radius:999px;
     padding:.65rem 1.05rem;font-family:inherit;font-size:.76rem;font-weight:800;
     letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;flex-shrink:0;
     transition:transform .15s ease, background .15s ease, box-shadow .15s ease;box-shadow:0 10px 22px rgba(49,81,60,.16);
   }
   .np-btn:hover{background:linear-gradient(135deg,#244f34 0%,#31513c 70%,#f0b36d 145%);color:#fff7df;transform:translateY(-1px);box-shadow:0 14px 28px rgba(49,81,60,.20)}
+  .np-btn::before{content:'';position:absolute;inset:-2px;background:linear-gradient(110deg,transparent 0 22%,rgba(174,223,192,.22) 34%,rgba(245,223,138,.55) 46%,rgba(255,217,184,.38) 58%,transparent 72%);transform:translateX(-130%);pointer-events:none;opacity:0}
   .np-btn::after{content:'';display:inline-block;width:.42rem;height:.42rem;margin-left:.45rem;border-radius:999px;background:#aedfc0;box-shadow:.38rem 0 0 rgba(174,223,192,.62),.76rem 0 0 rgba(128,128,128,.38);vertical-align:.02rem}
   .np-btn:disabled{opacity:.48;cursor:not-allowed;transform:none;background:rgba(191,236,207,.5)}
+  .np-btn.is-loading{opacity:1;cursor:wait;color:#fffdf7;background:linear-gradient(110deg,#244f34 0%,#31513c 28%,#4f8b5f 48%,#f0b36d 67%,#244f34 100%);background-size:240% 100%;animation:npBtnGradientWave 1.35s ease-in-out infinite;box-shadow:0 16px 34px rgba(49,81,60,.24),0 0 0 5px rgba(174,223,192,.18)}
+  .np-btn.is-loading::before{opacity:1;animation:npBtnShimmer 1.2s ease-in-out infinite}
+  .np-btn.is-loading::after{animation:npBtnSeedDots .9s ease-in-out infinite;background:#fff7df;box-shadow:.38rem 0 0 rgba(245,223,138,.85),.76rem 0 0 rgba(174,223,192,.85)}
+  .np-btn-label{position:relative;z-index:1}
+  @keyframes npBtnGradientWave{0%{background-position:0% 50%;transform:translateY(0)}50%{background-position:100% 50%;transform:translateY(-1px)}100%{background-position:0% 50%;transform:translateY(0)}}
+  @keyframes npBtnShimmer{0%{transform:translateX(-130%)}60%,100%{transform:translateX(130%)}}
+  @keyframes npBtnSeedDots{0%,100%{transform:translateY(0) scale(1);opacity:.82}50%{transform:translateY(-2px) scale(1.06);opacity:1}}
 
   .np-ack{display:flex;gap:.6rem;align-items:flex-start;margin:.65rem 0 0;padding:.68rem .85rem;border:1px solid rgba(174,223,192,.86);border-left:5px solid #aedfc0;border-radius:18px;background:linear-gradient(135deg,rgba(174,223,192,.42) 0%,rgba(255,255,255,.94) 56%,rgba(174,223,192,.22) 100%);color:#243028;font-size:.78rem;line-height:1.36;box-shadow:0 10px 22px rgba(45,92,59,.08)}
   .np-ack input{margin:.18rem 0 0;accent-color:var(--np-mint);width:18px;height:18px;flex:0 0 auto}
@@ -312,7 +321,7 @@
   @keyframes npSweep{0%{transform:translateX(-100%)}52%,100%{transform:translateX(100%)}}
 
   @media (prefers-reduced-motion:reduce){
-    .np-loader-card::after,.np-loader-heart,.np-loader-heart::before,.np-loader-heart::after,.np-loader-steps span{animation:none!important}
+    .np-loader-card::after,.np-loader-heart,.np-loader-heart::before,.np-loader-heart::after,.np-loader-steps span,.np-btn.is-loading,.np-btn.is-loading::before,.np-btn.is-loading::after{animation:none!important}
   }
 
   @media (max-width:720px){
@@ -1056,6 +1065,21 @@
     renderAiResponse(payload,out,input);
     return true;
   }
+  function npSetExploreBusy(isBusy){
+    var btn=document.getElementById('npBtn');
+    if(!btn) return;
+    if(!btn.dataset.readyLabel) btn.dataset.readyLabel='Explore →';
+    btn.classList.toggle('is-loading',!!isBusy);
+    btn.setAttribute('aria-busy',isBusy?'true':'false');
+    if(isBusy){
+      btn.disabled=true;
+      btn.innerHTML='<span class="np-btn-label">Loading</span>';
+    }else{
+      btn.innerHTML=btn.dataset.readyLabel;
+      var ack=document.getElementById('npAck');
+      btn.disabled=!(ack&&ack.checked);
+    }
+  }
   window.npAsk=async function(){
     var input=document.getElementById('npIn').value.trim();
     var out=document.getElementById('npOut');
@@ -1063,6 +1087,7 @@
     if(!ack || !ack.checked){out.innerHTML='<div class="np-empty">Please check the educational-use acknowledgment before exploring product research results.</div>';return;}
     if(!input){out.innerHTML='<div class="np-empty">Tell us your wellness goal first, or pick one of the quick-start buttons.</div>';return;}
     window.npLastReport=null;
+    npSetExploreBusy(true);
     npLoading(out);
     try{
       npSetAiStatus(true);
@@ -1072,6 +1097,8 @@
       console.warn('NutraPass AI fallback:',err);
       await npStaticAsk(input,out);
       npAiFallbackNotice(out);
+    }finally{
+      npSetExploreBusy(false);
     }
   };
 
@@ -1527,7 +1554,7 @@
   window.npToggleAck=function(){
     var ack=document.getElementById('npAck');
     var btn=document.getElementById('npBtn');
-    if(btn) btn.disabled=!(ack&&ack.checked);
+    if(btn && !btn.classList.contains('is-loading')) btn.disabled=!(ack&&ack.checked);
   };
   var input=document.getElementById('npIn');
   if(input){input.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&(ev.metaKey||ev.ctrlKey))window.npAsk();});}

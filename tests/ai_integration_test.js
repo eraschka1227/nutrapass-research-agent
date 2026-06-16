@@ -20,6 +20,7 @@ assert('frontend defines configurable AI endpoint', html.includes('window.NUTRAP
 assert('npAsk supports async backend request', /window\.npAsk\s*=\s*async\s*function/.test(html));
 assert('frontend has consumer-friendly loading state', html.includes('Building your NutraPass response'));
 assert('loading state includes animated cute heart progress UI', /@keyframes\s+npHeartbeat/.test(html) && /class=\"np-loader-heart/.test(html) && /♥/.test(html) && /aria-label=\"NutraPass heart loading animation\"/.test(html));
+assert('Explore button has warm loading animation and loading label state', /\.np-btn\.is-loading/.test(html) && /@keyframes\s+npBtnGradientWave/.test(html) && /@keyframes\s+npBtnShimmer/.test(html) && /function\s+npSetExploreBusy/.test(html) && /btn\.innerHTML='<span class="np-btn-label">Loading<\/span>'/.test(html) && /finally\{\s*npSetExploreBusy\(false\);\s*\}/.test(html));
 assert('frontend jumps to results after rendering', /function\s+npJumpToResults/.test(html) && /scrollIntoView\(\{behavior:'smooth',block:'start'\}\)/.test(html) && /npJumpToResults\(out\)/.test(html));
 assert('frontend can render backend response payload', html.includes('renderAiResponse'));
 assert('frontend retains static fallback', html.includes('npStaticAsk') && html.includes('topNutrients(input,16)'));
