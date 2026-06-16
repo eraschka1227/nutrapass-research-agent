@@ -662,12 +662,12 @@
           <button class="np-btn" id="npBtn" type="button" onclick="npAsk()" disabled>Explore →</button>
         </div>
         <div class="np-chips" aria-label="Common goals">
-          <button class="np-chip" type="button" onclick="npSet('I want to improve my gut health and digestion')">Gut Health</button>
-          <button class="np-chip" type="button" onclick="npSet('I need better sleep and help managing stress')">Sleep &amp; Stress</button>
-          <button class="np-chip" type="button" onclick="npSet('I want to support my immune system naturally')">Immune Support</button>
-          <button class="np-chip" type="button" onclick="npSet('I want to build strength and improve body composition')">Strength &amp; Body</button>
-          <button class="np-chip" type="button" onclick="npSet('I have acid reflux and indigestion problems')">Acid &amp; Reflux</button>
-          <button class="np-chip" type="button" onclick="npSet('I want stronger hair skin and nails')">Hair Skin &amp; Nails</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to improve my gut health and digestion',true)">Gut Health</button>
+          <button class="np-chip" type="button" onclick="npSet('I need better sleep and help managing stress',true)">Sleep &amp; Stress</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to support my immune system naturally',true)">Immune Support</button>
+          <button class="np-chip" type="button" onclick="npSet('I want to build strength and improve body composition',true)">Strength &amp; Body</button>
+          <button class="np-chip" type="button" onclick="npSet('I have acid reflux and indigestion problems',true)">Acid &amp; Reflux</button>
+          <button class="np-chip" type="button" onclick="npSet('I want stronger hair skin and nails',true)">Hair Skin &amp; Nails</button>
         </div>
         <label class="np-ack" for="npAck">
           <input id="npAck" type="checkbox" onchange="npToggleAck()">
@@ -897,7 +897,14 @@
     return 'Here are practical nutrition matches based on the goal you described, with products selected by keyword relevance.';
   }
 
-  window.npSet=function(t){document.getElementById('npIn').value=t;document.getElementById('npIn').focus();};
+  window.npSet=function(t,fastPath){
+    var el=document.getElementById('npIn');
+    if(!el) return;
+    el.value=t;
+    el.dataset.fastPath=fastPath?'true':'false';
+    el.dataset.fastPathValue=fastPath?String(t):'';
+    el.focus();
+  };
   window.npSwitchTab=function(tab){
     var guidance=tab==='guidance';
     var panelGuidance=document.getElementById('npPanelGuidance'), panelClinical=document.getElementById('npPanelClinical');
@@ -1056,9 +1063,11 @@
   }
   async function npTryAi(input,out){
     if(!NP_AI_ENABLED || !window.NUTRAPASS_AI_ENDPOINT || !window.fetch) return false;
+    var inputEl=document.getElementById('npIn');
+    var useCommonFastPath=!!(inputEl && inputEl.dataset.fastPath==='true' && inputEl.dataset.fastPathValue===input);
     var localIngredients=topNutrients(input,20).map(function(n){return {name:n.nm,bestFit:n.b,pubmedId:n.id};});
     var localProducts=(await npProductsForGoal(input,24)).map(function(p){return {name:p.n||p.name,brand:p.brand||'',price:p.p||p.price||'',url:p.u||p.url||'',imageUrl:p.img||p.imageUrl||'',why:p.w||p.why||''};});
-    var res=await fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal:input,products:localProducts,ingredients:localIngredients})});
+    var res=await fetch(window.NUTRAPASS_AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal:input,products:localProducts,ingredients:localIngredients,useCommonFastPath:useCommonFastPath})});
     if(!res.ok) throw new Error('NutraPass AI backend returned '+res.status);
     var payload=await res.json();
     npSetAiStatus(!(payload && /^fallback/.test(String(payload.mode||''))));

@@ -24,6 +24,7 @@ assert('Explore button has warm loading animation and loading label state', /\.n
 assert('frontend jumps to results after rendering', /function\s+npJumpToResults/.test(html) && /scrollIntoView\(\{behavior:'smooth',block:'start'\}\)/.test(html) && /npJumpToResults\(out\)/.test(html));
 assert('frontend can render backend response payload', html.includes('renderAiResponse'));
 assert('frontend retains static fallback', html.includes('npStaticAsk') && html.includes('topNutrients(input,16)'));
+assert('suggested topic chips opt into common fast path without forcing typed questions', /npSet\('I want to improve my gut health and digestion',true\)/.test(html) && /dataset\.fastPathValue/.test(html) && /useCommonFastPath=!!\(inputEl && inputEl\.dataset\.fastPath==='true' && inputEl\.dataset\.fastPathValue===input\)/.test(html) && /useCommonFastPath:useCommonFastPath/.test(html));
 assert('backend worker file exists', fs.existsSync(workerPath));
 assert('backend calls OpenAI responses/chat API without exposing key to browser', /api\.openai\.com/.test(worker) && /OPENAI_API_KEY/.test(worker));
 assert('backend can call Anthropic Claude Messages API for A/B testing', /api\.anthropic\.com\/v1\/messages/.test(worker) && /ANTHROPIC_API_KEY/.test(worker));
