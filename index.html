@@ -674,7 +674,7 @@
           <span><strong>I understand this is educational information only.</strong> These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease. I understand results may be AI-assisted and may be incomplete or incorrect. I will verify results and consult a healthcare professional before starting a new supplement regimen.</span>
         </label>
         <div class="np-privacy-note" role="note" aria-label="Privacy and AI processing notice">
-          <strong>Privacy:</strong> NutraPass will not collect, sell, or save your personal data from this tool. NutraPass does not save your questions or generated reports on our servers. When AI is active, your question and relevant report context are sent securely to our AI provider to generate the response.
+          <strong>Privacy:</strong> NutraPass will not collect, sell, or save your personal data from this tool. NutraPass does not save your questions or generated reports on our servers. When AI is active, your question and relevant results context are sent securely to our AI provider to generate the response.
           <ul>
             <li>Please avoid entering names, contact details, account numbers, or highly sensitive medical details.</li>
             <li>If symptoms are severe, urgent, or rapidly worsening, seek emergency or professional medical care instead of using this tool.</li>
@@ -705,7 +705,7 @@
       <section class="np-card np-legal" aria-label="Privacy and medical disclaimer">
         <div class="np-sl">Privacy &amp; Safety</div>
         <p><strong>No personal-data collection:</strong> NutraPass will not collect, sell, or save your personal data from this tool. NutraPass does not save your questions, follow-up questions, or generated reports on our servers. The tool is designed to process the request and return a response without database, file, or browser local-storage saving.</p>
-        <p><strong>AI processing:</strong> When AI is active, your question and relevant report context are sent to our AI provider to generate the response. Avoid entering names, contact information, account numbers, or highly sensitive medical details.</p>
+        <p><strong>AI processing:</strong> When AI is active, your question and relevant results context are sent to our AI provider to generate the response. Avoid entering names, contact information, account numbers, or highly sensitive medical details.</p>
         <p><strong>Educational only:</strong> Results are not medical advice, diagnosis, treatment, cure, mitigation, or prevention of any disease. Dietary supplement statements have not been evaluated by the FDA. Consult a qualified healthcare professional before changing supplements, medications, diet, or wellness routines, especially for pregnancy/nursing, children, medical conditions, medications, kidney concerns, blood thinners, severe symptoms, or persistent/worsening concerns.</p>
       </section>
     </div>
@@ -1313,7 +1313,7 @@
     var g=String(goal||'').toLowerCase();
     var names=(ingredients||[]).slice(0,6).map(function(n){return n.nm.toLowerCase();}).join(', ');
     function block(overview, eat, doNow){
-      return 'What may be going on: '+overview+'\n\n'+
+      return 'Nutritional Key Points: '+overview+'\n\n'+
         'Food first: '+eat+'\n\n'+
         'Easy things to try: '+doNow;
     }
@@ -1369,7 +1369,7 @@
     );
   }
   function formatOverviewHtml(text){
-    var labels=['What may be going on','Food first','Easy things to try'];
+    var labels=['Nutritional Key Points','Food first','Easy things to try'];
     var parts=String(text||'').split(/\n\n+/).filter(Boolean);
     if(!parts.length) return '';
     return '<ul class="np-overview-list">'+parts.map(function(part){
@@ -1396,8 +1396,8 @@
   }
   function formatOverviewForEmail(text){
     return String(text||'')
-      .replace(/What may be going on: /g,'• What may be going on: ')
-      .replace(/Potential causes: /g,'• What may be going on: ')
+      .replace(/Nutritional Key Points: /g,'• Nutritional Key Points: ')
+      .replace(/Potential causes: /g,'• Nutritional Key Points: ')
       .replace(/Food first: /g,'• Food first: ')
       .replace(/Easy things to try: /g,'• Easy things to try: ')
       .split(/\n\n+/)
@@ -1425,18 +1425,18 @@
     var data=window.npLastReport, box=document.getElementById('npFollowMessages');
     if(!box || !data) return;
     var turns=data.followUps||[];
-    if(!turns.length){box.innerHTML='<div class="np-follow-msg is-ai"><strong>NutraPass follow-up</strong>Ask a follow-up without losing this report. Good examples: “Which one should I compare first?”, “What foods should I try?”, or “What details would change this result?”</div>';return;}
+    if(!turns.length){box.innerHTML='<div class="np-follow-msg is-ai"><strong>NutraPass follow-up</strong>Ask a follow-up without losing these results. Good examples: “Which one should I compare first?”, “What foods should I try?”, or “What details would change this result?”</div>';return;}
     box.innerHTML=turns.map(function(t){
       if(t.role==='user') return '<div class="np-follow-msg is-user"><strong>You</strong>'+esc(t.text)+'</div>';
       var gapItems=(t.gaps||[]).slice(0,1);
       var gaps=gapItems.length?'<ul class="np-follow-gaps">'+gapItems.map(function(g){return '<li>'+esc(g)+'</li>';}).join('')+'</ul>':'';
       var productItems=(t.products||[]).slice(0,2);
-      var products=productItems.length?'<aside class="np-follow-products" aria-label="Related products from this report"><div class="np-sl">Related products</div><div class="np-pg">'+npProductCards(productItems)+'</div></aside>':'';
+      var products=productItems.length?'<aside class="np-follow-products" aria-label="Related products from these results"><div class="np-sl">Related products</div><div class="np-pg">'+npProductCards(productItems)+'</div></aside>':'';
       return '<div class="np-follow-msg is-ai'+(productItems.length?' has-products':'')+'"><div class="np-follow-answer"><strong>NutraPass follow-up</strong>'+npFormatFollowupText(t.text)+gaps+'</div>'+products+'</div>';
     }).join('');
   }
   function npFollowupPanel(){
-    return '<div class="np-card np-follow-card"><div class="np-sl">Follow-up Questions</div><p class="np-follow-intro">Ask a quick follow-up to fill in gaps while keeping this original report on the page.</p><div class="np-follow-messages" id="npFollowMessages" aria-live="polite"></div><div class="np-follow-row"><textarea class="np-follow-input" id="npFollowIn" rows="2" placeholder="Ask a follow-up about this report…"></textarea><button class="np-follow-btn" type="button" onclick="npAskFollowup()">Ask follow-up</button></div></div>';
+    return '<div class="np-card np-follow-card"><div class="np-sl">Follow-up Questions</div><p class="np-follow-intro">Ask a quick follow-up to fill in gaps while keeping these results on the page.</p><div class="np-follow-messages" id="npFollowMessages" aria-live="polite"></div><div class="np-follow-row"><textarea class="np-follow-input" id="npFollowIn" rows="2" placeholder="Ask a follow-up about these results…"></textarea><button class="np-follow-btn" type="button" onclick="npAskFollowup()">Ask follow-up</button></div></div>';
   }
   window.npAskFollowup=async function(){
     var data=window.npLastReport, input=document.getElementById('npFollowIn');
@@ -1445,7 +1445,7 @@
     if(!q) return;
     data.followUps=data.followUps||[];
     data.followUps.push({role:'user',text:q});
-    data.followUps.push({role:'ai',text:'Checking the original report context…'});
+    data.followUps.push({role:'ai',text:'Checking the results above…'});
     input.value='';
     npRenderFollowupMessages();
     try{
@@ -1561,13 +1561,13 @@
     var noPanels=!(r.n&&r.n.length) && !cards;
     var ingredientPanel=nuts?'<div class="np-card"><div class="np-nuts">'+nuts+'</div></div>':'';
     var productPanel=cards?'<aside class="np-side"><div class="np-card"><div class="np-sl">Related Products Available on NutraPass</div><div class="np-pg">'+cards+'</div></div></aside>':'';
-    var saveText=(r.noResults||noPanels)?'Copy, print, or open an email draft with this NutraPass response.':'Copy, print, or open an email draft with the health overview and top ingredient matches.';
+    var saveText=(r.noResults||noPanels)?'Copy, print, or open an email draft with this NutraPass response.':'Copy, print, or open an email draft with the nutritional key points and top ingredient matches.';
     out.innerHTML=
       '<div class="np-print-area">'+
       '<div class="np-print-head"><img class="np-print-logo" src="Art/nutrapass-logo-horizontal-leaf-black.png" alt="NutraPass"><div class="np-print-title">Personalized Nutritional Research Tool<br>Educational Research Summary</div></div>'+
       '<div class="np-warning" role="note" aria-label="Educational disclaimer"><strong>Educational information only.</strong> Results are AI-assisted research starting points, not medical advice or personalized medical recommendations.<small>AI-generated information may be incomplete or incorrect. Verify results, read product labels, and consult a qualified healthcare professional before starting any supplement regimen. These statements have not been evaluated by the Food and Drug Administration. Products are not intended to diagnose, treat, cure, or prevent any disease.</small></div>'+ 
       '<div class="np-card np-save-card"><div class="np-sl">Save or Print</div><div class="np-sum">'+esc(saveText)+'</div><div class="np-actions"><button class="np-action" type="button" onclick="npCopyResults()">Copy</button><button class="np-action" type="button" onclick="npPrintResults()">Print</button><button class="np-action" type="button" onclick="npEmailResults()">Email Draft</button></div></div>'+ 
-      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Health Overview</div><div class="np-overview">'+formatOverviewHtml(r.overview||r.s||nutritionOverview(r.goal||'', r.n||[]))+'</div></div>'+ingredientPanel+npFollowupPanel()+'</div>'+ 
+      '<div class="np-results-grid"><div class="np-main"><div class="np-card"><div class="np-sl">Nutritional Key Points</div><div class="np-overview">'+formatOverviewHtml(r.overview||r.s||nutritionOverview(r.goal||'', r.n||[]))+'</div></div>'+ingredientPanel+npFollowupPanel()+'</div>'+ 
       productPanel+'</div>'+ 
       '</div>';
     npRenderFollowupMessages();
