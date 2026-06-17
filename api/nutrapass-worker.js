@@ -139,7 +139,7 @@ function staticCatalogProducts() {
 
 const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
 const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
-const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v1:';
+const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v2:';
 const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
 const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
 
@@ -538,16 +538,29 @@ function buildCommonIntentResponse(intent, products = []) {
     img: p.img || p.imageUrl || '',
     why: p.why || p.w || 'Relevant NutraPass product to compare for this educational goal.'
   }));
+  const ingredientTemplates = {
+    immune: [
+      { name: 'Vitamin D3', bestFit: 'Nutrient-status and normal immune-function support', researchContext: 'Vitamin D is commonly researched for immune and bone-health support; blood levels, sun exposure, diet, and dose all affect fit.', typicalRange: 'Common supplemental range: 1,000–2,000 IU/day; blood levels and professional guidance matter.', pubmedId: '32252338' },
+      { name: 'Vitamin C', bestFit: 'Food-first antioxidant and immune nutrient support', researchContext: 'Vitamin C supports normal immune function and collagen biology; food sources are a practical first step before stacking high-dose products.', typicalRange: 'Food-first sources include citrus, berries, kiwi, peppers, broccoli, and potatoes.', pubmedId: '29099763' },
+      { name: 'Zinc', bestFit: 'Normal immune-function and barrier-support nutrient', researchContext: 'Zinc supports normal immune function, but dose and duration matter because long-term high zinc can affect copper status.', typicalRange: 'Common range: 10–30 mg/day elemental zinc; avoid chronic high-dose use without guidance.', pubmedId: '31305906' },
+      { name: 'Probiotics', bestFit: 'Gut-immune microbiome comparison', researchContext: 'Microbiome balance and immune signaling overlap, so probiotic strain, CFU count, and use-case are important comparison points.', typicalRange: 'Label ranges vary by strain and purpose; compare strain IDs, CFU through expiration, and storage directions.', pubmedId: '35945628' },
+      { name: 'Butyrate / postbiotics', bestFit: 'Gut-barrier and postbiotic immune-support comparison', researchContext: 'Postbiotic and butyrate-support categories are often compared for gut-barrier and microbiome signaling support.', typicalRange: 'Follow label directions; compare form, dose, and whether the product is paired with prebiotic/probiotic support.', pubmedId: '32828753' },
+      { name: 'Prebiotic fiber', bestFit: 'Microbiome-feeding foundation option', researchContext: 'Prebiotic fibers help feed beneficial microbes and can support regularity; increase slowly because tolerance differs.', typicalRange: 'Start low, often 2–5 g/day, and increase gradually with fluids as tolerated.', pubmedId: '29606185' },
+      { name: 'Selenium', bestFit: 'Antioxidant and immune nutrient-status comparison', researchContext: 'Selenium supports antioxidant enzyme systems and normal immune function, but the safe range is narrower than many vitamins.', typicalRange: 'Often covered by food or multis; avoid stacking high-dose selenium products.', pubmedId: '30509983' },
+      { name: 'Multivitamin support', bestFit: 'Foundation coverage when diet gaps are likely', researchContext: 'A broad multi can be a comparison option when vitamin/mineral coverage is inconsistent, but it should not duplicate high-dose single nutrients.', typicalRange: 'Follow label directions and check overlap with D, zinc, selenium, and other immune formulas.', pubmedId: '' }
+    ]
+  };
+  const ingredientNotes = ingredientTemplates[intent] || template.ingredients.map((name) => ({
+    name,
+    bestFit: 'Common comparison point for this goal',
+    researchContext: 'Educational starting point for comparing product fit, ingredient form, serving size, and cautions. Not medical advice.',
+    typicalRange: 'Follow product label directions and professional guidance when relevant.',
+    pubmedId: ''
+  }));
   return {
     summary: template.summary,
     nutritionOverview: `${template.overview}\n\nFood first: keep the basics in place before adding products — regular meals, enough protein/fiber where relevant, hydration, sleep, and consistency.`,
-    ingredientNotes: template.ingredients.map((name) => ({
-      name,
-      bestFit: 'Common comparison point for this goal',
-      researchContext: 'Educational starting point for comparing product fit, ingredient form, serving size, and cautions. Not medical advice.',
-      typicalRange: 'Follow product label directions and professional guidance when relevant.',
-      pubmedId: ''
-    })),
+    ingredientNotes,
     products: productCards,
     followUpQuestions: template.followUps,
     type: 'common_intent',

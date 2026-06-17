@@ -807,8 +807,8 @@
   var NP_PRODUCT_TAXONOMY={
     'built':'protein bar snack workout snack sweet tooth high protein treat travel snack lunchbox dessert alternative puff bar bars',
     'rnwy':'running fuel endurance protein salty carbs race day workout recovery complete protein extra mile athlete training carbs hydration',
-    'purishh':'creatine shilajit protein powder performance strength recovery sun balm hair care conditioner shampoo tallow mineral supplement',
-    'rawguru.com':'vegan collagen vitamin c chocolate functional food beauty plant based superfood b12 d3 k2 coconut cacao snack treat',
+    'purishh':'creatine shilajit protein powder performance strength recovery mineral supplement',
+    'rawguru.com':'vegan collagen vitamin c chocolate functional food beauty plant based superfood b12 d3 k2 coconut cacao snack treat amino acid glutamine supplement immune',
     'cellutrex':'electrolytes hydration sweating travel low sugar workout hydration zero sugar powder watermelon grapefruit orange lemon lime cherry',
     'silver fern':'gut probiotic prebiotic stress motility digestive fiber microbiome regularity bloat immune postbiotic cleanse constipation'
   };
@@ -831,7 +831,18 @@
   function npProductPhraseBoost(p,goal){
     var phraseBoost=0, name=' '+String(p.n||p.name||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ', g=' '+String(goal||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ';
     ['vegan collagen','vitamin c','vitamin d','d3 k2','magnesium','creatine','protein powder','electrolyte','chocolate','probiotic','prebiotic'].forEach(function(ph){if(g.indexOf(' '+ph+' ')>-1 && name.indexOf(' '+ph+' ')>-1) phraseBoost+=20;});
+    if(/\bimmune|immunity|cold|flu|seasonal\b/.test(g)){
+      var hay=' '+npProductSearchText(p).toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ';
+      ['immune','immunity','probiotic','prebiotic','postbiotic','biotic','microbiome','gut','vitamin','multivitamin','glutamine'].forEach(function(ph){if(hay.indexOf(' '+ph+' ')>-1) phraseBoost+=10;});
+    }
     return phraseBoost;
+  }
+  function npIsNonIngestibleProduct(p,goal){
+    var hay=' '+[p.n,p.name,p.k,p.w,p.why,p.productType].join(' ').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ';
+    var g=String(goal||'').toLowerCase();
+    var bodyCare=/\b(conditioner|shampoo|sun balm|sunscreen|soap|lotion|body essentials|topical|tallow balm|skin balm)\b/.test(hay);
+    var beautyGoal=/\b(hair|skin|nail|beauty|conditioner|shampoo|topical|sun|body essentials)\b/.test(g);
+    return bodyCare && !beautyGoal;
   }
   function npProductBrandKey(p){return String(p.brand||p.b||'').toLowerCase().replace(/[™®]/g,'').trim();}
   function npProductSearchText(p){
@@ -854,7 +865,7 @@
   function npStaticProducts(){return P.slice();}
   function npRankProducts(products,goal,n){
     var words=tokens(goal);
-    var list=(products&&products.length?products:npStaticProducts()).map(function(p){
+    var list=(products&&products.length?products:npStaticProducts()).filter(function(p){return !npIsNonIngestibleProduct(p,goal);}).map(function(p){
       var keys=npProductSearchText(p);
       return {p:p,s:scoreKeywords(String(keys||''),words)+npProductExactNameBoost(p,words)+npProductPhraseBoost(p,goal)};
     });
