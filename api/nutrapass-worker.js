@@ -526,9 +526,32 @@ async function writeCommonResponseCache(env, intent, response) {
   return payload;
 }
 
+function scoreCommonIntentProduct(intent, product = {}) {
+  const text = ` ${[product.name, product.n, product.brand, product.why, product.w, product.productType, product.category].join(' ').toLowerCase().replace(/[^a-z0-9]+/g, ' ')} `;
+  if (intent !== 'immune') return 0;
+  if (/\b(conditioner|shampoo|sun balm|sunscreen|soap|lotion|body essentials|topical|tallow balm|skin balm|hair complex|hair skin nails|keratin)\b/.test(text)) return -1000;
+  let score = 0;
+  [
+    ['immune', 80], ['immunity', 80], ['probiotic', 65], ['prebiotic', 60], ['postbiotic', 70], ['biotic', 45],
+    ['microbiome', 35], ['gut repair', 45], ['gut and immune', 80], ['multivitamin', 45], ['daily essential vitamin', 50],
+    ['vitamin d', 40], ['d3', 35], ['k2 d3', 35], ['glutamine', 30], ['trace mineral', 25]
+  ].forEach(([term, weight]) => { if (text.includes(` ${term} `) || text.includes(term)) score += weight; });
+  return score;
+}
+
+function prioritizeCommonIntentProducts(intent, products = []) {
+  if (intent !== 'immune') return products;
+  return (products || [])
+    .map((product, index) => ({ product, index, score: scoreCommonIntentProduct(intent, product) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((item) => item.product);
+}
+
 function buildCommonIntentResponse(intent, products = []) {
   const template = COMMON_INTENT_RESPONSES[intent] || COMMON_INTENT_RESPONSES.gut_health;
-  const productCards = (products || []).slice(0, 6).map((p) => ({
+  const rankedProducts = prioritizeCommonIntentProducts(intent, products);
+  const productCards = (rankedProducts.length ? rankedProducts : products || []).slice(0, 6).map((p) => ({
     name: p.name || p.n || '',
     brand: p.brand || '',
     price: p.price || p.p || '',

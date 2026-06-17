@@ -840,9 +840,10 @@
   function npIsNonIngestibleProduct(p,goal){
     var hay=' '+[p.n,p.name,p.k,p.w,p.why,p.productType].join(' ').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ')+' ';
     var g=String(goal||'').toLowerCase();
-    var bodyCare=/\b(conditioner|shampoo|sun balm|sunscreen|soap|lotion|body essentials|topical|tallow balm|skin balm)\b/.test(hay);
     var beautyGoal=/\b(hair|skin|nail|beauty|conditioner|shampoo|topical|sun|body essentials)\b/.test(g);
-    return bodyCare && !beautyGoal;
+    var bodyCare=/\b(conditioner|shampoo|sun balm|sunscreen|soap|lotion|body essentials|topical|tallow balm|skin balm)\b/.test(hay);
+    var beautySupplement=/\b(hair complex|hair skin nails|keratin|beauty from within)\b/.test(hay);
+    return (bodyCare || beautySupplement) && !beautyGoal;
   }
   function npProductBrandKey(p){return String(p.brand||p.b||'').toLowerCase().replace(/[™®]/g,'').trim();}
   function npProductSearchText(p){
