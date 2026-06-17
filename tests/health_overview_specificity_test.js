@@ -15,7 +15,7 @@ function assert(name, condition) {
   }
 }
 
-async function workerFallback(goal) {
+async function workerFallback(goal, extraBody = {}) {
   const tempModule = path.join(os.tmpdir(), `nutrapass-worker-${Date.now()}-${Math.random().toString(16).slice(2)}.mjs`);
   fs.writeFileSync(tempModule, fs.readFileSync(workerPath, 'utf8'));
   try {
@@ -23,7 +23,7 @@ async function workerFallback(goal) {
     const response = await mod.default.fetch(new Request('https://example.test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ goal, products: [], ingredients: [] })
+      body: JSON.stringify({ goal, products: [], ingredients: [], ...extraBody })
     }), {});
     return response.json();
   } finally {
@@ -59,7 +59,17 @@ async function workerFallback(goal) {
   assert('menopause sleep fallback includes a what-may-be-going-on health overview', menopauseOverview.startsWith('what may be going on:') && /menopause|perimenopause|hot flashes|night sweats|hormone/.test(menopauseOverview));
   assert('menopause sleep fallback prioritizes clinically backed ingredients while allowing traditional options', /magnesium|l-theanine|glycine/.test(menopauseNotes) && /black cohosh|saffron|soy isoflavones|red clover/.test(menopauseNotes));
 
+  const commonImmune = await workerFallback('I want to support my immune system naturally', { useCommonFastPath: true });
+  const commonImmuneOverview = String(commonImmune.nutritionOverview || '').toLowerCase();
+  assert('common fast-path immunity overview uses full Health Overview shape', commonImmune.mode === 'common_template_cached' && commonImmuneOverview.startsWith('what may be going on:') && commonImmuneOverview.includes('food first:') && commonImmuneOverview.includes('easy things to try:'));
+  assert('common fast-path immunity overview is richer than old short supplement disclaimer', /sleep quality|stress load|vitamin d status|protein intake|gut health|seasonal exposure/.test(commonImmuneOverview) && commonImmuneOverview.length > 450);
+
+  const commonSleep = await workerFallback('I need help with sleep and stress support', { useCommonFastPath: true });
+  const commonSleepOverview = String(commonSleep.nutritionOverview || '').toLowerCase();
+  assert('common fast-path sleep/stress overview uses full Health Overview shape', commonSleep.mode === 'common_template_cached' && commonSleepOverview.startsWith('what may be going on:') && commonSleepOverview.includes('food first:') && commonSleepOverview.includes('easy things to try:'));
+
   const worker = fs.readFileSync(workerPath, 'utf8');
+  assert('common response cache version is bumped after preloaded overview upgrade', worker.includes("COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v3:'"));
   assert('AI prompts forbid category-routing language and generic wellness dumps', /Never tell the user their question does not match a category/.test(worker) && /Never expose internal routing/.test(worker) && /meal quality, protein, fiber, hydration, sleep, stress, movement, nutrient gaps/.test(worker));
   assert('AI prompts require friendly upbeat tone and evidence-tiered ingredient framing', /friendly, upbeat, and reassuring/.test(worker) && /Prioritize clinically backed ingredients/.test(worker) && /traditional or alternative options/.test(worker));
   assert('Black Cohosh lookup prompt is balanced rather than reflexively negative', /Black cohosh/.test(worker) && /balanced, not dismissive/.test(worker));

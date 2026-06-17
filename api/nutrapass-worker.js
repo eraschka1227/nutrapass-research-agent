@@ -139,7 +139,7 @@ function staticCatalogProducts() {
 
 const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
 const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
-const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v2:';
+const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v3:';
 const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
 const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
 
@@ -147,56 +147,56 @@ const COMMON_INTENT_RESPONSES = {
   gut_health: {
     keywords: ['gut', 'bloat', 'bloating', 'digestion', 'digestive', 'microbiome', 'regularity', 'fiber', 'constipation', 'probiotic', 'prebiotic'],
     summary: 'For everyday gut support, start with the basics: fiber diversity, hydration, meal rhythm, and products that support regularity or microbiome balance.',
-    overview: 'NutraPass can help you compare prebiotic, probiotic, postbiotic, enzyme, and fiber options. For persistent, severe, or new digestive symptoms, talk with a qualified professional.',
+    overview: 'What may be going on: everyday gut-support goals often overlap with fiber diversity, meal rhythm, hydration, stress load, food tolerance, motility, and microbiome balance. Persistent, severe, bloody, or unexplained digestive symptoms deserve professional guidance.\n\nFood first: build a steady base with oats, beans/lentils as tolerated, cooked vegetables, fruit such as kiwi or berries, fermented foods if tolerated, enough fluids, and gradual fiber increases rather than sudden big changes.\n\nEasy things to try: walk 5–10 minutes after meals, slow down meal pace, track obvious trigger foods, introduce one fiber/probiotic/enzyme change at a time, and compare products by strain, fiber type, serving size, and tolerance.',
     ingredients: ['prebiotic fiber', 'probiotics', 'postbiotics', 'digestive enzymes', 'ginger or peppermint-style digestive support'],
     followUps: ['Is your main goal regularity, bloating comfort, or daily microbiome support?', 'Any major food triggers you already know about?']
   },
   sleep_stress: {
     keywords: ['sleep', 'stress', 'calm', 'relax', 'relaxation', 'cortisol', 'night', 'bedtime', 'anxiety', 'menopause', 'perimenopause', 'hot flashes', 'night sweats'],
     summary: 'For sleep and stress routines, look at calming habits first, then products that support normal relaxation and sleep quality.',
-    overview: 'Common support categories include magnesium, L-theanine, adaptogen-style stress support, and bedtime routine products. Avoid mixing sedating products with medications unless cleared by a professional.',
+    overview: 'What may be going on: sleep and stress patterns can be shaped by caffeine timing, inconsistent sleep/wake rhythm, evening light exposure, high stress load, under-eating, low protein, magnesium intake, alcohol, overtraining, and mood or thyroid/iron/B12 issues.\n\nFood first: anchor protein at meals, include magnesium-rich foods such as pumpkin seeds, spinach, beans, or nuts, use steady hydration, and consider complex carbs at dinner if tolerated.\n\nEasy things to try: set a consistent wind-down window, dim screens/lights before bed, get morning daylight, keep late caffeine modest, and compare calming products by daytime vs bedtime fit, sedation risk, and medication context.',
     ingredients: ['magnesium', 'L-theanine', 'adaptogens', 'glycine', 'sleep routine support'],
     followUps: ['Is the bigger issue falling asleep, staying asleep, or daytime stress?', 'Are you looking for non-sedating daytime support or bedtime support?']
   },
   electrolytes: {
     keywords: ['electrolyte', 'electrolytes', 'hydration', 'sodium', 'potassium', 'magnesium', 'sweat', 'cramps', 'salty'],
     summary: 'For hydration support, compare electrolyte products by sodium level, taste, sugar/carbs, and whether you need daily hydration or exercise-focused support.',
-    overview: 'Electrolytes may support fluid balance during sweating, travel, low-carb eating patterns, or longer activity. People with kidney, blood pressure, or heart concerns should ask a qualified professional before increasing electrolytes.',
+    overview: 'What may be going on: hydration-support needs can be driven by sweating, heat, travel, low-carb eating patterns, long workouts, illness recovery, alcohol, or simply low fluid/mineral intake. Kidney, blood-pressure, or heart concerns deserve professional guidance before increasing electrolytes.\n\nFood first: use regular fluids, water-rich foods, salted meals when appropriate, fruits/vegetables for potassium, and balanced meals before relying on powders.\n\nEasy things to try: match electrolytes to the situation — daily hydration, heat, travel, or training — and compare sodium level, sugar/carbs, magnesium content, taste, and whether you actually feel better using it.',
     ingredients: ['sodium', 'potassium', 'magnesium', 'chloride'],
     followUps: ['Is this for daily hydration, workouts, heat, travel, or low-carb eating?', 'Do you want sugar-free electrolytes or carbs plus electrolytes?']
   },
   protein: {
     keywords: ['protein', 'bar', 'bars', 'snack', 'muscle', 'recovery', 'strength', 'body composition'],
     summary: 'For protein support, match the product to the use case: quick snack, post-workout recovery, muscle support, or daily protein gap filling.',
-    overview: 'Protein products can support satiety and training recovery when they fit your overall eating pattern. Check total protein, calories, sweeteners, fiber, and ingredient tolerance.',
+    overview: 'What may be going on: protein-support goals often reflect meal gaps, training recovery needs, low-satiety snacks, busy schedules, or body-composition goals. Product fit depends on total protein, calories, fiber, sweeteners, dairy tolerance, and whether it is replacing a snack or supporting recovery.\n\nFood first: build meals around protein-rich foods such as Greek yogurt, eggs, fish, poultry, tofu/tempeh, beans, lentils, or lean meats, plus fiber-rich carbs and produce.\n\nEasy things to try: aim for a protein-forward breakfast, compare bars/powders by grams of protein per serving and ingredient tolerance, and use products to fill realistic gaps rather than crowding out whole foods.',
     ingredients: ['whey or plant protein', 'essential amino acids', 'fiber', 'creatine where appropriate'],
     followUps: ['Do you want a snack/bar, powder, or recovery product?', 'Any dairy, sweetener, or texture preferences?']
   },
   creatine: {
     keywords: ['creatine', 'strength', 'power', 'lifting', 'muscle', 'performance'],
     summary: 'Creatine is commonly used to support strength, power, and training performance routines.',
-    overview: 'Most people compare creatine products by form, serving size, simplicity, flavor, and tolerance. People with kidney concerns or relevant medications should ask a qualified professional first.',
+    overview: 'What may be going on: creatine questions usually connect to strength, power, repeated sprint performance, lean-mass support, or training consistency. Fit depends on kidney/medication context, dose consistency, form, flavor tolerance, and whether the basics of lifting, protein, hydration, and sleep are already in place.\n\nFood first: keep protein distributed across meals, include enough total calories for training goals, hydrate consistently, and use carbohydrate around harder sessions if performance is dipping.\n\nEasy things to try: compare simple creatine monohydrate first, look for 3–5 g/day serving clarity, take it consistently, and ask a qualified professional first if kidney disease, pregnancy/nursing, or relevant medications are in play.',
     ingredients: ['creatine monohydrate', 'protein', 'electrolytes'],
     followUps: ['Is this for lifting, sports performance, or general body composition support?', 'Do you prefer flavored or unflavored?']
   },
   running_fuel: {
     keywords: ['running', 'run', 'runner', 'endurance', 'fuel', 'carbs', 'salty carbs', 'race', 'marathon', 'cycling'],
     summary: 'For running fuel, look for easy-to-use carbs, electrolytes, and recovery support matched to the duration and intensity of the effort.',
-    overview: 'Short sessions may only need hydration. Longer sessions usually benefit from planned carbs and electrolytes, plus post-run protein or recovery support.',
+    overview: 'What may be going on: running-fuel needs depend on session length, sweat rate, gut tolerance, intensity, heat, and whether the goal is during-run energy, hydration, or recovery. Under-fueling can show up as fading pace, cravings, headaches, or poor recovery.\n\nFood first: for shorter easy runs, regular meals and hydration may be enough; for longer or harder efforts, plan familiar carbs, fluids, sodium, and post-run protein.\n\nEasy things to try: practice fuel before race day, compare products by carbs per serving, sodium, texture, caffeine, and stomach tolerance, and adjust based on duration rather than using the same plan for every run.',
     ingredients: ['carbohydrates', 'sodium', 'electrolytes', 'protein for recovery'],
     followUps: ['How long are the runs or races?', 'Do you want during-run fuel, recovery, or both?']
   },
   beauty: {
     keywords: ['hair', 'skin', 'nails', 'beauty', 'collagen', 'vitamin c', 'vegan collagen'],
     summary: 'For hair, skin, and nail support, compare products that support normal structure, collagen-building nutrients, antioxidant support, and daily nutrient coverage.',
-    overview: 'Look at protein intake, vitamin C, minerals, and targeted beauty products. If hair loss or skin changes are sudden or severe, professional evaluation is the right next step.',
+    overview: 'What may be going on: hair, skin, and nail goals can overlap with protein intake, iron/zinc status, essential fatty acids, thyroid or hormone changes, stress load, collagen support, skin-barrier habits, and normal growth cycles. Sudden hair loss or major skin changes should be evaluated.\n\nFood first: prioritize adequate protein, vitamin-C foods, eggs/fish/lean meats or legumes, nuts/seeds, colorful produce, omega-3-rich foods, and enough calories overall.\n\nEasy things to try: stay consistent for 8–12+ weeks, avoid crash dieting, simplify harsh hair/skin routines, compare products by dose and overlap, and remember high-dose biotin can interfere with lab tests.',
     ingredients: ['vitamin C', 'silica', 'biotin', 'amino acids', 'antioxidants'],
     followUps: ['Are you focused more on skin glow, nails, or hair support?', 'Do you prefer vegan options?']
   },
   immune: {
     keywords: ['immune', 'immunity', 'vitamin c', 'zinc', 'sick', 'seasonal'],
     summary: 'For immune support, start with sleep, protein, micronutrient coverage, and targeted nutrients like vitamin C, D, and zinc when appropriate.',
-    overview: 'Supplements can support normal immune function but do not prevent or treat illness. Check medication interactions and avoid stacking high-dose nutrients without guidance.',
+    overview: 'What may be going on: immune-support needs are often shaped by sleep quality, stress load, vitamin D status, protein intake, gut health, hydration, seasonal exposure, and overall diet quality. Frequent, severe, or prolonged infections should be discussed with a clinician.\n\nFood first: focus on colorful fruits/vegetables, citrus or berries, protein with each meal, zinc foods like seafood, meat, beans, or pumpkin seeds, fermented foods if tolerated, and steady hydration.\n\nEasy things to try: prioritize sleep, wash hands, keep workouts moderate when run down, get daylight when possible, compare gut-immune products thoughtfully, and avoid megadosing single nutrients for long periods.',
     ingredients: ['vitamin C', 'vitamin D', 'zinc', 'probiotics', 'multivitamin support'],
     followUps: ['Is this daily immune support or short-term seasonal support?', 'Are you already taking vitamin D or zinc?']
   }
@@ -582,7 +582,7 @@ function buildCommonIntentResponse(intent, products = []) {
   }));
   return {
     summary: template.summary,
-    nutritionOverview: `${template.overview}\n\nFood first: keep the basics in place before adding products — regular meals, enough protein/fiber where relevant, hydration, sleep, and consistency.`,
+    nutritionOverview: template.overview,
     ingredientNotes,
     products: productCards,
     followUpQuestions: template.followUps,
