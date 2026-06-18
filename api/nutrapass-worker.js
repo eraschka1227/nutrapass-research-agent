@@ -401,6 +401,143 @@ function json(data, status = 200, origin = ALLOWED_ORIGINS_DEFAULT[0]) {
   });
 }
 
+
+function timingSafeEqual(a, b) {
+  const left = String(a || '');
+  const right = String(b || '');
+  if (!left || !right || left.length !== right.length) return false;
+  let diff = 0;
+  for (let i = 0; i < left.length; i += 1) diff |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  return diff === 0;
+}
+
+function simpleroWebhookAuthorized(request, env, url) {
+  const configured = String(env.SIMPLERO_WEBHOOK_SECRET || '').trim();
+  if (!configured) return false;
+  const supplied = request.headers.get('X-NutraPass-Webhook-Secret')
+    || request.headers.get('X-Webhook-Secret')
+    || url.searchParams.get('secret')
+    || url.searchParams.get('token')
+    || '';
+  return timingSafeEqual(supplied, configured);
+}
+
+function walkValues(value, visitor, depth = 0) {
+  if (depth > 8 || value == null) return;
+  if (Array.isArray(value)) {
+    for (const item of value) walkValues(item, visitor, depth + 1);
+    return;
+  }
+  if (typeof value === 'object') {
+    for (const [key, item] of Object.entries(value)) {
+      visitor(key, item);
+      walkValues(item, visitor, depth + 1);
+    }
+  }
+}
+
+function extractSimpleroContact(payload = {}) {
+  const contact = { email: '', firstName: '', lastName: '', name: '', tags: [] };
+  walkValues(payload, (key, value) => {
+    const k = String(key || '').toLowerCase();
+    if (!contact.email && typeof value === 'string' && (k === 'email' || k.endsWith('_email')) && /@/.test(value)) contact.email = value.trim().toLowerCase();
+    if (!contact.firstName && typeof value === 'string' && ['first_name', 'firstname', 'first name'].includes(k)) contact.firstName = value.trim();
+    if (!contact.lastName && typeof value === 'string' && ['last_name', 'lastname', 'last name'].includes(k)) contact.lastName = value.trim();
+    if (!contact.name && typeof value === 'string' && k === 'name') contact.name = value.trim();
+    if ((k === 'tag' || k === 'tags') && typeof value === 'string') contact.tags.push(value.trim());
+    if ((k === 'tag' || k === 'tags') && Array.isArray(value)) contact.tags.push(...value.map((tag) => String(tag || '').trim()).filter(Boolean));
+  });
+  if ((!contact.firstName || !contact.lastName) && contact.name) {
+    const parts = contact.name.split(/\s+/).filter(Boolean);
+    if (!contact.firstName) contact.firstName = parts[0] || '';
+    if (!contact.lastName) contact.lastName = parts.slice(1).join(' ');
+  }
+  return contact;
+}
+
+function simpleroActionTags(url, payload, contactTags = []) {
+  const action = String(url.searchParams.get('action') || payload.action || payload.event || payload.trigger || '').toLowerCase();
+  const text = `${action} ${contactTags.join(' ')}`.toLowerCase();
+  const tags = ['nutrapass'];
+  if (/subscrib|purchase|paid|member|active/.test(text)) tags.push('approved', 'member', 'active');
+  else if (/approv/.test(text)) tags.push('approved');
+  else if (/appl|lead|submit/.test(text)) tags.push('applicant');
+  else tags.push('approved');
+  return Array.from(new Set(tags));
+}
+
+function normalizeShopifyDomainForAdmin(env) {
+  const domain = normalizeStoreDomain(env.SHOPIFY_ADMIN_STORE_DOMAIN || env.SHOPIFY_STORE_DOMAIN || '');
+  if (!domain) return '';
+  return domain.includes('.myshopify.com') ? domain : domain;
+}
+
+function mergeTagString(existing, additions) {
+  const tags = String(existing || '').split(',').map((tag) => tag.trim()).filter(Boolean);
+  for (const tag of additions) if (!tags.some((t) => t.toLowerCase() === tag.toLowerCase())) tags.push(tag);
+  return tags.join(', ');
+}
+
+async function shopifyAdminFetch(env, path, init = {}) {
+  const domain = normalizeShopifyDomainForAdmin(env);
+  const token = env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  if (!domain || !token) throw new Error('Missing Shopify Admin domain or token');
+  const url = `https://${domain}/admin/api/2025-10${path}`;
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Access-Token': token,
+      ...(init.headers || {})
+    }
+  });
+  const text = await response.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+  if (!response.ok) throw new Error(`Shopify Admin API ${response.status}: ${text.slice(0, 400)}`);
+  return data;
+}
+
+async function findShopifyCustomerByEmail(env, email) {
+  const data = await shopifyAdminFetch(env, `/customers/search.json?query=${encodeURIComponent(`email:${email}`)}&limit=1`, { method: 'GET' });
+  return Array.isArray(data.customers) && data.customers.length ? data.customers[0] : null;
+}
+
+async function upsertShopifyCustomerFromSimplero(env, contact, tagsToAdd) {
+  if (!contact.email) return { ok: false, error: 'No email found in Simplero payload' };
+  const existing = await findShopifyCustomerByEmail(env, contact.email);
+  if (existing && existing.id) {
+    const updatedTags = mergeTagString(existing.tags, tagsToAdd);
+    await shopifyAdminFetch(env, `/customers/${existing.id}.json`, {
+      method: 'PUT',
+      body: JSON.stringify({ customer: { id: existing.id, tags: updatedTags, first_name: contact.firstName || existing.first_name || undefined, last_name: contact.lastName || existing.last_name || undefined } })
+    });
+    return { ok: true, action: 'updated', customerId: existing.id, email: contact.email, tags: updatedTags };
+  }
+  const created = await shopifyAdminFetch(env, '/customers.json', {
+    method: 'POST',
+    body: JSON.stringify({ customer: { email: contact.email, first_name: contact.firstName || undefined, last_name: contact.lastName || undefined, tags: tagsToAdd.join(', '), verified_email: true } })
+  });
+  return { ok: true, action: 'created', customerId: created.customer && created.customer.id, email: contact.email, tags: tagsToAdd.join(', ') };
+}
+
+async function handleSimpleroWebhook(request, env, url, allowOrigin) {
+  if (!simpleroWebhookAuthorized(request, env, url)) return json({ error: 'Not found' }, 404, allowOrigin);
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > MAX_BODY_BYTES) return json({ error: 'Request too large' }, 413, allowOrigin);
+  let payload = {};
+  try { payload = await request.json(); }
+  catch { return json({ error: 'Invalid JSON body' }, 400, allowOrigin); }
+  const contact = extractSimpleroContact(payload);
+  const tagsToAdd = simpleroActionTags(url, payload, contact.tags);
+  try {
+    const result = await upsertShopifyCustomerFromSimplero(env, contact, tagsToAdd);
+    return json({ ok: true, ...result, addedTags: tagsToAdd }, 200, allowOrigin);
+  } catch (error) {
+    return json({ ok: false, error: 'Shopify update failed', detail: String(error.message || error).slice(0, 500) }, 502, allowOrigin);
+  }
+}
+
 function healthPage(origin = ALLOWED_ORIGINS_DEFAULT[0]) {
   return new Response(`<!doctype html>
 <html lang="en">
@@ -1132,6 +1269,9 @@ export default {
     if ((request.method === 'GET' || request.method === 'HEAD') && /^\/question-analytics\/?$/.test(url.pathname)) {
       if (!canReadAnalytics(request, env)) return json({ error: 'Not found' }, 404, allowOrigin);
       return json(await getQuestionAnalyticsSummary(env), 200, allowOrigin);
+    }
+    if (request.method === 'POST' && /^\/simplero-webhook\/?$/.test(url.pathname)) {
+      return handleSimpleroWebhook(request, env, url, allowOrigin);
     }
     if ((request.method === 'GET' || request.method === 'HEAD') && /^\/(products|product-catalog)\/?$/.test(url.pathname)) {
       return json(await getProductCatalog(env), 200, allowOrigin);
