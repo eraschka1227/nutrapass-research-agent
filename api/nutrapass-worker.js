@@ -141,6 +141,7 @@ const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
 const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
 const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v4:';
 const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
+const DAILY_ANALYTICS_PREFIX = 'nutrapass:analytics:daily:v1:';
 const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 const COMMON_INTENT_RESPONSES = {
@@ -755,9 +756,109 @@ async function recordQuestionAnalytics(env, event = {}) {
   await env.PRODUCT_CATALOG_KV.put(key, JSON.stringify(payload));
 }
 
+function dailyKey(date = new Date()) {
+  return `${DAILY_ANALYTICS_PREFIX}${date.toISOString().slice(0, 10)}`;
+}
+
+function emptyDailyAnalytics(day) {
+  return {
+    day,
+    totalUses: 0,
+    researchSearches: 0,
+    followupQuestions: 0,
+    clinicalLookups: 0,
+    aiUses: 0,
+    cacheHits: 0,
+    errors: 0,
+    avgResponseMs: 0,
+    intents: {}
+  };
+}
+
+function normalizeAnalyticsKind(kind) {
+  if (kind === 'followup' || kind === 'clinical') return kind;
+  return 'research';
+}
+
+async function recordDailyAnalytics(env, event = {}) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.get || !env.PRODUCT_CATALOG_KV.put) return;
+  const now = new Date();
+  const day = now.toISOString().slice(0, 10);
+  const key = dailyKey(now);
+  const existing = await env.PRODUCT_CATALOG_KV.get(key, 'json') || emptyDailyAnalytics(day);
+  const kind = normalizeAnalyticsKind(event.kind);
+  const intent = COMMON_INTENT_KEYS.includes(event.intent) ? event.intent : 'other';
+  const totalUses = Number(existing.totalUses || 0) + 1;
+  const payload = {
+    ...emptyDailyAnalytics(day),
+    ...existing,
+    day,
+    totalUses,
+    researchSearches: Number(existing.researchSearches || 0) + (kind === 'research' ? 1 : 0),
+    followupQuestions: Number(existing.followupQuestions || 0) + (kind === 'followup' ? 1 : 0),
+    clinicalLookups: Number(existing.clinicalLookups || 0) + (kind === 'clinical' ? 1 : 0),
+    aiUses: Number(existing.aiUses || 0) + (event.aiUsed ? 1 : 0),
+    cacheHits: Number(existing.cacheHits || 0) + (event.cacheHit ? 1 : 0),
+    errors: Number(existing.errors || 0) + (event.error ? 1 : 0),
+    avgResponseMs: updateAverage(existing.avgResponseMs, existing.totalUses, event.responseMs || 0),
+    intents: {
+      ...(existing.intents || {}),
+      [intent]: Number((existing.intents || {})[intent] || 0) + 1
+    },
+    lastSeenAt: now.toISOString()
+  };
+  await env.PRODUCT_CATALOG_KV.put(key, JSON.stringify(payload), { expirationTtl: 60 * 60 * 24 * 120 });
+}
+
+function rollupDailyAnalytics(days = []) {
+  const summary = emptyDailyAnalytics('rollup');
+  for (const day of days) {
+    if (!day) continue;
+    const countBefore = summary.totalUses;
+    summary.totalUses += Number(day.totalUses || 0);
+    summary.researchSearches += Number(day.researchSearches || 0);
+    summary.followupQuestions += Number(day.followupQuestions || 0);
+    summary.clinicalLookups += Number(day.clinicalLookups || 0);
+    summary.aiUses += Number(day.aiUses || 0);
+    summary.cacheHits += Number(day.cacheHits || 0);
+    summary.errors += Number(day.errors || 0);
+    summary.avgResponseMs = summary.totalUses
+      ? Math.round(((summary.avgResponseMs * countBefore) + (Number(day.avgResponseMs || 0) * Number(day.totalUses || 0))) / summary.totalUses)
+      : 0;
+    for (const [intent, count] of Object.entries(day.intents || {})) {
+      summary.intents[intent] = Number(summary.intents[intent] || 0) + Number(count || 0);
+    }
+  }
+  return summary;
+}
+
+async function getDailyAnalyticsSummary(env) {
+  if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.get) return { mode: 'daily_analytics_unavailable' };
+  const today = new Date();
+  const days = [];
+  for (let i = 0; i < 30; i += 1) {
+    const date = new Date(today.getTime() - (i * 86400000));
+    const day = date.toISOString().slice(0, 10);
+    const row = await env.PRODUCT_CATALOG_KV.get(dailyKey(date), 'json');
+    days.push(row || emptyDailyAnalytics(day));
+  }
+  return {
+    mode: 'dailyAnalytics',
+    storesRawQuestions: false,
+    today: days[0],
+    last7Days: rollupDailyAnalytics(days.slice(0, 7)),
+    last30Days: rollupDailyAnalytics(days),
+    days
+  };
+}
+
+function trackDaily(ctx, env, event = {}) {
+  if (ctx && ctx.waitUntil) ctx.waitUntil(recordDailyAnalytics(env, event));
+}
+
 async function getQuestionAnalyticsSummary(env) {
   if (!env.PRODUCT_CATALOG_KV || !env.PRODUCT_CATALOG_KV.list || !env.PRODUCT_CATALOG_KV.get) {
-    return { intents: [], mode: 'analytics_unavailable' };
+    return { intents: [], dailyAnalytics: await getDailyAnalyticsSummary(env), mode: 'analytics_unavailable' };
   }
   const listed = await env.PRODUCT_CATALOG_KV.list({ prefix: QUESTION_ANALYTICS_PREFIX, limit: 100 });
   const rows = [];
@@ -778,7 +879,7 @@ async function getQuestionAnalyticsSummary(env) {
     });
   }
   rows.sort((a, b) => b.count - a.count || a.intent.localeCompare(b.intent));
-  return { mode: 'privacy_safe_question_analytics', storesRawQuestions: false, intents: rows };
+  return { mode: 'privacy_safe_question_analytics', storesRawQuestions: false, dailyAnalytics: await getDailyAnalyticsSummary(env), intents: rows };
 }
 
 function canReadAnalytics(request, env) {
@@ -1307,23 +1408,31 @@ export default {
         linkPreference: 'Return durable research/search links only. Do not invent PubMed IDs.'
       };
       if (asksVulgarAbusiveOrSexualQuestion(clinicalLookup)) {
+        trackDaily(ctx, env, { kind: 'clinical', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...disallowedQuestionReportPayload(), mode: 'content_safety_static' }, 200, allowOrigin);
       }
       if (asksAboutCancerOrSeriousTreatment(clinicalLookup)) {
+        trackDaily(ctx, env, { kind: 'clinical', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...noResultsReportPayload(MEDICAL_REDIRECT_RESPONSE, 'medical_redirect'), mode: 'medical_redirect_static' }, 200, allowOrigin);
       }
       if (asksClearlyNonNutritionQuestion(clinicalLookup)) {
+        trackDaily(ctx, env, { kind: 'clinical', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...noResultsReportPayload(OUT_OF_SCOPE_RESPONSE, 'out_of_scope'), mode: 'out_of_scope_static' }, 200, allowOrigin);
       }
       const provider = selectAiProvider(body, env);
-      if (provider === 'fallback') return json(staticClinicalLookupFallback(clinicalLookup), 200, allowOrigin);
+      if (provider === 'fallback') {
+        trackDaily(ctx, env, { kind: 'clinical', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
+        return json(staticClinicalLookupFallback(clinicalLookup), 200, allowOrigin);
+      }
       try {
         const content = provider === 'claude'
           ? await callClaudeClinicalLookup(env, lookupPayload)
           : await callOpenAiClinicalLookup(env, lookupPayload);
         const parsed = safeParseJson(content);
+        trackDaily(ctx, env, { kind: 'clinical', intent: 'other', aiUsed: true, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai', type: 'clinicalLookup' }, 200, allowOrigin);
       } catch (error) {
+        trackDaily(ctx, env, { kind: 'clinical', intent: 'other', aiUsed: true, cacheHit: false, error: true, responseMs: Date.now() - requestStartedAt });
         return json({ ...staticClinicalLookupFallback(clinicalLookup), mode: `fallback_${provider}_clinical_error`, error: 'AI provider unavailable; static clinical lookup fallback used.' }, 200, allowOrigin);
       }
     }
@@ -1331,15 +1440,19 @@ export default {
     const followUpQuestion = String(body.followUpQuestion || body.followup || body.question || '').slice(0, 700);
     if (followUpQuestion.trim()) {
       if (asksVulgarAbusiveOrSexualQuestion(followUpQuestion)) {
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...disallowedQuestionAnswerPayload(), mode: 'content_safety_static', type: 'followup' }, 200, allowOrigin);
       }
       if (asksAboutCancerOrSeriousTreatment(followUpQuestion)) {
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...noResultsAnswerPayload(MEDICAL_REDIRECT_RESPONSE, 'medical_redirect'), mode: 'medical_redirect_static', type: 'followup' }, 200, allowOrigin);
       }
       if (asksClearlyNonNutritionQuestion(followUpQuestion)) {
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...noResultsAnswerPayload(OUT_OF_SCOPE_RESPONSE, 'out_of_scope'), mode: 'out_of_scope_static', type: 'followup' }, 200, allowOrigin);
       }
       if (asksAboutPrivacyOrData(followUpQuestion)) {
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...privacyPolicyAnswerPayload(), mode: 'privacy_policy_static', type: 'followup' }, 200, allowOrigin);
       }
       const report = body.report && typeof body.report === 'object' ? body.report : {};
@@ -1355,6 +1468,7 @@ export default {
       };
       const provider = selectAiProvider(body, env);
       if (provider === 'fallback') {
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...staticFollowUpFallback(followUpQuestion, report), mode: 'fallback_no_ai_key', type: 'followup' }, 200, allowOrigin);
       }
       try {
@@ -1367,8 +1481,10 @@ export default {
           parsed = safeParseJson(rewritten);
         }
         if (asksAboutOffCatalogProduct(followUpQuestion)) parsed.products = [];
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: true, cacheHit: false, responseMs: Date.now() - requestStartedAt });
         return json({ ...parsed, mode: provider === 'claude' ? 'claude' : 'openai', type: 'followup' }, 200, allowOrigin);
       } catch (error) {
+        trackDaily(ctx, env, { kind: 'followup', intent: 'other', aiUsed: true, cacheHit: false, error: true, responseMs: Date.now() - requestStartedAt });
         return json({ ...staticFollowUpFallback(followUpQuestion, report), mode: `fallback_${provider}_error`, type: 'followup', error: 'AI provider unavailable; static educational fallback used.' }, 200, allowOrigin);
       }
     }
@@ -1376,20 +1492,24 @@ export default {
     const goal = String(body.goal || '').slice(0, 800);
     const products = Array.isArray(body.products) ? body.products.slice(0, 24) : [];
     const ingredients = Array.isArray(body.ingredients) ? body.ingredients.slice(0, 20) : [];
+    const intent = classifyCommonIntent(goal);
     if (!goal.trim()) return json({ error: 'Missing goal' }, 400, allowOrigin);
     if (asksVulgarAbusiveOrSexualQuestion(goal)) {
+      trackDaily(ctx, env, { kind: 'research', intent, aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
       return json({ ...disallowedQuestionReportPayload(), mode: 'content_safety_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
     }
     if (asksAboutCancerOrSeriousTreatment(goal)) {
+      trackDaily(ctx, env, { kind: 'research', intent, aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
       return json({ ...noResultsReportPayload(MEDICAL_REDIRECT_RESPONSE, 'medical_redirect'), mode: 'medical_redirect_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
     }
     if (asksClearlyNonNutritionQuestion(goal)) {
+      trackDaily(ctx, env, { kind: 'research', intent, aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
       return json({ ...noResultsReportPayload(OUT_OF_SCOPE_RESPONSE, 'out_of_scope'), mode: 'out_of_scope_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
     }
     if (asksAboutPrivacyOrData(goal)) {
+      trackDaily(ctx, env, { kind: 'research', intent, aiUsed: false, cacheHit: false, responseMs: Date.now() - requestStartedAt });
       return json({ ...privacyPolicyReportPayload(), mode: 'privacy_policy_static', cacheHit: false, aiUsed: false }, 200, allowOrigin);
     }
-    const intent = classifyCommonIntent(goal);
     const provider = selectAiProvider(body, env);
 
     // Prefer a fresh AI response whenever a provider key is available.
@@ -1407,6 +1527,7 @@ export default {
         aiUsed: false,
         responseMs: Date.now() - requestStartedAt
       }));
+      trackDaily(ctx, env, { kind: 'research', intent, cacheHit: Boolean(cached), aiUsed: false, responseMs: Date.now() - requestStartedAt });
       return json({ ...payload, mode: cached ? 'common_cache_hit' : 'common_template_cached', cacheHit: Boolean(cached), aiUsed: false }, 200, allowOrigin);
     }
 
@@ -1425,6 +1546,7 @@ export default {
         aiUsed: false,
         responseMs: Date.now() - requestStartedAt
       }));
+      trackDaily(ctx, env, { kind: 'research', intent, cacheHit: false, aiUsed: false, responseMs: Date.now() - requestStartedAt });
       return json({ ...staticFallback(goal, products, ingredients), mode: 'fallback_no_ai_key' }, 200, allowOrigin);
     }
 
@@ -1443,6 +1565,7 @@ export default {
         aiUsed: true,
         responseMs: Date.now() - requestStartedAt
       }));
+      trackDaily(ctx, env, { kind: 'research', intent, cacheHit: false, aiUsed: true, responseMs: Date.now() - requestStartedAt });
       return json({ ...enrichProductLinks(parsed, products), mode: provider === 'claude' ? 'claude' : 'openai', cacheHit: false, aiUsed: true }, 200, allowOrigin);
     } catch (error) {
       if (ctx && ctx.waitUntil) ctx.waitUntil(recordQuestionAnalytics(env, {
@@ -1451,6 +1574,7 @@ export default {
         aiUsed: true,
         responseMs: Date.now() - requestStartedAt
       }));
+      trackDaily(ctx, env, { kind: 'research', intent, cacheHit: false, aiUsed: true, error: true, responseMs: Date.now() - requestStartedAt });
       return json({ ...staticFallback(goal, products, ingredients), mode: `fallback_${provider}_error`, error: 'AI provider unavailable; static educational fallback used.' }, 200, allowOrigin);
     }
   }
