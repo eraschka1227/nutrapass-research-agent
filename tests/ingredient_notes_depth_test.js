@@ -18,6 +18,8 @@ function assert(name, condition) {
 assert('worker prompt requires 10–12 ingredient notes', /10[–-]12 ingredient notes/i.test(worker));
 assert('worker prompt separates strongest matches from additional comparison options', /Top Matches/i.test(worker) && /Additional Options to Compare/i.test(worker));
 assert('worker prompt asks for 2–3 sentence research context', /2[–-]3 sentence research context/i.test(worker));
+assert('worker prompt asks for a concise biological mechanism field per ingredient', /mechanism/i.test(worker) && /biological mechanism/i.test(worker) && /1[–-]2 short sentences/i.test(worker));
+assert('frontend preserves and renders ingredient mechanism text', /mechanism:item\.mechanism/.test(html) && /Mechanism/.test(html) && /ingredientMechanism\(n\)/.test(html));
 assert('worker accepts at least 20 approved ingredients from frontend', /body\.ingredients\) \? body\.ingredients\.slice\(0, 20\)/.test(worker));
 assert('frontend sends top 20 candidate ingredients to AI', /topNutrients\(input,20\)/.test(html));
 assert('frontend renders Top Matches section', /Top Matches/.test(html));

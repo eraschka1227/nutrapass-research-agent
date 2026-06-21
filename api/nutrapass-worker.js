@@ -139,7 +139,7 @@ function staticCatalogProducts() {
 
 const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
 const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
-const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v4:';
+const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v5:';
 const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
 const DAILY_ANALYTICS_PREFIX = 'nutrapass:analytics:daily:v1:';
 const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -330,6 +330,7 @@ Ingredient Research Notes requirements:
 - The remaining 4–6 notes are shown under Additional Options to Compare, including secondary or situation-dependent options when appropriate.
 - Do not repeat "Top Match" or "Additional Option to Compare" inside each ingredient note's bestFit text; the section heading already carries that ranking.
 - Each researchContext should be a 2–3 sentence research context, not a generic one-liner.
+- Each note must also include a mechanism field: 1–2 short sentences on the plain-language biological mechanism of action, such as receptor/signaling, nutrient-status, microbiome, barrier, muscle/nerve, antioxidant, or substrate/cofactor pathways. Keep it educational and avoid drug-like or disease-treatment claims.
 - Do not imply the user should take every ingredient; frame them as comparison options.
 - Ingredient notes must be nutrients, botanicals, compounds, or honest blend categories — not NutraPass product names. For example, Joint Complex is a product/blend category, not an ingredient; if relevant, write about joint-support nutrients such as collagen peptides, omega-3s, turmeric/curcumin, glucosamine/chondroitin/MSM category comparisons, or minerals rather than naming Joint Complex as an ingredient.
 
@@ -338,8 +339,8 @@ Return strict JSON only with this shape:
   "summary": "one short paragraph",
   "nutritionOverview": "Nutritional Key Points: 1–2 concise sentences explaining the user's likely wellness pattern without diagnosing.\n\nFood first: 1 concise sentence with the most relevant food/routine basics.\n\nEasy things to try: 1–2 concise sentences with practical next steps and one clarifying question only if needed. Do not include a Nutrition options to compare section.",
   "ingredientNotes": [
-    {"name":"Magnesium","bestFit":"Normal muscle function and relaxation-routine support","researchContext":"2–3 sentence research context...","typicalRange":"...","pubmedId":""},
-    {"name":"Omega-3s","bestFit":"Secondary inflammatory-balance and heart-health comparison","researchContext":"2–3 sentence research context...","typicalRange":"...","pubmedId":""}
+    {"name":"Magnesium","bestFit":"Normal muscle function and relaxation-routine support","researchContext":"2–3 sentence research context...","mechanism":"1–2 short sentences on the plain-language biological mechanism of action...","typicalRange":"...","pubmedId":""},
+    {"name":"Omega-3s","bestFit":"Secondary inflammatory-balance and heart-health comparison","researchContext":"2–3 sentence research context...","mechanism":"1–2 short sentences on the plain-language biological mechanism of action...","typicalRange":"...","pubmedId":""}
   ],
   "products": [
     {"name":"H2O Electrolytes","brand":"Cellutrex","url":"https://nutrapass.club/products/...","imageUrl":"","why":"..."},
@@ -711,13 +712,13 @@ function buildCommonIntentResponse(intent, products = []) {
       { name: 'Multivitamin support', bestFit: 'Foundation coverage when diet gaps are likely', researchContext: 'A broad multi can be a comparison option when vitamin/mineral coverage is inconsistent, but it should not duplicate high-dose single nutrients.', typicalRange: 'Follow label directions and check overlap with D, zinc, selenium, and other immune formulas.', pubmedId: '' }
     ]
   };
-  const ingredientNotes = ingredientTemplates[intent] || template.ingredients.map((name) => ({
+  const ingredientNotes = (ingredientTemplates[intent] || template.ingredients.map((name) => ({
     name,
     bestFit: 'Common comparison point for this goal',
     researchContext: 'Educational starting point for comparing product fit, ingredient form, serving size, and cautions. Not medical advice.',
     typicalRange: 'Follow product label directions and professional guidance when relevant.',
     pubmedId: ''
-  }));
+  }))).map((note) => ({ ...note, mechanism: note.mechanism || ingredientMechanism(note.name) }));
   return {
     summary: template.summary,
     nutritionOverview: template.overview,
@@ -889,6 +890,32 @@ function canReadAnalytics(request, env) {
   return supplied === token;
 }
 
+function ingredientMechanism(name = '') {
+  const lower = String(name || '').toLowerCase();
+  if (/probiotic|biotic/.test(lower)) return 'Probiotics work through strain-specific microbiome signaling, short-chain fatty acid production, and gut-barrier interactions. Their effects depend heavily on strain, dose, and the person’s baseline microbiome.';
+  if (/prebiotic|fiber|inulin|phgg|resistant starch/.test(lower)) return 'Prebiotic fibers act as fermentable substrates for beneficial gut microbes, which can increase short-chain fatty acid production. This can influence stool form, gut-barrier function, and microbiome signaling.';
+  if (/vitamin\s*d|d3/.test(lower)) return 'Vitamin D acts through the vitamin D receptor, which helps regulate calcium balance and immune-cell signaling. Status matters because low baseline levels and dose both change the expected response.';
+  if (/vitamin\s*c|ascorb/.test(lower)) return 'Vitamin C functions as a water-soluble antioxidant and cofactor for collagen synthesis. It also supports normal immune-cell function and helps regenerate other antioxidants.';
+  if (/zinc/.test(lower)) return 'Zinc is a cofactor for many enzymes and transcription factors involved in immune-cell development, skin/barrier integrity, and antioxidant defense. Too much zinc can compete with copper, so dose and duration matter.';
+  if (/magnesium/.test(lower)) return 'Magnesium acts as a cofactor in ATP-dependent enzymes and helps regulate normal nerve and muscle signaling. Different forms can emphasize tolerability, bowel effects, or relaxation-oriented use.';
+  if (/omega|fish oil|epa|dha/.test(lower)) return 'Omega-3 fatty acids can be incorporated into cell membranes and influence eicosanoid and resolvin signaling. This is why they are often discussed around inflammatory balance and cardiometabolic support.';
+  if (/ashwagandha/.test(lower)) return 'Ashwagandha is studied as an adaptogenic botanical that may influence stress-response signaling, including HPA-axis related pathways. Extract standardization and personal context matter for safety and fit.';
+  if (/theanine/.test(lower)) return 'L-theanine may influence glutamate/GABA balance and alpha-wave activity associated with relaxed attention. It is usually framed as calm-focus support rather than a sedative.';
+  if (/collagen/.test(lower)) return 'Collagen peptides supply amino acids such as glycine, proline, and hydroxyproline that serve as building blocks for connective-tissue proteins. They may also act as signaling peptides in skin and joint-support research.';
+  if (/creatine/.test(lower)) return 'Creatine supports the phosphocreatine system, which helps rapidly regenerate ATP during high-intensity muscle and brain energy demand. Saturating muscle creatine stores is the usual research model.';
+  if (/electrolyte|sodium|potassium/.test(lower)) return 'Electrolytes help maintain fluid balance, nerve conduction, and muscle contraction. Needs rise with sweating, heat, travel, low-carb diets, or high activity.';
+  if (/melatonin/.test(lower)) return 'Melatonin is a hormone-like signal involved in circadian timing. It is best understood as a sleep-timing cue rather than a general relaxation nutrient.';
+  if (/glycine/.test(lower)) return 'Glycine is an amino acid involved in inhibitory neurotransmission, collagen structure, and one-carbon metabolism. Sleep research often focuses on bedtime use and thermoregulation-related pathways.';
+  if (/curcumin|turmeric/.test(lower)) return 'Curcumin interacts with inflammatory-signaling pathways in lab and clinical research, but absorption is a key limitation. Formulation quality strongly affects how much reaches circulation.';
+  if (/glucosamine|chondroitin|msm/.test(lower)) return 'These joint-support compounds are discussed as structural substrates or sulfur-containing support for cartilage and connective-tissue matrices. Evidence is mixed and product form matters.';
+  if (/selenium/.test(lower)) return 'Selenium is built into selenoproteins that support antioxidant enzyme systems and thyroid hormone metabolism. It has a narrow useful range, so more is not automatically better.';
+  if (/iron/.test(lower)) return 'Iron is required for hemoglobin, myoglobin, and oxygen-transport biology. Because excess iron can be harmful, iron-status questions are best guided by labs such as CBC, ferritin, and iron studies.';
+  if (/b12|cobalamin/.test(lower)) return 'Vitamin B12 supports methylation, nerve function, and red-blood-cell formation. Absorption depends on stomach acid, intrinsic factor, medications, diet pattern, and gut health.';
+  if (/ginger/.test(lower)) return 'Ginger contains pungent compounds such as gingerols and shogaols that interact with digestive and sensory signaling pathways. It is usually framed around digestive comfort and nausea research rather than disease treatment.';
+  if (/peppermint/.test(lower)) return 'Peppermint oil contains menthol, which can affect smooth-muscle calcium channels and gut sensory signaling. It may not fit reflux-prone users because it can relax the lower esophageal sphincter.';
+  return 'This ingredient is included as an educational comparison point based on nutrient-status, signaling, substrate, microbiome, or barrier-support biology. Exact mechanism depends on ingredient form, dose, and personal context.';
+}
+
 function staticFallback(goal, products = [], ingredients = []) {
   const g = String(goal || '').toLowerCase();
   const has = (re) => re.test(g);
@@ -978,6 +1005,7 @@ function staticFallback(goal, products = [], ingredients = []) {
       name,
       bestFit: String(rawBestFit || '').replace(/^(Top Match|Additional Option to Compare):\s*/i, ''),
       researchContext: i.researchContext || i.detail || 'Compare ingredient form, dose, product quality, and personal context before use. Use this as an educational research starting point, not a recommendation to take every listed ingredient.',
+      mechanism: i.mechanism || ingredientMechanism(name),
       typicalRange: i.typicalRange || i.dose || 'Follow label directions and professional guidance.',
       pubmedId: i.pubmedId || i.id || ''
     };
@@ -992,7 +1020,8 @@ function staticFallback(goal, products = [], ingredients = []) {
       seenIngredientNames.add(name);
       return true;
     })
-    .slice(0, 12);
+    .slice(0, 12)
+    .map(i => ({ ...i, mechanism: i.mechanism || ingredientMechanism(i.name) }));
   const suppliedProducts = (products || []).slice(0, 4).map(p => ({ name: p.name || p.n, brand: productBrand(p.name || p.n, p.brand), url: p.url || p.u || '', u: p.u || p.url || '', price: p.price || p.p || '', imageUrl: p.imageUrl || p.img || '', why: p.why || p.w || 'Closest product fit from the NutraPass catalog' }));
   const productMap = {
     pica: [{ name: 'Ultimate Wellness Bundle', why: 'Broad daily wellness comparison only; prioritize clinician-guided iron-status evaluation before supplement choices' }, { name: 'Stress Complex', why: 'Sleep and shift-work routine support comparison' }],

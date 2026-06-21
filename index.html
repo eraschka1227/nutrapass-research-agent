@@ -236,6 +236,8 @@
   .np-meta-pill{display:inline-block;border-radius:999px;background:#eef9f2;border:1px solid rgba(63,159,102,.16);color:#2f7f50;font-size:.72rem;font-weight:800;padding:.28rem .55rem}
   .np-nb{font-size:.82rem;color:#243028;line-height:1.42;margin-bottom:.3rem;font-weight:700}
   .np-nd{font-size:.82rem;color:#243028;line-height:1.45}
+  .np-mech{font-size:.78rem;color:#314238;line-height:1.42;margin-top:.34rem;padding:.42rem .5rem;border-radius:12px;background:rgba(238,249,242,.72);border:1px solid rgba(63,159,102,.12)}
+  .np-mech strong{color:#1f6f43}
   .np-rl{display:inline-block;color:var(--np-mint);text-decoration:none;font-size:.72rem;margin-top:.45rem;opacity:.82}
   .np-rl:hover{opacity:1;text-decoration:underline}
   .np-research-links{display:grid;gap:.42rem;margin-top:.7rem}
@@ -1062,7 +1064,7 @@
     var ingredients=(payload.ingredientNotes||payload.ingredients||[]).map(function(item){
       var itemName=npNormalizeIngredientName(item.name||item.nm);
       var base=npIngredientByName(itemName)||{nm:itemName||'Ingredient',b:npCleanBestFit(item.bestFit||item.b)||'Educational research note',id:item.pubmedId||item.id||'',k:''};
-      return {nm:base.nm,b:npCleanBestFit(item.bestFit||base.b),id:item.pubmedId||base.id,k:base.k,detail:item.researchContext||item.detail||ingredientDetail(base),dose:item.typicalRange||item.dose||ingredientDose(base)};
+      return {nm:base.nm,b:npCleanBestFit(item.bestFit||base.b),id:item.pubmedId||base.id,k:base.k,detail:item.researchContext||item.detail||ingredientDetail(base),mechanism:item.mechanism||ingredientMechanism(base),dose:item.typicalRange||item.dose||ingredientDose(base)};
     });
     if(!ingredients.length && !noResults && !hasIngredientResults) ingredients=topNutrients(input,16);
     var products=(payload.products||[]).map(function(item){
@@ -1122,6 +1124,24 @@
       npSetExploreBusy(false);
     }
   };
+
+  function ingredientMechanism(n){
+    if(n && n.mechanism) return n.mechanism;
+    var name=String((n&&n.nm)||'').toLowerCase();
+    if(/probiotic|biotic/.test(name)) return 'Mechanism: Probiotics work through strain-specific microbiome signaling, short-chain fatty acid production, and gut-barrier interactions.';
+    if(/prebiotic|fiber|inulin|phgg|resistant starch/.test(name)) return 'Mechanism: Prebiotic fibers act as fermentable substrates for beneficial gut microbes, supporting short-chain fatty acid production and gut-barrier signaling.';
+    if(/vitamin\s*d|d3/.test(name)) return 'Mechanism: Vitamin D acts through the vitamin D receptor, helping regulate calcium balance and immune-cell signaling.';
+    if(/vitamin\s*c/.test(name)) return 'Mechanism: Vitamin C functions as a water-soluble antioxidant and collagen-synthesis cofactor while supporting normal immune-cell function.';
+    if(/zinc/.test(name)) return 'Mechanism: Zinc is a cofactor for enzymes and transcription factors involved in immune-cell development, barrier integrity, and antioxidant defense.';
+    if(/magnesium/.test(name)) return 'Mechanism: Magnesium acts as a cofactor in ATP-dependent enzymes and helps regulate normal nerve and muscle signaling.';
+    if(/omega|fish oil|epa|dha/.test(name)) return 'Mechanism: Omega-3 fatty acids incorporate into cell membranes and influence eicosanoid and resolvin signaling tied to inflammatory balance.';
+    if(/ashwagandha/.test(name)) return 'Mechanism: Ashwagandha is studied for stress-response signaling, including HPA-axis related pathways; extract standardization matters.';
+    if(/theanine/.test(name)) return 'Mechanism: L-theanine may influence glutamate/GABA balance and alpha-wave activity associated with relaxed attention.';
+    if(/collagen/.test(name)) return 'Mechanism: Collagen peptides supply amino acids used in connective-tissue proteins and may act as signaling peptides in skin and joint research.';
+    if(/creatine/.test(name)) return 'Mechanism: Creatine supports the phosphocreatine system, helping rapidly regenerate ATP during high-intensity muscle and brain energy demand.';
+    if(/electrolyte|sodium|potassium/.test(name)) return 'Mechanism: Electrolytes help maintain fluid balance, nerve conduction, and muscle contraction.';
+    return 'Mechanism: This ingredient is included as an educational comparison point based on nutrient-status, signaling, substrate, microbiome, or barrier-support biology.';
+  }
 
   function ingredientDetail(n){
     if(n && n.detail) return n.detail;
@@ -1552,7 +1572,9 @@
     (r.n||[]).forEach(function(n,i){
       var href=n.id?'https://pubmed.ncbi.nlm.nih.gov/'+esc(n.id)+'/':'';
       var ref=href?'<a class="np-rl" href="'+href+'" target="_blank" rel="noopener">PubMed source →</a>':'';
-      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div><div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
+      var mechanism=ingredientMechanism(n);
+      var mech=mechanism?'<div class="np-mech"><strong>Mechanism:</strong> '+esc(String(mechanism).replace(/^Mechanism:\s*/i,''))+'</div>':'';
+      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div>'+mech+'<div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
       if(i<6) topMatchItems.push(card); else additionalItems.push(card);
     });
     var nuts=(topMatchItems.length?'<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>':'')+
