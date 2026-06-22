@@ -43,7 +43,7 @@ function assert(name, condition) {
   }), env);
   assert('Simplero webhook rejects missing secret', denied.status === 404);
 
-  const approved = await mod.default.fetch(new Request('https://example.test/simplero-webhook?action=approved', {
+  const approved = await mod.default.fetch(new Request('https://example.test/simplero-webhook?action=subscribed', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-NutraPass-Webhook-Secret': 'test-secret' },
     body: JSON.stringify({ contact: { email: 'Member@Example.com', first_name: 'Mina', last_name: 'Mint' } })
@@ -53,7 +53,7 @@ function assert(name, condition) {
   assert('Simplero webhook returns success', approved.status === 200 && approvedJson.ok === true);
   assert('Simplero webhook normalizes email', approvedJson.email === 'member@example.com');
   assert('Simplero webhook creates customer when missing', approvedJson.action === 'created' && approvedJson.customerId === 12345);
-  assert('Simplero webhook adds approved tags', approvedJson.addedTags.includes('nutrapass') && approvedJson.addedTags.includes('approved'));
+  assert('Simplero webhook adds paid subscriber tags', approvedJson.addedTags.includes('nutrapass') && approvedJson.addedTags.includes('approved') && approvedJson.addedTags.includes('paid subscriber'));
   assert('Shopify Admin API search was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers/search.json')));
   assert('Shopify Admin API create was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers.json') && call.init.method === 'POST'));
 
