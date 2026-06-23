@@ -139,7 +139,7 @@ function staticCatalogProducts() {
 
 const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
 const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
-const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v6:';
+const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v7:';
 const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
 const DAILY_ANALYTICS_PREFIX = 'nutrapass:analytics:daily:v1:';
 const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -156,7 +156,7 @@ const COMMON_INTENT_RESPONSES = {
     keywords: ['sleep', 'stress', 'calm', 'relax', 'relaxation', 'cortisol', 'night', 'bedtime', 'anxiety', 'menopause', 'perimenopause', 'hot flashes', 'night sweats'],
     summary: 'For sleep and stress routines, look at calming habits first, then products that support normal relaxation and sleep quality.',
     overview: 'Nutritional Key Points: sleep and stress patterns can be shaped by caffeine timing, inconsistent sleep/wake rhythm, evening light exposure, high stress load, under-eating, low protein, magnesium intake, alcohol, overtraining, and mood or thyroid/iron/B12 issues.\n\nFood first: anchor protein at meals, include magnesium-rich foods such as pumpkin seeds, spinach, beans, or nuts, use steady hydration, and consider complex carbs at dinner if tolerated.\n\nEasy things to try: set a consistent wind-down window, dim screens/lights before bed, get morning daylight, keep late caffeine modest, and compare calming products by daytime vs bedtime fit, sedation risk, and medication context.',
-    ingredients: ['magnesium', 'L-theanine', 'adaptogens', 'glycine', 'sleep routine support'],
+    ingredients: ['magnesium', 'L-theanine', 'glycine', 'ashwagandha', 'melatonin'],
     followUps: ['Is the bigger issue falling asleep, staying asleep, or daytime stress?', 'Are you looking for non-sedating daytime support or bedtime support?']
   },
   electrolytes: {
@@ -932,6 +932,8 @@ function ingredientNutritionRole(name = '') {
   if (/omega|fish oil|epa|dha/.test(lower)) return 'Nutritional overview: essential fatty acid support for inflammatory-balance and heart-health routines';
   if (/ashwagandha/.test(lower)) return 'Nutritional overview: botanical stress-resilience comparison with safety context';
   if (/theanine/.test(lower)) return 'Nutritional overview: amino-acid support for calm focus and wind-down routines';
+  if (/glycine/.test(lower)) return 'Nutritional overview: amino-acid support for bedtime routines and connective-tissue nutrition context';
+  if (/melatonin/.test(lower)) return 'Nutritional overview: circadian-timing support option, best compared by dose and timing';
   if (/collagen/.test(lower)) return 'Nutritional overview: protein-peptide support for connective tissue, skin, and joint routines';
   if (/creatine/.test(lower)) return 'Nutritional overview: performance nutrient support for strength, power, and training recovery';
   if (/electrolyte|sodium|potassium/.test(lower)) return 'Nutritional overview: mineral support for hydration, sweating, and muscle function';
@@ -951,6 +953,8 @@ function ingredientNutritionSummary(name = '') {
   if (/omega|fish oil|epa|dha/.test(lower)) return 'Omega-3s are essential fats commonly compared for heart-health, brain-health, and inflammatory-balance routines. Food sources like fatty fish are useful context when judging whether a product adds value.';
   if (/ashwagandha/.test(lower)) return 'Ashwagandha is a botanical often compared for stress and sleep-quality routines. It is not a basic nutrient, so extract quality, dose, thyroid/autoimmune context, pregnancy, and medications matter.';
   if (/theanine/.test(lower)) return 'L-theanine is an amino acid from tea commonly compared for calm-focus and evening wind-down routines. It can fit when the goal is relaxation without heavy sedation.';
+  if (/glycine/.test(lower)) return 'Glycine is an amino acid found in protein foods and collagen-rich tissues, and it is commonly compared for bedtime routine support. Its nutritional fit depends on total protein intake, timing, and whether the goal is evening wind-down rather than daytime calm.';
+  if (/melatonin/.test(lower)) return 'Melatonin is best framed as a sleep-timing signal rather than a general relaxation nutrient. It is most useful to compare when schedule, travel, light exposure, or circadian timing seems central to the sleep routine.';
   if (/collagen/.test(lower)) return 'Collagen peptides provide amino-acid building blocks used in connective-tissue proteins. They are usually compared alongside total protein intake and vitamin C-rich foods.';
   if (/creatine/.test(lower)) return 'Creatine is a well-studied performance nutrient for strength, power, and high-intensity training support. It is usually evaluated by form, daily amount, consistency, and hydration tolerance.';
   if (/electrolyte|sodium|potassium/.test(lower)) return 'Electrolytes support hydration balance and normal nerve/muscle function. They are most nutritionally relevant around sweating, heat, travel, low-carb eating, or longer activity.';
@@ -966,6 +970,8 @@ function ingredientTypicalRange(name = '') {
   if (/zinc/.test(lower)) return 'Common range: 10–30 mg/day elemental zinc; avoid chronic high-dose stacking without guidance.';
   if (/creatine/.test(lower)) return 'Common range: 3–5 g/day creatine monohydrate.';
   if (/theanine/.test(lower)) return 'Common range: 100–200 mg as needed in research and product labels.';
+  if (/glycine/.test(lower)) return 'Common research range: about 3 g near bedtime in sleep-quality studies.';
+  if (/melatonin/.test(lower)) return 'Common low-dose range: 0.3–1 mg near bedtime for timing support; higher is not automatically better.';
   if (/fiber|prebiotic/.test(lower)) return 'Start low, often 2–5 g/day, and increase gradually with fluids as tolerated.';
   return '';
 }

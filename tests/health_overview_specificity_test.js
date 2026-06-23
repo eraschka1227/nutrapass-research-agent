@@ -66,10 +66,12 @@ async function workerFallback(goal, extraBody = {}) {
 
   const commonSleep = await workerFallback('I need help with sleep and stress support', { useCommonFastPath: true });
   const commonSleepOverview = String(commonSleep.nutritionOverview || '').toLowerCase();
+  const commonSleepNotes = JSON.stringify(commonSleep.ingredientNotes || []).toLowerCase();
   assert('common fast-path sleep/stress overview uses full Nutritional Key Points shape', commonSleep.mode === 'common_template_cached' && commonSleepOverview.startsWith('nutritional key points:') && commonSleepOverview.includes('food first:') && commonSleepOverview.includes('easy things to try:'));
+  assert('common fast-path sleep/stress cards use specific ingredients, not generic categories', /magnesium/.test(commonSleepNotes) && /l-theanine/.test(commonSleepNotes) && /glycine/.test(commonSleepNotes) && /ashwagandha/.test(commonSleepNotes) && !/"name":"adaptogens"|"name":"sleep routine support"|ingredient-specific nutrition support|nutrition-focused comparison option|educational comparison point based on/.test(commonSleepNotes));
 
   const worker = fs.readFileSync(workerPath, 'utf8');
-  assert('common response cache version is bumped after preloaded card-copy upgrade', worker.includes("COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v6:'"));
+  assert('common response cache version is bumped after preloaded sleep-card upgrade', worker.includes("COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v7:'"));
   assert('AI prompts forbid category-routing language and generic wellness dumps', /Never tell the user their question does not match a category/.test(worker) && /Never expose internal routing/.test(worker) && /meal quality, protein, fiber, hydration, sleep, stress, movement, nutrient gaps/.test(worker));
   assert('AI prompts require friendly upbeat tone and evidence-tiered ingredient framing', /friendly, upbeat, and reassuring/.test(worker) && /Prioritize clinically backed ingredients/.test(worker) && /traditional or alternative options/.test(worker));
   assert('Black Cohosh lookup prompt is balanced rather than reflexively negative', /Black cohosh/.test(worker) && /balanced, not dismissive/.test(worker));
