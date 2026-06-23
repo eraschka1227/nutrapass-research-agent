@@ -11,6 +11,7 @@ ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 AI_PROVIDER = "claude"
 # Live product feed source. Storefront access token must be configured as a secret.
 SHOPIFY_STORE_DOMAIN = "nutrapass.club"
+SHOPIFY_ADMIN_STORE_DOMAIN = "bf3gxy-cp.myshopify.com"
 SHOPIFY_PRODUCTS_LIMIT = "5000"
 SHOPIFY_PRODUCTS_PAGE_SIZE = "100"
 ALLOWED_ORIGINS = "https://nutrapass.club,https://www.nutrapass.club,https://nutrapass-widget.pages.dev"

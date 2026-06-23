@@ -16,6 +16,8 @@
     "secret:anthropic": "wrangler secret put ANTHROPIC_API_KEY",
     "secret:shopify": "wrangler secret put SHOPIFY_STOREFRONT_ACCESS_TOKEN",
     "secret:shopify-admin": "wrangler secret put SHOPIFY_ADMIN_ACCESS_TOKEN",
+    "secret:shopify-admin-client-id": "wrangler secret put SHOPIFY_ADMIN_CLIENT_ID",
+    "secret:shopify-admin-client-secret": "wrangler secret put SHOPIFY_ADMIN_CLIENT_SECRET",
     "secret:simplero-webhook": "wrangler secret put SIMPLERO_WEBHOOK_SECRET",
     "secret:analytics": "wrangler secret put ANALYTICS_READ_TOKEN"
   },

@@ -480,10 +480,39 @@ function mergeTagString(existing, additions) {
   return tags.join(', ');
 }
 
+let cachedShopifyAdminToken = null;
+let cachedShopifyAdminTokenExpiresAt = 0;
+
+async function getShopifyAdminAccessToken(env, domain) {
+  if (env.SHOPIFY_ADMIN_ACCESS_TOKEN) return env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  const clientId = env.SHOPIFY_ADMIN_CLIENT_ID;
+  const clientSecret = env.SHOPIFY_ADMIN_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error('Missing Shopify Admin token or client credentials');
+  const now = Date.now();
+  if (cachedShopifyAdminToken && now < cachedShopifyAdminTokenExpiresAt - 300000) return cachedShopifyAdminToken;
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: clientId,
+    client_secret: clientSecret
+  });
+  const response = await fetch(`https://${domain}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString()
+  });
+  const text = await response.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+  if (!response.ok || !data.access_token) throw new Error(`Shopify token request failed ${response.status}: ${text.slice(0, 400)}`);
+  cachedShopifyAdminToken = data.access_token;
+  cachedShopifyAdminTokenExpiresAt = now + Math.max(Number(data.expires_in || 3600) - 60, 300) * 1000;
+  return cachedShopifyAdminToken;
+}
+
 async function shopifyAdminFetch(env, path, init = {}) {
   const domain = normalizeShopifyDomainForAdmin(env);
-  const token = env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-  if (!domain || !token) throw new Error('Missing Shopify Admin domain or token');
+  if (!domain) throw new Error('Missing Shopify Admin domain');
+  const token = await getShopifyAdminAccessToken(env, domain);
   const url = `https://${domain}/admin/api/2025-10${path}`;
   const response = await fetch(url, {
     ...init,

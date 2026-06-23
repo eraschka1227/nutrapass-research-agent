@@ -22,6 +22,11 @@ function assert(name, condition) {
   const calls = [];
   global.fetch = async (url, init = {}) => {
     calls.push({ url: String(url), init });
+    if (String(url).includes('/admin/oauth/access_token')) {
+      const body = String(init.body || '');
+      assert('Shopify token request uses client credentials grant', body.includes('grant_type=client_credentials') && body.includes('client_id=test-client-id') && body.includes('client_secret=test-client-secret'));
+      return new Response(JSON.stringify({ access_token: 'generated_admin_token', expires_in: 86400, scope: 'write_customers' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
     if (String(url).includes('/customers/search.json')) {
       return new Response(JSON.stringify({ customers: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
@@ -33,8 +38,9 @@ function assert(name, condition) {
 
   const env = {
     SIMPLERO_WEBHOOK_SECRET: 'test-secret',
-    SHOPIFY_STORE_DOMAIN: 'nutrapass.club',
-    SHOPIFY_ADMIN_ACCESS_TOKEN: 'shpat_test'
+    SHOPIFY_ADMIN_STORE_DOMAIN: 'bf3gxy-cp.myshopify.com',
+    SHOPIFY_ADMIN_CLIENT_ID: 'test-client-id',
+    SHOPIFY_ADMIN_CLIENT_SECRET: 'test-client-secret'
   };
 
   const denied = await mod.default.fetch(new Request('https://example.test/simplero-webhook', {
@@ -54,8 +60,9 @@ function assert(name, condition) {
   assert('Simplero webhook normalizes email', approvedJson.email === 'member@example.com');
   assert('Simplero webhook creates customer when missing', approvedJson.action === 'created' && approvedJson.customerId === 12345);
   assert('Simplero webhook adds paid subscriber tags', approvedJson.addedTags.includes('nutrapass') && approvedJson.addedTags.includes('approved') && approvedJson.addedTags.includes('paid subscriber'));
-  assert('Shopify Admin API search was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers/search.json')));
-  assert('Shopify Admin API create was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers.json') && call.init.method === 'POST'));
+  assert('Shopify token endpoint was called', calls.some((call) => call.url.includes('/admin/oauth/access_token')));
+  assert('Shopify Admin API search was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers/search.json') && call.init.headers['X-Shopify-Access-Token'] === 'generated_admin_token'));
+  assert('Shopify Admin API create was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers.json') && call.init.method === 'POST' && call.init.headers['X-Shopify-Access-Token'] === 'generated_admin_token'));
 
   fs.unlinkSync(tempModule);
   if (process.exitCode) process.exit(process.exitCode);
