@@ -20,6 +20,8 @@ assert('worker prompt separates strongest matches from additional comparison opt
 assert('worker prompt asks for 2–3 sentence research context', /2[–-]3 sentence research context/i.test(worker));
 assert('worker prompt asks for a concise biological mechanism field per ingredient', /mechanism/i.test(worker) && /biological mechanism/i.test(worker) && /1[–-]2 short sentences/i.test(worker));
 assert('frontend preserves and renders ingredient mechanism text', /mechanism:item\.mechanism/.test(html) && /Mechanism/.test(html) && /ingredientMechanism\(n\)/.test(html));
+assert('worker common/fallback ingredient cards avoid generic placeholder copy', !/Common comparison point for this goal/.test(worker) && !/Educational starting point for comparing product fit/.test(worker));
+assert('frontend suppresses redundant generic follow-label dose pill', /npDoseIsGeneric/.test(html) && /doseHtml=/.test(html));
 assert('worker accepts at least 20 approved ingredients from frontend', /body\.ingredients\) \? body\.ingredients\.slice\(0, 20\)/.test(worker));
 assert('frontend sends top 20 candidate ingredients to AI', /topNutrients\(input,20\)/.test(html));
 assert('frontend renders Top Matches section', /Top Matches/.test(html));

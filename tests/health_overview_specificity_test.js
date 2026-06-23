@@ -69,7 +69,7 @@ async function workerFallback(goal, extraBody = {}) {
   assert('common fast-path sleep/stress overview uses full Nutritional Key Points shape', commonSleep.mode === 'common_template_cached' && commonSleepOverview.startsWith('nutritional key points:') && commonSleepOverview.includes('food first:') && commonSleepOverview.includes('easy things to try:'));
 
   const worker = fs.readFileSync(workerPath, 'utf8');
-  assert('common response cache version is bumped after preloaded mechanism upgrade', worker.includes("COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v5:'"));
+  assert('common response cache version is bumped after preloaded card-copy upgrade', worker.includes("COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v6:'"));
   assert('AI prompts forbid category-routing language and generic wellness dumps', /Never tell the user their question does not match a category/.test(worker) && /Never expose internal routing/.test(worker) && /meal quality, protein, fiber, hydration, sleep, stress, movement, nutrient gaps/.test(worker));
   assert('AI prompts require friendly upbeat tone and evidence-tiered ingredient framing', /friendly, upbeat, and reassuring/.test(worker) && /Prioritize clinically backed ingredients/.test(worker) && /traditional or alternative options/.test(worker));
   assert('Black Cohosh lookup prompt is balanced rather than reflexively negative', /Black cohosh/.test(worker) && /balanced, not dismissive/.test(worker));

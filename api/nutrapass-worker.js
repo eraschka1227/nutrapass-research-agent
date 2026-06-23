@@ -139,7 +139,7 @@ function staticCatalogProducts() {
 
 const PRODUCT_CATALOG_CACHE_KEY = 'nutrapass:product-catalog:v1';
 const PRODUCT_CATALOG_CACHE_TTL_SECONDS = 60 * 60 * 36;
-const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v5:';
+const COMMON_RESPONSE_CACHE_PREFIX = 'nutrapass:common-response:v6:';
 const QUESTION_ANALYTICS_PREFIX = 'nutrapass:question-analytics:v1:';
 const DAILY_ANALYTICS_PREFIX = 'nutrapass:analytics:daily:v1:';
 const COMMON_RESPONSE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -714,9 +714,9 @@ function buildCommonIntentResponse(intent, products = []) {
   };
   const ingredientNotes = (ingredientTemplates[intent] || template.ingredients.map((name) => ({
     name,
-    bestFit: 'Common comparison point for this goal',
-    researchContext: 'Educational starting point for comparing product fit, ingredient form, serving size, and cautions. Not medical advice.',
-    typicalRange: 'Follow product label directions and professional guidance when relevant.',
+    bestFit: ingredientNutritionRole(name),
+    researchContext: ingredientNutritionSummary(name),
+    typicalRange: ingredientTypicalRange(name),
     pubmedId: ''
   }))).map((note) => ({ ...note, mechanism: note.mechanism || ingredientMechanism(note.name) }));
   return {
@@ -890,6 +890,55 @@ function canReadAnalytics(request, env) {
   return supplied === token;
 }
 
+function ingredientNutritionRole(name = '') {
+  const lower = String(name || '').toLowerCase();
+  if (/magnesium/.test(lower)) return 'Nutritional overview: mineral support for normal muscle, nerve, energy, and relaxation routines';
+  if (/probiotic|biotic/.test(lower)) return 'Nutritional overview: microbiome support for digestive, barrier, and gut-immune routines';
+  if (/prebiotic|fiber|inulin|phgg|resistant starch/.test(lower)) return 'Nutritional overview: fermentable fiber support for beneficial gut microbes and regularity';
+  if (/vitamin\s*d|d3/.test(lower)) return 'Nutritional overview: nutrient-status support for bone, muscle, and normal immune function';
+  if (/vitamin\s*c|ascorb/.test(lower)) return 'Nutritional overview: antioxidant and collagen-cofactor support from a food-first nutrient';
+  if (/zinc/.test(lower)) return 'Nutritional overview: mineral support for immune, skin/barrier, and antioxidant systems';
+  if (/omega|fish oil|epa|dha/.test(lower)) return 'Nutritional overview: essential fatty acid support for inflammatory-balance and heart-health routines';
+  if (/ashwagandha/.test(lower)) return 'Nutritional overview: botanical stress-resilience comparison with safety context';
+  if (/theanine/.test(lower)) return 'Nutritional overview: amino-acid support for calm focus and wind-down routines';
+  if (/collagen/.test(lower)) return 'Nutritional overview: protein-peptide support for connective tissue, skin, and joint routines';
+  if (/creatine/.test(lower)) return 'Nutritional overview: performance nutrient support for strength, power, and training recovery';
+  if (/electrolyte|sodium|potassium/.test(lower)) return 'Nutritional overview: mineral support for hydration, sweating, and muscle function';
+  if (/selenium/.test(lower)) return 'Nutritional overview: trace-mineral support for antioxidant enzyme and thyroid-related nutrition';
+  if (/multivitamin/.test(lower)) return 'Nutritional overview: broad micronutrient coverage when diet gaps are likely';
+  return 'Nutritional overview: ingredient-specific nutrition support to compare for this goal';
+}
+
+function ingredientNutritionSummary(name = '') {
+  const lower = String(name || '').toLowerCase();
+  if (/magnesium/.test(lower)) return 'Magnesium is an essential mineral involved in hundreds of enzyme systems, including normal muscle contraction, nerve signaling, and cellular energy production. It can be nutritionally relevant when sleep quality, muscle tension, activity level, or intake of magnesium-rich foods is part of the picture.';
+  if (/probiotic|biotic/.test(lower)) return 'Probiotics are live microbes used to compare microbiome-support routines. Nutritional usefulness depends on the strain, dose, and whether the goal is digestive comfort, regularity, or gut-immune support.';
+  if (/prebiotic|fiber|inulin|phgg|resistant starch/.test(lower)) return 'Prebiotic fibers help feed beneficial gut bacteria and can support regularity and microbiome diversity. They are usually most useful when increased gradually alongside fluids and tolerated whole-food fiber.';
+  if (/vitamin\s*d|d3/.test(lower)) return 'Vitamin D is a fat-soluble nutrient tied to bone, muscle, and normal immune-function nutrition. Blood level, sun exposure, diet, and dose all affect whether it is a meaningful comparison point.';
+  if (/vitamin\s*c|ascorb/.test(lower)) return 'Vitamin C supports antioxidant status, collagen formation, and normal immune function. Citrus, berries, kiwi, peppers, and broccoli are practical food-first sources before comparing higher-dose supplements.';
+  if (/zinc/.test(lower)) return 'Zinc is a trace mineral used in immune, skin/barrier, and antioxidant enzyme biology. It is worth comparing carefully because long-term high intake can affect copper balance.';
+  if (/omega|fish oil|epa|dha/.test(lower)) return 'Omega-3s are essential fats commonly compared for heart-health, brain-health, and inflammatory-balance routines. Food sources like fatty fish are useful context when judging whether a product adds value.';
+  if (/ashwagandha/.test(lower)) return 'Ashwagandha is a botanical often compared for stress and sleep-quality routines. It is not a basic nutrient, so extract quality, dose, thyroid/autoimmune context, pregnancy, and medications matter.';
+  if (/theanine/.test(lower)) return 'L-theanine is an amino acid from tea commonly compared for calm-focus and evening wind-down routines. It can fit when the goal is relaxation without heavy sedation.';
+  if (/collagen/.test(lower)) return 'Collagen peptides provide amino-acid building blocks used in connective-tissue proteins. They are usually compared alongside total protein intake and vitamin C-rich foods.';
+  if (/creatine/.test(lower)) return 'Creatine is a well-studied performance nutrient for strength, power, and high-intensity training support. It is usually evaluated by form, daily amount, consistency, and hydration tolerance.';
+  if (/electrolyte|sodium|potassium/.test(lower)) return 'Electrolytes support hydration balance and normal nerve/muscle function. They are most nutritionally relevant around sweating, heat, travel, low-carb eating, or longer activity.';
+  if (/selenium/.test(lower)) return 'Selenium is a trace mineral involved in antioxidant enzyme systems. It has a narrow useful range, so total intake from food, multis, and immune formulas should be compared before stacking.';
+  if (/multivitamin/.test(lower)) return 'A multivitamin can provide broad micronutrient coverage when diet variety is inconsistent. It should be checked for overlap with separate vitamin D, zinc, selenium, or immune formulas.';
+  return 'This ingredient is included as a nutrition-focused comparison option for the stated goal. Compare food sources, ingredient form, serving amount, product quality, and personal context before deciding whether it belongs in a routine.';
+}
+
+function ingredientTypicalRange(name = '') {
+  const lower = String(name || '').toLowerCase();
+  if (/magnesium/.test(lower)) return 'Common supplemental range: 100–300 mg elemental magnesium/day, depending on form and tolerance.';
+  if (/vitamin\s*d|d3/.test(lower)) return 'Common supplemental range: 1,000–2,000 IU/day; blood levels help guide fit.';
+  if (/zinc/.test(lower)) return 'Common range: 10–30 mg/day elemental zinc; avoid chronic high-dose stacking without guidance.';
+  if (/creatine/.test(lower)) return 'Common range: 3–5 g/day creatine monohydrate.';
+  if (/theanine/.test(lower)) return 'Common range: 100–200 mg as needed in research and product labels.';
+  if (/fiber|prebiotic/.test(lower)) return 'Start low, often 2–5 g/day, and increase gradually with fluids as tolerated.';
+  return '';
+}
+
 function ingredientMechanism(name = '') {
   const lower = String(name || '').toLowerCase();
   if (/probiotic|biotic/.test(lower)) return 'Probiotics work through strain-specific microbiome signaling, short-chain fatty acid production, and gut-barrier interactions. Their effects depend heavily on strain, dose, and the person’s baseline microbiome.';
@@ -1000,13 +1049,13 @@ function staticFallback(goal, products = [], ingredients = []) {
   const normalizeSuppliedIngredient = (i, idx) => {
     const rawName = i.name || i.nm || `Ingredient ${idx + 1}`;
     const name = /^joint complex$/i.test(String(rawName || '').trim()) ? 'Joint support nutrients' : rawName;
-    const rawBestFit = i.bestFit || i.b || (idx < 6 ? 'educational research fit' : 'secondary educational research fit');
+    const rawBestFit = i.bestFit || i.b || '';
     return {
       name,
-      bestFit: String(rawBestFit || '').replace(/^(Top Match|Additional Option to Compare):\s*/i, ''),
-      researchContext: i.researchContext || i.detail || 'Compare ingredient form, dose, product quality, and personal context before use. Use this as an educational research starting point, not a recommendation to take every listed ingredient.',
+      bestFit: String(rawBestFit || ingredientNutritionRole(name) || '').replace(/^(Top Match|Additional Option to Compare):\s*/i, ''),
+      researchContext: i.researchContext || i.detail || ingredientNutritionSummary(name),
       mechanism: i.mechanism || ingredientMechanism(name),
-      typicalRange: i.typicalRange || i.dose || 'Follow label directions and professional guidance.',
+      typicalRange: i.typicalRange || i.dose || ingredientTypicalRange(name),
       pubmedId: i.pubmedId || i.id || ''
     };
   };

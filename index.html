@@ -1125,6 +1125,7 @@
     }
   };
 
+  function npDoseIsGeneric(text){return /^\s*(follow\s+(product\s+)?label directions|follow label directions|use as directed|consult|professional guidance)/i.test(String(text||''));}
   function ingredientMechanism(n){
     if(n && n.mechanism) return n.mechanism;
     var name=String((n&&n.nm)||'').toLowerCase();
@@ -1574,7 +1575,9 @@
       var ref=href?'<a class="np-rl" href="'+href+'" target="_blank" rel="noopener">PubMed source →</a>':'';
       var mechanism=ingredientMechanism(n);
       var mech=mechanism?'<div class="np-mech"><strong>Mechanism:</strong> '+esc(String(mechanism).replace(/^Mechanism:\s*/i,''))+'</div>':'';
-      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div>'+mech+'<div class="np-dose">'+esc(ingredientDose(n))+'</div>'+ref+'</div>';
+      var dose=ingredientDose(n);
+      var doseHtml=dose&&!npDoseIsGeneric(dose)?'<div class="np-dose">'+esc(dose)+'</div>':'';
+      var card='<div class="np-nut"><div class="np-nn"><button class="np-nn-btn" type="button" onclick="npIngredientDetail('+i+')">'+esc(n.nm)+'<span class="np-drill-hint">details →</span></button></div><div class="np-nb">'+esc(n.b)+'</div><div class="np-nd">'+esc(ingredientDetail(n))+'</div>'+mech+doseHtml+ref+'</div>';
       if(i<6) topMatchItems.push(card); else additionalItems.push(card);
     });
     var nuts=(topMatchItems.length?'<div class="np-note-section"><div class="np-note-heading">Top Matches</div><div class="np-nuts">'+topMatchItems.join('')+'</div></div>':'')+
