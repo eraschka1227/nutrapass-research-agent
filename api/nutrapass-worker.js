@@ -484,10 +484,12 @@ let cachedShopifyAdminToken = null;
 let cachedShopifyAdminTokenExpiresAt = 0;
 
 async function getShopifyAdminAccessToken(env, domain) {
-  if (env.SHOPIFY_ADMIN_ACCESS_TOKEN) return env.SHOPIFY_ADMIN_ACCESS_TOKEN;
   const clientId = env.SHOPIFY_ADMIN_CLIENT_ID;
   const clientSecret = env.SHOPIFY_ADMIN_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('Missing Shopify Admin token or client credentials');
+  if (!clientId || !clientSecret) {
+    if (env.SHOPIFY_ADMIN_ACCESS_TOKEN) return env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+    throw new Error('Missing Shopify Admin token or client credentials');
+  }
   const now = Date.now();
   if (cachedShopifyAdminToken && now < cachedShopifyAdminTokenExpiresAt - 300000) return cachedShopifyAdminToken;
   const body = new URLSearchParams({
