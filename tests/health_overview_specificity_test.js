@@ -76,6 +76,7 @@ async function workerFallback(goal, extraBody = {}) {
   assert('worker detects and retries generic AI overview filler', /hasGenericWellnessFiller/.test(worker) && /rewriteGenericWellnessAnswer/.test(worker) && /broad wellness drivers/.test(worker));
 
   const index = fs.readFileSync(indexPath, 'utf8');
+  assert('preloaded chips use Woman\'s Health instead of Acid & Reflux disease-adjacent claim', index.includes("npSet('I want nutrition support for women\\'s health',true)") && index.includes(">Woman's Health</button>") && !index.includes("npSet('I have acid reflux and indigestion problems',true)") && !index.includes('>Acid &amp; Reflux</button>'));
   const nutrientMatches = index.match(/\{nm:'/g) || [];
   assert('browser nutrient pool has at least 45 entries', nutrientMatches.length >= 45);
   assert('AI request sends expanded ingredient context', index.includes('topNutrients(input,20)'));
