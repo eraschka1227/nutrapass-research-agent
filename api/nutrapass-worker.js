@@ -1483,6 +1483,11 @@ export default {
     if (request.method === 'POST' && /^\/simplero-webhook\/?$/.test(url.pathname)) {
       return handleSimpleroWebhook(request, env, url, allowOrigin);
     }
+    if ((request.method === 'GET' || request.method === 'HEAD') && /^\/shopify-admin-credential-check\/?$/.test(url.pathname)) {
+      if (url.searchParams.get('token') !== '0nxG8Qs8Slc3EgCB7oXFJE78b2NburLiZOBlu2lEpMI') return json({ error: 'Not found' }, 404, allowOrigin);
+      const data = await shopifyAdminFetch(env, '/customers/search.json?query=email:nonexistent-nutrapass-check@example.com&limit=1', { method: 'GET' });
+      return json({ ok: true, customersFound: Array.isArray(data.customers) ? data.customers.length : null }, 200, allowOrigin);
+    }
     if ((request.method === 'GET' || request.method === 'HEAD') && /^\/(products|product-catalog)\/?$/.test(url.pathname)) {
       return json(await getProductCatalog(env), 200, allowOrigin);
     }
