@@ -59,7 +59,7 @@ function assert(name, condition) {
   assert('Simplero webhook returns success', approved.status === 200 && approvedJson.ok === true);
   assert('Simplero webhook normalizes email', approvedJson.email === 'member@example.com');
   assert('Simplero webhook creates customer when missing', approvedJson.action === 'created' && approvedJson.customerId === 12345);
-  assert('Simplero webhook adds paid subscriber tags', approvedJson.addedTags.includes('nutrapass') && approvedJson.addedTags.includes('approved') && approvedJson.addedTags.includes('paid subscriber'));
+  assert('Simplero webhook adds only the active tag', approvedJson.addedTags.length === 1 && approvedJson.addedTags[0] === 'active');
   assert('Shopify token endpoint was called', calls.some((call) => call.url.includes('/admin/oauth/access_token')));
   assert('Shopify Admin API search was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers/search.json') && call.init.headers['X-Shopify-Access-Token'] === 'generated_admin_token'));
   assert('Shopify Admin API create was called', calls.some((call) => call.url.includes('/admin/api/2025-10/customers.json') && call.init.method === 'POST' && call.init.headers['X-Shopify-Access-Token'] === 'generated_admin_token'));

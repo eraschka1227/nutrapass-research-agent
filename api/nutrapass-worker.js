@@ -458,14 +458,7 @@ function extractSimpleroContact(payload = {}) {
 }
 
 function simpleroActionTags(url, payload, contactTags = []) {
-  const action = String(url.searchParams.get('action') || payload.action || payload.event || payload.trigger || '').toLowerCase();
-  const text = `${action} ${contactTags.join(' ')}`.toLowerCase();
-  const tags = ['nutrapass'];
-  if (/subscrib|purchase|paid|member|active/.test(text)) tags.push('approved', 'member', 'active', 'paid subscriber');
-  else if (/approv/.test(text)) tags.push('approved');
-  else if (/appl|lead|submit/.test(text)) tags.push('applicant');
-  else tags.push('approved');
-  return Array.from(new Set(tags));
+  return ['active'];
 }
 
 function normalizeShopifyDomainForAdmin(env) {
